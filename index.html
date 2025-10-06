@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reçeller İçin Yaratıcı ve Sağlıklı Fikirler</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Linen & Sage -->
+    <!-- Application Structure Plan: The application uses a thematic, card-based dashboard structure. A top navigation bar with filter buttons allows users to dynamically sort ideas by category ('All', 'Drinks', 'Breakfast', 'Main Course', 'Dessert'). This is more intuitive than a linear list, enabling users to quickly find ideas relevant to their immediate needs (e.g., "what can I make for breakfast?"). The user flow is simple: land, see all ideas, and click a filter to instantly narrow down the options. This interactive card grid was chosen for its visual appeal, scannability, and ease of use on both desktop and mobile devices, directly addressing the user's need for varied and categorized alternatives. -->
+    <!-- Visualization & Content Choices: The source information is a qualitative request for ideas. Therefore, no data charts are needed. The chosen presentation method is a grid of interactive "idea cards." Goal: Inform & Organize. Method: Each card uses structured HTML/CSS (Tailwind) to present an idea with a title, description, jam suggestions, and a health tip. Interaction: JavaScript-powered filtering buttons allow users to dynamically show/hide cards based on categories. This is more effective than a static list, providing an engaging and user-directed exploration experience. Unicode emojis are used for visual cues, avoiding image/SVG dependencies. Justification: This approach turns a simple list of suggestions into a small, useful tool that is easy to navigate and visually pleasing, perfectly matching the user's creative and practical query. Library/Method: Vanilla JavaScript for interactions. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FBF7F3;
+            color: #4A4A4A;
+        }
+        .filter-btn {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .filter-btn.active, .filter-btn:hover {
+            color: #6A7A3B;
+            border-bottom-color: #6A7A3B;
+        }
+        .idea-card {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+        .idea-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-[#6A7A3B] mb-2">Reçelleri Dönüştürme Sanatı</h1>
+            <p class="text-lg md:text-xl text-gray-600">Evinizdeki reçelleri sağlıklı ve lezzetli alternatiflere dönüştürün.</p>
+        </header>
+
+        <nav id="filters" class="flex justify-center items-center space-x-4 sm:space-x-8 mb-12 border-b border-gray-200">
+            <button class="filter-btn active py-2 px-2 sm:px-4 text-sm sm:text-base font-semibold" data-category="all">Hepsi</button>
+            <button class="filter-btn py-2 px-2 sm:px-4 text-sm sm:text-base font-semibold" data-category="drink">İçecekler</button>
+            <button class="filter-btn py-2 px-2 sm:px-4 text-sm sm:text-base font-semibold" data-category="breakfast">Kahvaltılık</button>
+            <button class="filter-btn py-2 px-2 sm:px-4 text-sm sm:text-base font-semibold" data-category="main">Ana Yemek</button>
+            <button class="filter-btn py-2 px-2 sm:px-4 text-sm sm:text-base font-semibold" data-category="dessert">Tatlı</button>
+        </nav>
+
+        <main id="idea-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            
+            <div class="idea-card bg-white rounded-xl shadow-lg overflow-hidden p-6" data-category="drink">
+                <div class="text-4xl mb-4">🥤</div>
+                <h3 class="text-xl font-bold text-[#6A7A3B] mb-2">Reçelli & Yoğurtlu Smoothie</h3>
+                <p class="text-gray-600 mb-4">Bir kaşık reçeli, yoğurt veya kefir ve sevdiğiniz taze meyvelerle blender'dan geçirin. Şeker eklemeden harika bir ara öğün yaratın.</p>
+                <div class="text-sm">
+                    <p class="font-semibold">Hangi Reçel?</p>
+                    <p class="text-gray-500">Çilek, Şeftali</p>
+                    <p class="font-semibold mt-2">Sağlık Notu:</p>
+                    <p class="text-gray-500">Yoğurdun proteini ve probiyotiği ile dengelenir.</p>
+                </div>
+            </div>
+
+            <div class="idea-card bg-white rounded-xl shadow-lg overflow-hidden p-6" data-category="main">
+                <div class="text-4xl mb-4">🍗</div>
+                <h3 class="text-xl font-bold text-[#6A7A3B] mb-2">Etler İçin Marinasyon Sosu</h3>
+                <p class="text-gray-600 mb-4">Zeytinyağı, sarımsak, taze kekik ve bir kaşık reçeli karıştırarak tavuk veya kırmızı et için harika bir marinasyon hazırlayın.</p>
+                <div class="text-sm">
+                    <p class="font-semibold">Hangi Reçel?</p>
+                    <p class="text-gray-500">Ayva, Şeftali</p>
+                    <p class="font-semibold mt-2">Sağlık Notu:</p>
+                    <p class="text-gray-500">Reçelin şekeri, etin üzerinde karamelize bir tat bırakır.</p>
+                </div>
+            </div>
+
+            <div class="idea-card bg-white rounded-xl shadow-lg overflow-hidden p-6" data-category="breakfast">
+                <div class="text-4xl mb-4">🥣</div>
+                <h3 class="text-xl font-bold text-[#6A7A3B] mb-2">Yulaf Lapası Tatlandırıcısı</h3>
+                <p class="text-gray-600 mb-4">Sabahları yulaf lapanızı pişirdikten sonra içine bal veya pekmez yerine bir çay kaşığı reçel ekleyerek tatlandırın.</p>
+                <div class="text-sm">
+                    <p class="font-semibold">Hangi Reçel?</p>
+                    <p class="text-gray-500">Çilek, Şeftali, Ayva</p>
+                    <p class="font-semibold mt-2">Sağlık Notu:</p>
+                    <p class="text-gray-500">Yulafın lifi sayesinde kan şekerini daha yavaş yükseltir.</p>
+                </div>
+            </div>
+            
+            <div class="idea-card bg-white rounded-xl shadow-lg overflow-hidden p-6" data-category="main">
+                <div class="text-4xl mb-4">🥗</div>
+                <h3 class="text-xl font-bold text-[#6A7A3B] mb-2">Salata Sosu (Vinaigrette)</h3>
+                <p class="text-gray-600 mb-4">Biraz reçel, zeytinyağı, limon suyu (veya balzamik sirke) ve hardalı karıştırarak tatlı-ekşi bir salata sosu elde edin.</p>
+                <div class="text-sm">
+                    <p class="font-semibold">Hangi Reçel?</p>
+                    <p class="text-gray-500">Çilek (yeşil salatalara), Ayva (rokaya)</p>
+                    <p class="font-semibold mt-2">Sağlık Notu:</p>
+                    <p class="text-gray-500">Hazır soslara göre çok daha doğal ve az kalorilidir.</p>
+                </div>
+            </div>
+
+            <div class="idea-card bg-white rounded-xl shadow-lg overflow-hidden p-6" data-category="breakfast">
+                <div class="text-4xl mb-4">🧀</div>
+                <h3 class="text-xl font-bold text-[#6A7A3B] mb-2">Peynir Tabağı Eşlikçisi</h3>
+                <p class="text-gray-600 mb-4">Özellikle ayva reçeli, eskitilmiş Kars gravyeri veya Ezine peyniri gibi tuzlu ve karakterli peynirlerle müthiş bir uyum yakalar.</p>
+                <div class="text-sm">
+                    <p class="font-semibold">Hangi Reçel?</p>
+                    <p class="text-gray-500">Ayva</p>
+                    <p class="font-semibold mt-2">Sağlık Notu:</p>
+                    <p class="text-gray-500">Az miktarda kullanarak harika bir lezzet dengesi kurun.</p>
+                </div>
+            </div>
+
+            <div class="idea-card bg-white rounded-xl shadow-lg overflow-hidden p-6" data-category="dessert">
+                <div class="text-4xl mb-4">🍪</div>
+                <h3 class="text-xl font-bold text-[#6A7A3B] mb-2">Sağlıklı Crumble Dolgusu</h3>
+                <p class="text-gray-600 mb-4">Taze meyvelerle karıştırdığınız reçeli fırın kabına yayın, üzerine yulaf ezmesi ve tam buğday unlu bir karışım serpip fırınlayın.</p>
+                <div class="text-sm">
+                    <p class="font-semibold">Hangi Reçel?</p>
+                    <p class="text-gray-500">Şeftali, Çilek</p>
+                    <p class="font-semibold mt-2">Sağlık Notu:</p>
+                    <p class="text-gray-500">Ekstra şeker kullanmadan, lifli ve lezzetli bir tatlı.</p>
+                </div>
+            </div>
+            
+             <div class="idea-card bg-white rounded-xl shadow-lg overflow-hidden p-6" data-category="drink">
+                <div class="text-4xl mb-4">🍹</div>
+                <h3 class="text-xl font-bold text-[#6A7A3B] mb-2">Ev Yapımı Soğuk Çay</h3>
+                <p class="text-gray-600 mb-4">Demleyip soğuttuğunuz siyah veya yeşil çayı bir kaşık reçel ile tatlandırın. İçine taze nane ve limon dilimleri ekleyin.</p>
+                <div class="text-sm">
+                    <p class="font-semibold">Hangi Reçel?</p>
+                    <p class="text-gray-500">Şeftali, Çilek</p>
+                    <p class="font-semibold mt-2">Sağlık Notu:</p>
+                    <p class="text-gray-500">Hazır soğuk çaylardaki yapay tatlandırıcılar ve mısır şurubu yerine geçer.</p>
+                </div>
+            </div>
+
+            <div class="idea-card bg-white rounded-xl shadow-lg overflow-hidden p-6" data-category="dessert">
+                <div class="text-4xl mb-4">🍰</div>
+                <h3 class="text-xl font-bold text-[#6A7A3B] mb-2">Kek ve Muffin Dolgusu</h3>
+                <p class="text-gray-600 mb-4">Şekeri azaltılmış tam buğday unlu kek harcının ortasına bir kaşık reçel koyarak sürprizli ve nemli bir doku katın.</p>
+                <div class="text-sm">
+                    <p class="font-semibold">Hangi Reçel?</p>
+                    <p class="text-gray-500">Hepsi uygun</p>
+                    <p class="font-semibold mt-2">Sağlık Notu:</p>
+                    <p class="text-gray-500">Tarifteki toplam şeker miktarını azaltmanıza yardımcı olur.</p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            const ideaCards = document.querySelectorAll('.idea-card');
+
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+
+                    const category = this.getAttribute('data-category');
+
+                    ideaCards.forEach(card => {
+                        const cardCategory = card.getAttribute('data-category');
+                        if (category === 'all' || category === cardCategory) {
+                            card.classList.remove('hidden');
+                        } else {
+                            card.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>
