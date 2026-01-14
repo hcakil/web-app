@@ -929,27 +929,6 @@ if (result != null && context.mounted) {
 
 ---
 
-### 🚨 SCENARIO 4: Location Check Bypass
-
-**Production Configuration:**
-- `locationService` = TRUE
-- `byPassLocationCheck` = TRUE (hardcoded in updateOrderDetailStateWithCompleted)
-
-**Code Evidence (actions_content.dart, lines 429-434):**
-```dart
-void updateOrderDetailStateWithCompleted() {
-  orderDetailsState.updateOrderStatus(
-    workOrderStatus: MSDynSystemStatus.completed,
-    clockOutDateTime: ExtendedDateTime.current,
-    byPassLocationCheck: true  // ← Always bypasses location check!
-  );
-}
-```
-
-**Impact:** Even though `locationService` FF is TRUE, the location validation is bypassed when completing via QC flow.
-
----
-
 ### Summary Table: Cheating Vectors
 
 | Scenario | How Pro Does It | BRB Completed? | Telemetry Logged? | Reversible? |
@@ -957,7 +936,6 @@ void updateOrderDetailStateWithCompleted() {
 | 1. Leave Zoom Early | Click X → Leave Meeting | ✅ YES | ✅ YES (`qcProcessEndWithoutJoin`) | ❌ NO |
 | 2. API Failure | (Automatic on backend error) | ✅ YES | ❌ Limited | ❌ NO |
 | 3. Waiting Room Exit | Close waiting room | ❌ NO | ✅ YES (`WaitingRoomCloseButton`) | N/A |
-| 4. Fake Location | Not possible (FF hardcoded) | - | - | - |
 
 ---
 
@@ -1078,13 +1056,6 @@ if (hasWaitingRoomFF) {
 // Disable "Leave Meeting" button for first 30 seconds
 // Or show confirmation dialog
 ```
-
-### Fix 4: Remove byPassLocationCheck Flag
-
-**Problem:** Location check is always bypassed in QC completion.
-
-**Solution:** Remove the hardcoded `byPassLocationCheck: true` or make it conditional.
-
 ---
 
 ## Document Version
