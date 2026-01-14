@@ -1057,10 +1057,3 @@ if (hasWaitingRoomFF) {
 // Or show confirmation dialog
 ```
 ---
-
-## Document Version
-- **Created:** January 14, 2026
-- **Updated:** January 14, 2026 (Added Production FF values and detailed BRB timing analysis)
-- **Author:** Tech Story 41957 Investigation
-- **Pro App Version:** v2.0
-- **Related Tasks:** 41910, 41911 (QC Investigation Tasks)
