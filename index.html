@@ -28,6 +28,7 @@
             color: #292524;
             border-bottom: 2px solid #0d9488;
             padding-bottom: 0.5rem;
+            scroll-margin-top: 1rem;
         }
         .markdown-content h1:first-child {
             margin-top: 0;
@@ -38,6 +39,7 @@
             margin-top: 1.5rem;
             margin-bottom: 0.75rem;
             color: #292524;
+            scroll-margin-top: 1rem;
         }
         .markdown-content h3 {
             font-size: 1.25rem;
@@ -45,6 +47,7 @@
             margin-top: 1.25rem;
             margin-bottom: 0.5rem;
             color: #292524;
+            scroll-margin-top: 1rem;
         }
         .markdown-content h4 {
             font-size: 1.125rem;
@@ -52,6 +55,10 @@
             margin-top: 1rem;
             margin-bottom: 0.5rem;
             color: #292524;
+            scroll-margin-top: 1rem;
+        }
+        html {
+            scroll-behavior: smooth;
         }
         .markdown-content p {
             margin-bottom: 1rem;
@@ -190,10 +197,27 @@
                     }
                     
                     const markdown = await response.text();
+                    
+                    // Configure marked to generate heading IDs
+                    marked.setOptions({
+                        headerIds: true,
+                        mangle: false
+                    });
+                    
                     const html = marked.parse(markdown);
                     const container = document.getElementById('readme-container');
                     if (container) {
                         container.innerHTML = html;
+                        
+                        // Fix anchor links after rendering
+                        fixAnchorLinks(container);
+                        
+                        // Handle initial hash if present
+                        if (window.location.hash) {
+                            setTimeout(() => {
+                                scrollToAnchor(window.location.hash.substring(1));
+                            }, 100);
+                        }
                     }
                 } catch (error) {
                     const container = document.getElementById('readme-container');
@@ -208,6 +232,72 @@
                     }
                 }
             }
+            
+            // Function to generate anchor ID from text (matching GitHub markdown behavior)
+            function generateAnchorId(text) {
+                return text.toLowerCase()
+                    .replace(/[^\w\s-]/g, '') // Remove special characters
+                    .replace(/\s+/g, '-')      // Replace spaces with hyphens
+                    .replace(/-+/g, '-')        // Replace multiple hyphens with single
+                    .replace(/^-+|-+$/g, '')   // Remove leading/trailing hyphens
+                    .trim();
+            }
+            
+            // Function to fix anchor links
+            function fixAnchorLinks(container) {
+                // First, ensure all headings have IDs in GitHub-style format
+                const headings = container.querySelectorAll('h1, h2, h3, h4, h5, h6');
+                headings.forEach(heading => {
+                    // Always regenerate ID to match GitHub format, even if marked.js created one
+                    const text = heading.textContent || heading.innerText;
+                    const id = generateAnchorId(text);
+                    heading.id = id;
+                });
+                
+                // Now fix all anchor links to point to the correct headings
+                const links = container.querySelectorAll('a[href^="#"]');
+                links.forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && href.startsWith('#')) {
+                        const targetId = href.substring(1);
+                        
+                        // Find the heading with matching ID
+                        const targetHeading = Array.from(headings).find(h => {
+                            const headingId = generateAnchorId(h.textContent || h.innerText);
+                            return headingId === targetId || h.id === targetId;
+                        });
+                        
+                        if (targetHeading && targetHeading.id) {
+                            // Update link href to match the heading ID
+                            link.setAttribute('href', '#' + targetHeading.id);
+                            
+                            // Add click handler for smooth scrolling
+                            link.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                scrollToAnchor(targetHeading.id);
+                            });
+                        }
+                    }
+                });
+            }
+
+            // Function to scroll to anchor with smooth behavior
+            function scrollToAnchor(id) {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // Update URL without triggering scroll
+                    window.history.pushState(null, '', '#' + id);
+                }
+            }
+            
+            // Handle hash changes
+            window.addEventListener('hashchange', function() {
+                const hash = window.location.hash.substring(1);
+                if (hash) {
+                    scrollToAnchor(hash);
+                }
+            });
             
             // Load README on page load
             loadReadme();
