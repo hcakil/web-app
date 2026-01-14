@@ -1,80 +1,24 @@
-<!-- Chosen Palette: Calm Harmony (Amber/Stone/Teal) -->
-<!-- Application Structure Plan: A 5-section tabbed interface (Summary, Allergy, Blood Count, Vitamins, Assessment) was chosen. This structure guides the user (a parent) from the most critical findings (Allergy) to supporting evidence (Blood Count) and reassurance (Vitamins), culminating in a comprehensive assessment that directly answers their specific questions about eczema and diet. This thematic flow is more intuitive for a non-medical user than the original report's lab-department-based structure. -->
-<!-- Visualization & Content Choices: 1. Allergy Panels: (Report: Positive fp1/fp5) -> Goal: Inform/Highlight -> Viz: Color-coded HTML cards (Red=Positive, Green=Negative) -> Interaction: Visual cue -> Justification: Clearly isolates the *problem* allergens from the *safe* ones. 2. Blood Count: (Report: High EO, Low RBC/HCT) -> Goal: Compare/Explain -> Viz: Two Chart.js Horizontal Bar Charts (one for allergy, one for anemia) -> Interaction: Bar colors (red/green) change based on value vs. reference range -> Justification: Visually proves the 'out of range' status and separates the 'allergic reaction' (Eosinophils) from the 'anemia' (RBC/HCT) for clarity. 3. Vitamins: (Report: All normal) -> Goal: Inform/Reassure -> Viz: Green-coded HTML cards -> Interaction: Visual cue -> Justification: Quickly reassures the parent that nutrition is not an issue. 4. Assessment: (Report: All data + User Context) -> Goal: Synthesize/Advise -> Viz: Structured HTML text -> Justification: Directly connects the lab data (EO, fp1/fp5) to the user's real-world context (eczema, diet). -->
-<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ali Kerem Çakıl - Tahlil Raporu</title>
+    <title>QC Workflow Documentation</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #fefbec; /* amber-50 */
-            color: #292524; /* stone-800 */
-        }
-        .tab-button {
-            transition: all 0.3s ease;
-        }
-        .tab-button.active {
-            border-bottom-color: #0d9488; /* teal-600 */
-            color: #0d9488; /* teal-600 */
-            font-weight: 600;
-        }
-        .content-panel {
-            display: none;
-        }
-        .content-panel.active {
-            display: block;
-        }
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-            height: 250px;
-            max-height: 300px;
-        }
-        @media (min-width: 640px) {
-            .chart-container {
-                height: 300px;
-                max-height: 350px;
-            }
-        }
-        .status-card {
-            border-left-width: 4px;
-        }
-        .status-normal {
-            border-color: #22c55e; /* green-500 */
-            background-color: #f0fdf4; /* green-50 */
-        }
-        .status-low {
-            border-color: #f97316; /* orange-500 */
-            background-color: #fff7ed; /* orange-50 */
-        }
-        .status-high {
-            border-color: #ef4444; /* red-500 */
-            background-color: #fef2f2; /* red-50 */
-        }
-        .status-positive {
-            border-color: #ef4444; /* red-500 */
-            background-color: #fef2f2; /* red-50 */
-        }
-        .status-negative {
-            border-color: #22c55e; /* green-500 */
-            background-color: #f0fdf4; /* green-50 */
+            background-color: #fefbec;
+            color: #292524;
         }
         .markdown-content {
             background-color: white;
             padding: 2rem;
             border-radius: 0.5rem;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            max-width: 100%;
         }
         .markdown-content h1 {
             font-size: 2rem;
@@ -84,6 +28,9 @@
             color: #292524;
             border-bottom: 2px solid #0d9488;
             padding-bottom: 0.5rem;
+        }
+        .markdown-content h1:first-child {
+            margin-top: 0;
         }
         .markdown-content h2 {
             font-size: 1.5rem;
@@ -139,11 +86,14 @@
             background-color: transparent;
             color: #f9fafb;
             padding: 0;
+            font-size: 0.875rem;
         }
         .markdown-content table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 1rem;
+            overflow-x: auto;
+            display: block;
         }
         .markdown-content table th,
         .markdown-content table td {
@@ -191,283 +141,54 @@
     </style>
 </head>
 <body class="antialiased">
-
     <div class="container mx-auto max-w-6xl p-4 sm:p-8">
-        
         <header class="mb-8">
-            <h1 class="text-3xl font-bold text-stone-900">Ali Kerem Çakıl - Tahlil Sonuçları Raporu</h1>
-            <p class="text-lg text-stone-700 mt-2">Bu interaktif rapor, 13.10.2025 tarihli tahlil sonuçlarını ve sizin belirttiğiniz durum (egzema, beslenme) bağlamında bir değerlendirme sunar.</p>
+            <h1 class="text-3xl font-bold text-stone-900">QC Workflow Documentation</h1>
+            <p class="text-lg text-stone-700 mt-2">Quality Check (QC) Approval & Zoom Workflow Documentation</p>
         </header>
-
-        
-        <nav class="mb-8 border-b border-stone-300">
-            <div class="flex flex-wrap -mb-px space-x-4">
-                <button class="tab-button active text-lg py-4 px-2 border-b-2 border-transparent" data-target="ozet">
-                    Özet Bulgular
-                </button>
-                <button class="tab-button text-lg py-4 px-2 border-b-2 border-transparent" data-target="alerji">
-                    Alerji Testleri
-                </button>
-                <button class="tab-button text-lg py-4 px-2 border-b-2 border-transparent" data-target="kan-sayimi">
-                    Kan Sayımı (Hemogram)
-                </button>
-                <button class="tab-button text-lg py-4 px-2 border-b-2 border-transparent" data-target="vitamin">
-                    Vitamin & Diğer
-                </button>
-                <button class="tab-button text-lg py-4 px-2 border-b-2 border-transparent" data-target="degerlendirme">
-                    Genel Değerlendirme
-                </button>
-                <button class="tab-button text-lg py-4 px-2 border-b-2 border-transparent" data-target="readme">
-                    Documentation
-                </button>
-            </div>
-        </nav>
-
         
         <main>
-            
-            <section id="ozet-content" class="content-panel active space-y-6">
-                <h2 class="text-2xl font-semibold text-stone-900">Özet Bulgular</h2>
-                <p class="text-stone-700">Tahlil sonuçları incelendiğinde üç önemli nokta öne çıkmaktadır. Bu bölüm, sonuçların en kritik kısımlarını hızlıca gözden geçirmenizi sağlar. Detaylar diğer sekmelerde mevcuttur.</p>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-white p-6 rounded-lg shadow-md status-card status-high">
-                        <h3 class="text-xl font-semibold mb-2 text-red-700">1. Alerjik Reaksiyon Göstergesi</h3>
-                        <p class="text-stone-700">Kan sayımında (Hemogram) <span class="font-bold">Eozinofil (EO% ve EO#)</span> değerleri referans aralığının belirgin şekilde üzerindedir. Bu durum, vücudun bir alerjik reaksiyon içinde olduğunun güçlü bir laboratuvar işaretidir.</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow-md status-card status-positive">
-                        <h3 class="text-xl font-semibold mb-2 text-red-700">2. Pozitif Alerji Panelleri</h3>
-                        <p class="text-stone-700"><span class="font-bold">fp1 ve fp5</span> isimli iki gıda paneli <span class="font-bold">"Sınıf 2 - Düşük Düzeyde Pozitif"</span> olarak sonuçlanmıştır. Bu, çocuğunuzun bu panellerde yer alan gıdalardan (İnek sütü, yumurta, yer fıstığı, soya vb.) bir veya birkaçına karşı hassasiyeti olabileceğini göstermektedir.</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow-md status-card status-normal">
-                        <h3 class="text-xl font-semibold mb-2 text-green-700">3. Yeterli Vitamin Düzeyleri</h3>
-                        <p class="text-stone-700">Bakılan Vitamin D, Vitamin B12, Folik Asit ve Ferritin (Demir deposu) düzeylerinin tümü referans aralıkları içinde <span class="font-bold">normal ve yeterli</span> seviyededir. Bu, egzema veya anemi bulgularının temel bir besin eksikliğinden kaynaklanmadığını göstermesi açısından olumludur.</p>
+            <div id="readme-container" class="markdown-content">
+                <div class="flex items-center justify-center py-8">
+                    <div class="loading-spinner mr-3"></div>
+                    <span class="text-stone-600">Loading documentation...</span>
                     </div>
                 </div>
-            </section>
-
-            
-            <section id="alerji-content" class="content-panel space-y-6">
-                <h2 class="text-2xl font-semibold text-stone-900">Alerji Testleri (Spesifik IgE)</h2>
-                <p class="text-stone-700">Bu bölüm, egzemanın olası nedenlerini araştıran gıda alerjisi testlerini detaylandırmaktadır. Testler, "panel" olarak gruplanmış gıdalara karşı vücudun ürettiği antikor (IgE) seviyesini ölçer. Sonuçlar "Sınıf" olarak derecelendirilir (Sınıf 0: Negatif, Sınıf 1-6: Pozitif).</p>
-                
-                <div class="bg-white p-6 rounded-lg shadow-md status-card status-normal">
-                    <h3 class="text-xl font-semibold mb-2">Total IgE (Toplam Alerji Düzeyi)</h3>
-                    <div class="flex items-baseline space-x-4">
-                        <span class="text-3xl font-bold text-stone-900">88.3</span>
-                        <span class="text-lg text-stone-600">IU/mL</span>
-                        <span class="text-lg text-stone-500">(Referans: 0 - 165)</span>
-                    </div>
-                    <p class="mt-2 text-stone-700"><span class="font-semibold text-green-700">DURUM: NORMAL.</span> Not: Bebeklerde Total IgE düzeyinin normal olması, spesifik gıda alerjilerini dışlamaz. Önemli olan spesifik gıdalara karşı verilen yanıttır.</p>
-                </div>
-
-                <h3 class="text-xl font-semibold text-stone-900 mt-6">Gıda Alerjen Panelleri</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    
-                    <div class="p-4 rounded-lg shadow-md status-card status-positive">
-                        <h4 class="font-bold text-lg text-red-700">fp1 Paneli (f1, f2, f13, f24, f75)</h4>
-                        <p class="text-xl font-semibold text-stone-900">Sınıf 2 (0.91 kU/L)</p>
-                        <p class="font-semibold text-red-600">Düşük Düzeyde Pozitif</p>
-                        <ul class="list-disc list-inside text-stone-700 mt-2">
-                            <li>f1 Yumurta Akı</li>
-                            <li>f2 İnek Sütü</li>
-                            <li>f13 Yer Fıstığı</li>
-                            <li>f24 Karides</li>
-                            <li>f75 Yumurta Sarısı</li>
-                        </ul>
-                    </div>
-
-                    <div class="p-4 rounded-lg shadow-md status-card status-positive">
-                        <h4 class="font-bold text-lg text-red-700">fp5 Gıda Paneli (f13, f14, f17, f18, f3)</h4>
-                        <p class="text-xl font-semibold text-stone-900">Sınıf 2 (0.97 kU/L)</p>
-                        <p class="font-semibold text-red-600">Düşük Düzeyde Pozitif</p>
-                        <ul class="list-disc list-inside text-stone-700 mt-2">
-                            <li>f13 Yer Fıstığı</li>
-                            <li>f14 Soya Fasülyesi</li>
-                            <li>f17 Fındık</li>
-                            <li>f18 Brezilya Fıstığı</li>
-                            <li>f3 Morina Balığı (Cod)</li>
-                        </ul>
-                    </div>
-
-                    
-                    <div class="p-4 rounded-lg shadow-md status-card status-negative">
-                        <h4 class="font-bold text-lg text-green-700">fp2 Paneli (f3, f41, f205, f206, f254)</h4>
-                        <p class="text-xl font-semibold text-stone-900">Sınıf 0 (0.10 kU/L)</p>
-                        <p class="font-semibold text-green-600">Negatif</p>
-                        <ul class="list-disc list-inside text-stone-700 mt-2">
-                            <li>Balıklar (Morina, Somon vb.)</li>
-                        </ul>
-                    </div>
-
-                    <div class="p-4 rounded-lg shadow-md status-card status-negative">
-                        <h4 class="font-bold text-lg text-green-700">FM3 Tahıl/Un Karışımı</h4>
-                        <p class="text-xl font-semibold text-stone-900">Sınıf 0 (0.10 kU/L)</p>
-                        <p class="font-semibold text-green-600">Negatif</p>
-                        <ul class="list-disc list-inside text-stone-700 mt-2">
-                            <li>Buğday, Yulaf, Mısır vb.</li>
-                        </ul>
-                    </div>
-
-                    <div class="p-4 rounded-lg shadow-md status-card status-negative">
-                        <h4 class="font-bold text-lg text-green-700">FM7 Sebze Paneli</h4>
-                        <p class="text-xl font-semibold text-stone-900">Sınıf 0 (0.10 kU/L)</p>
-                        <p class="font-semibold text-green-600">Negatif</p>
-                        <ul class="list-disc list-inside text-stone-700 mt-2">
-                            <li>Domates, Patates, Havuç vb.</li>
-                        </ul>
-                    </div>
-
-                    <div class="p-4 rounded-lg shadow-md status-card status-negative">
-                        <h4 class="font-bold text-lg text-green-700">FM15 Meyve Paneli</h4>
-                        <p class="text-xl font-semibold text-stone-900">Sınıf 0 (0.10 kU/L)</p>
-                        <p class="font-semibold text-green-600">Negatif</p>
-                        <ul class="list-disc list-inside text-stone-700 mt-2">
-                            <li>Portakal, Elma, Muz, Şeftali</li>
-                        </ul>
-                    </div>
-
-                    <div class="p-4 rounded-lg shadow-md status-card status-negative">
-                        <h4 class="font-bold text-lg text-green-700">Diğer Paneller (Et, Kuruyemiş vb.)</h4>
-                        <p class="text-xl font-semibold text-stone-900">Sınıf 0</p>
-                        <p class="font-semibold text-green-600">Negatif</p>
-                        <p class="text-stone-700 mt-2">FM1, FM2, FM4, FM6, FM16, FM25 panellerinin tümü negatif sonuçlanmıştır.</p>
-                    </div>
-
-                </div>
-            </section>
-
-            
-            <section id="kan-sayimi-content" class="content-panel space-y-6">
-                <h2 class="text-2xl font-semibold text-stone-900">Kan Sayımı (Hemogram) Analizi</h2>
-                <p class="text-stone-700">Hemogram testi, kan hücrelerini inceler. Çocuğunuzun sonuçlarında iki ana bulguya odaklanıyoruz: Alerjik reaksiyonu gösteren <span class="font-bold">Eozinofil (EO)</span> hücreleri ve kansızlık (anemi) ile ilgili olan kırmızı kan hücre (RBC) değerleri. Grafikler, sonucu referans aralığına göre görselleştirmektedir (Kırmızı: Dışında, Yeşil: İçinde).</p>
-
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-xl font-semibold mb-4 text-center">Alerji Göstergeleri (Eozinofil)</h3>
-                    <div class="chart-container">
-                        <canvas id="eosinophilChart"></canvas>
-                    </div>
-                    <p class="text-center mt-4 text-stone-700">Her iki eozinofil değeri de referans aralığının <span class="font-bold text-red-600">üzerindedir</span>, bu da aktif bir alerjik durumu destekler.</p>
-                </div>
-
-                <div class="bg-white p-6 rounded-lg shadow-md mt-6">
-                    <h3 class="text-xl font-semibold mb-4 text-center">Anemi ve Diğer Göstergeler</h3>
-                    <div class="chart-container">
-                        <canvas id="anemiaChart"></canvas>
-                    </div>
-                    <p class="text-center mt-4 text-stone-700">Hafif bir kansızlık (RBC, HCT <span class="font-bold text-orange-600">düşük</span>) ve iltihaplanma (PCT <span class="font-bold text-red-600">yüksek</span>) bulguları mevcut. Ancak Vitaminler sekmesinde görüleceği üzere demir depoları (Ferritin) normaldir. Bu durum "enflamasyon anemisi" olarak bilinir ve alerjinin kendisine bağlı olabilir.</p>
-                </div>
-            </section>
-
-            
-            <section id="vitamin-content" class="content-panel space-y-6">
-                <h2 class="text-2xl font-semibold text-stone-900">Vitamin & Mineral Düzeyleri</h2>
-                <p class="text-stone-700">Bu bölüm, kansızlık veya diğer sağlık sorunlarıyla ilişkili olabilecek temel vitamin ve mineral düzeylerini göstermektedir. Çocuğunuzun tüm değerleri yeterli ve normal sınırlardadır.</p>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="p-6 rounded-lg shadow-md status-card status-normal">
-                        <h3 class="text-xl font-semibold mb-2 text-green-700">25-Hidroksi Vitamin D</h3>
-                        <div class="flex items-baseline space-x-3">
-                            <span class="text-3xl font-bold text-stone-900">32.51</span>
-                            <span class="text-lg text-stone-600">ng/mL</span>
-                        </div>
-                        <p class="text-stone-600 mt-1">(Referans: 20 - 50)</p>
-                        <p class="mt-2 text-lg font-semibold text-green-700">DURUM: YETERLİ</p>
-                    </div>
-
-                    <div class="p-6 rounded-lg shadow-md status-card status-normal">
-                        <h3 class="text-xl font-semibold mb-2 text-green-700">Vitamin B12</h3>
-                        <div class="flex items-baseline space-x-3">
-                            <span class="text-3xl font-bold text-stone-900">325</span>
-                            <span class="text-lg text-stone-600">pg/mL</span>
-                        </div>
-                        <p class="text-stone-600 mt-1">(Referans: 126.5 - 505)</p>
-                        <p class="mt-2 text-lg font-semibold text-green-700">DURUM: NORMAL</p>
-                    </div>
-
-                    <div class="p-6 rounded-lg shadow-md status-card status-normal">
-                        <h3 class="text-xl font-semibold mb-2 text-green-700">Ferritin (Demir Deposu)</h3>
-                        <div class="flex items-baseline space-x-3">
-                            <span class="text-3xl font-bold text-stone-900">37.53</span>
-                            <span class="text-lg text-stone-600">ng/mL</span>
-                        </div>
-                        <p class="text-stone-600 mt-1">(Referans: 6 - 150)</p>
-                        <p class="mt-2 text-lg font-semibold text-green-700">DURUM: NORMAL</p>
-                    </div>
-
-                    <div class="p-6 rounded-lg shadow-md status-card status-normal">
-                        <h3 class="text-xl font-semibold mb-2 text-green-700">Folik Asit (Folat)</h3>
-                        <div class="flex items-baseline space-x-3">
-                            <span class="text-3xl font-bold text-stone-900">17.51</span>
-                            <span class="text-lg text-stone-600">ng/mL</span>
-                        </div>
-                        <p class="text-stone-600 mt-1">(Referans: 5.38 - 24.8)</p>
-                        <p class="mt-2 text-lg font-semibold text-green-700">DURUM: NORMAL</p>
-                    </div>
-                </div>
-            </section>
-
-            
-            <section id="degerlendirme-content" class="content-panel space-y-6">
-                <h2 class="text-2xl font-semibold text-stone-900">Genel Değerlendirme ve Sonraki Adımlar</h2>
-                <div class="bg-white p-6 rounded-lg shadow-md space-y-4 text-stone-700">
-                    <p class="text-lg">Bu rapor, çocuğunuz Ali Kerem'in egzema şikayetinin altında yatan nedeni büyük ölçüde aydınlatmaktadır. Verdiğiniz bilgilerle (egzema, beslenme) tahlil sonuçlarını birleştirdiğimizde aşağıdaki tablo ortaya çıkmaktadır:</p>
-                    
-                    <h3 class="text-xl font-semibold text-stone-900 pt-2">Bulguların Yorumlanması</h3>
-                    <ul class="list-disc list-inside space-y-2">
-                        <li><span class="font-semibold">Egzema ve Alerji Bağlantısı:</span> Kan tahlilindeki <span class="font-bold text-red-600">yüksek Eozinofil (EO)</span> değerleri, vücudun bir alerji ile mücadele ettiğinin net bir göstergesidir. Egzema, bu alerjik reaksiyonun ciltteki yansımasıdır. Kortizonlu kremler egzemayı (sonucu) baskılar, ancak bu tahlil alerjinin kendisine (nedene) işaret etmektedir.</li>
-                        
-                        <li><span class="font-semibold">Potansiyel Alerjenler:</span> <span class="font-bold text-red-600">fp1 ve fp5</span> panellerinin pozitif gelmesi, reaksiyonun muhtemel kaynağını gıda alerjisi olarak işaret etmektedir. Bu panellerde yer alan ve bebekler için en yaygın alerjenler olan <span class="font-bold">İnek Sütü, Yumurta, Yer Fıstığı ve Soya</span> başlıca şüphelilerdir.</li>
-                        
-                        <li><span class="font-semibold">Beslenme Durumu:</span>
-                            <ul class="list-decimal list-inside ml-6 space-y-1 mt-1">
-                                <li><span class="font-bold">Mama ve Anne Sütü:</span> Çocuğunuzun hem mama hem de anne sütü alması önemlidir. Kullandığınız mama <span class="font-bold">inek sütü bazlı</span> ise, bu durum pozitif çıkan `fp1` paneli ile doğrudan ilişkilidir. Ayrıca, sizin tükettiğiniz gıdalar (süt, yumurta, fıstık vb.) anne sütü yoluyla bebeğinize geçerek reaksiyonu tetikleyebilir.</li>
-                                <li><span class="font-bold">Ek Gıda:</span> Ek gıdaya 1 ay önce başlamanız, bu testlerin pozitif çıkmasıyla zamanlama olarak uyumludur. Çocuğunuz bu potansiyel alerjenlerle artık doğrudan temas ediyor olabilir.</li>
-                            </ul>
-                        </li>
-
-                        <li><span class="font-semibold">Olumlu Bulgular:</span> Diğer tüm gıda panellerinin (tahıl, meyve, sebze, et) <span class="font-bold text-green-600">negatif</span> gelmesi çok olumludur; bu, olası alerjen listesini daraltır. Ayrıca vitamin ve mineral eksikliği olmaması, çocuğunuzun genel beslenme durumunun iyi olduğunu göstermektedir.</li>
-                    </ul>
-
-                    <div class="p-4 rounded-lg bg-amber-100 border-l-4 border-amber-500 mt-6">
-                        <h4 class="font-bold text-lg text-amber-800">ÖNEMLİ NOT VE SONRAKİ ADIMLAR</h4>
-                        <p class="text-amber-900 mt-2">Bu rapor, bir <span class="font-bold">tıbbi tavsiye veya teşhis değildir</span>; yalnızca mevcut verilerinizi görselleştiren bir analizdir. Bu sonuçlar, "karışık panel" testleridir ve hangi gıdanın *spesifik* olarak reaksiyona neden olduğunu tek başına göstermez (örneğin, fp1 panelindeki pozitiflik sütten mi, yumurtadan mı, yoksa fıstıktan mı kaynaklanıyor, bu test söylemez).</p>
-                        <p class="text-amber-900 mt-2 font-semibold">Bu raporu ve sonuçların aslını <span class="font-bold">mutlaka bir Çocuk Alerji Uzmanına (Çocuk İmmünolojisi ve Alerji Hastalıkları)</span> göstermeniz gerekmektedir. Doktorunuz, çocuğunuzun belirtileri ve bu sonuçlara dayanarak size en doğru yolu (örneğin, spesifik gıdaları tek tek test etmek, size veya bebeğinize diyet uygulamak vb.) çizecektir.</p>
-                    </div>
-                </div>
-            </section>
-
-            
-            <section id="readme-content" class="content-panel space-y-6">
-                <h2 class="text-2xl font-semibold text-stone-900">Documentation</h2>
-                <div id="readme-container" class="markdown-content">
-                    <div class="flex items-center justify-center py-8">
-                        <div class="loading-spinner mr-3"></div>
-                        <span class="text-stone-600">Loading documentation...</span>
-                    </div>
-                </div>
-            </section>
-
         </main>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            
-            // Check URL parameters for readme view
-            const urlParams = new URLSearchParams(window.location.search);
-            const hash = window.location.hash.substring(1);
-            const showReadme = urlParams.get('view') === 'readme' || hash === 'readme';
-            
-            const tabs = document.querySelectorAll('.tab-button');
-            const contents = document.querySelectorAll('.content-panel');
-            
             // Load and render README.md
             async function loadReadme() {
                 try {
-                    const response = await fetch('README.md');
-                    if (!response.ok) {
-                        throw new Error('Failed to load README.md');
+                    // Try multiple possible paths for GitHub Pages
+                    const paths = [
+                        'README.md',
+                        './README.md',
+                        '/web-app/README.md',
+                        '/README.md'
+                    ];
+                    
+                    let response = null;
+                    let lastError = null;
+                    
+                    for (const path of paths) {
+                        try {
+                            response = await fetch(path);
+                            if (response.ok) {
+                                break;
+                            }
+                        } catch (error) {
+                            lastError = error;
+                            continue;
+                        }
                     }
+                    
+                    if (!response || !response.ok) {
+                        throw new Error(lastError?.message || 'Failed to load README.md');
+                    }
+                    
                     const markdown = await response.text();
                     const html = marked.parse(markdown);
                     const container = document.getElementById('readme-container');
@@ -481,7 +202,7 @@
                             <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
                                 <p class="text-red-700 font-semibold">Error loading documentation</p>
                                 <p class="text-red-600 mt-2">${error.message}</p>
-                                <p class="text-red-600 mt-2">Make sure README.md is in the same directory as index.html</p>
+                                <p class="text-red-600 mt-2">Please ensure README.md is available in the repository.</p>
                             </div>
                         `;
                     }
@@ -490,149 +211,6 @@
             
             // Load README on page load
             loadReadme();
-
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    
-                    tabs.forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-
-                    
-                    const targetId = tab.getAttribute('data-target');
-                    contents.forEach(content => {
-                        content.classList.remove('active');
-                        if (content.id === targetId + '-content') {
-                            content.classList.add('active');
-                        }
-                    });
-                    
-                    // Update URL without reload
-                    if (targetId === 'readme') {
-                        window.history.pushState({}, '', '?view=readme');
-                    } else {
-                        window.history.pushState({}, '', window.location.pathname);
-                    }
-                });
-            });
-            
-            // If URL indicates readme view, activate it
-            if (showReadme) {
-                const readmeTab = document.querySelector('[data-target="readme"]');
-                if (readmeTab) {
-                    readmeTab.click();
-                }
-            }
-
-            
-            function createChart(ctx, type, labels, datasets) {
-                new Chart(ctx, {
-                    type: type,
-                    data: {
-                        labels: labels,
-                        datasets: datasets
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        indexAxis: 'y',
-                        scales: {
-                            x: {
-                                beginAtZero: true,
-                                ticks: {
-                                    color: '#292524'
-                                },
-                                grid: {
-                                    color: '#e7e5e4'
-                                }
-                            },
-                            y: {
-                                ticks: {
-                                    color: '#292524',
-                                    font: {
-                                        size: 14
-                                    }
-                                },
-                                grid: {
-                                    display: false
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                display: false
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        let label = context.dataset.label || '';
-                                        if (label) {
-                                            label += ': ';
-                                        }
-                                        if (context.parsed.x !== null) {
-                                            label += context.parsed.x;
-                                        }
-                                        
-                                        const ref = context.dataset.ref[context.dataIndex];
-                                        label += ` (Ref: ${ref.low} - ${ref.high})`;
-                                        return label;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-
-            
-            const eoData = {
-                labels: ['EO% (Eozinofil %)', 'EO# (Eozinofil Sayısı)'],
-                values: [8.3, 0.88],
-                refs: [
-                    { low: 0.5, high: 7 },
-                    { low: 0.02, high: 0.7 }
-                ]
-            };
-
-            const eoCtx = document.getElementById('eosinophilChart');
-            if (eoCtx) {
-                createChart(eoCtx, 'bar', eoData.labels, [
-                    {
-                        label: 'Sonuç',
-                        data: eoData.values,
-                        ref: eoData.refs,
-                        backgroundColor: eoData.values.map((v, i) => v > eoData.refs[i].high || v < eoData.refs[i].low ? '#ef4444' : '#22c55e'),
-                        borderColor: eoData.values.map((v, i) => v > eoData.refs[i].high || v < eoData.refs[i].low ? '#b91c1c' : '#15803d'),
-                        borderWidth: 1
-                    }
-                ]);
-            }
-
-            
-            const anemiaData = {
-                labels: ['RBC (Kırmızı Kan Hücresi)', 'HCT (Hematokrit)', 'PCT (Plateletkrit)', 'MCHC'],
-                values: [4.37, 34.2, 0.35, 35.4],
-                refs: [
-                    { low: 4.44, high: 5.61 },
-                    { low: 34.9, high: 43.9 },
-                    { low: 0.108, high: 0.32 },
-                    { low: 31, high: 34.8 }
-                ]
-            };
-
-            const anemiaCtx = document.getElementById('anemiaChart');
-            if (anemiaCtx) {
-                createChart(anemiaCtx, 'bar', anemiaData.labels, [
-                    {
-                        label: 'Sonuç',
-                        data: anemiaData.values,
-                        ref: anemiaData.refs,
-                        backgroundColor: anemiaData.values.map((v, i) => v > anemiaData.refs[i].high || v < anemiaData.refs[i].low ? (v < anemiaData.refs[i].low ? '#f97316' : '#ef4444') : '#22c55e'),
-                        borderColor: anemiaData.values.map((v, i) => v > anemiaData.refs[i].high || v < anemiaData.refs[i].low ? (v < anemiaData.refs[i].low ? '#c2410c' : '#b91c1c') : '#15803d'),
-                        borderWidth: 1
-                    }
-                ]);
-            }
-
         });
     </script>
 </body>
