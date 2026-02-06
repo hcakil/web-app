@@ -8,6 +8,19 @@ This document provides a bird's-eye view and a detailed technical breakdown of t
 
 ---
 
+## Feature Flags Status (Production)
+
+| Flag | Key | Status | Effect on Checklist |
+|------|-----|--------|---------------------|
+| Enhance Addon Creation | `41318` | ✅ ON | Enables connection checking for checklist too |
+| Network Performance Metrics | `41653` | ✅ ON | Enables network speed monitoring |
+| Image Upload Improvement | `image-upload-improvement` | ✅ ON | Uses `application/octet-stream` content type |
+| **Adaptive Image Compression** | **`41461`** | **❌ OFF** | **Not used by checklist flow** |
+
+> **Note on flag 41461:** The Adaptive Image Compression flag does **NOT** affect the checklist flow. Checklists always skip photo uploads on poor connection, regardless of this flag. This flag only affects the Add-on creation flow.
+
+---
+
 ## 1. Bird's-Eye View
 
 A simplified, high-level overview of what happens when a pro completes a checklist:
@@ -33,8 +46,8 @@ A simplified, high-level overview of what happens when a pro completes a checkli
                         │                             │
                         ▼                             ▼
                ┌────────────────────┐       ┌────────────────────┐
-               │ Upload All Photos  │       │ Skip Photo Upload  │
-               │ to Cloud Storage   │       │ (save for later)   │
+               │ Upload All Photos  │       │ ⛔ Skip Photo      │
+               │ to Cloud Storage   │       │    Upload Entirely │
                └────────┬───────────┘       └────────┬───────────┘
                         │                             │
                         ▼                             ▼
@@ -116,9 +129,11 @@ When network quality is **good**, all photos are uploaded immediately, then the 
      ║         ┌─────────────────────────────────────────────────┐                 ║
      ║         │  STEP 2: UPLOAD EACH PHOTO                      │                 ║
      ║         │                                                 │                 ║
+     ║         │  ⚠️  No compression applied to checklist photos  │                 ║
+     ║         │                                                 │                 ║
      ║         │  For each checklist question that has photos:    │                 ║
      ║         │    → Build upload URL from template + filename  │                 ║
-     ║         │    → PUT image bytes to Blob Storage URL        │                 ║
+     ║         │    → PUT original image bytes to Blob URL       │                 ║
      ║         │    → Content-Type: application/octet-stream     │                 ║
      ║         │    → Track upload progress                      │                 ║
      ║         │    → Collect (URL, filename) pairs per question │                 ║
@@ -350,6 +365,7 @@ When checklist photos are saved for deferred upload, a **background service** ru
      ║         ┌─────────────────────────────────────────────────┐                 ║
      ║         │  3. Upload Each Photo to Blob Storage           │                 ║
      ║         │     → PUT image bytes to URL                    │                 ║
+     ║         │     → ⚠️  NO COMPRESSION — uploads original     │                 ║
      ║         │     → Content-Type: application/octet-stream    │                 ║
      ║         └────────────────────┬────────────────────────────┘                 ║
      ║                              │                                               ║
@@ -389,11 +405,14 @@ When checklist photos are saved for deferred upload, a **background service** ru
 
 | Aspect | Add-on Creation | Checklist Completion |
 |--------|----------------|---------------------|
-| **Good connection** | Get individual upload URLs, compress, upload 2-at-a-time | Get temp blob URL template, upload sequentially per question |
-| **Poor connection** | Still uploads (aggressive compression), then saves deferred backup | **Skips upload entirely**, saves deferred, uploads later |
-| **Compression** | Standard (1920px) or Aggressive (1000px) based on connection | No compression — uploads original image |
+| **Good connection** | Get individual upload URLs, compress (1920px, 85%), upload 2-at-a-time | Get temp blob URL template, upload sequentially per question, **no compression** |
+| **Poor connection** | ⛔ Photo upload completely skipped (flag 41461 is OFF) | ⛔ Photo upload completely skipped |
+| **Compression** | Standard (1920px, 85%) on good connection only | **No compression** — always uploads original image |
 | **URL strategy** | Individual URL per photo from API | URL template — replace {BLOBNAME} with filename |
-| **Deferred target** | Booking Alert update | Checklist update |
+| **Deferred target** | Booking Alert PATCH (add photos) | Checklist PATCH (add photos to questions) |
+| **Deferred compression** | No compression (uploads originals) | No compression (uploads originals) |
+
+> ⚠️ **Important observation:** Neither add-on nor checklist deferred uploads apply any compression. If flag 41461 were turned ON, add-on creation would use aggressive compression (1000 × 1000, 60%) on poor connections and attempt immediate upload instead of skipping.
 
 ---
 
@@ -460,9 +479,9 @@ These are combined into a **balanced quality** score:
 
 | Quality | Meaning | Checklist Behavior |
 |---------|---------|-------------------|
-| **Good** | Reliable connection | Upload photos immediately, save checklist with attachments |
-| **Moderate** | Slow but usable | Skip photo upload, save checklist without photos, queue deferred upload |
-| **Poor** | Unreliable | Skip photo upload, save checklist without photos, queue deferred upload |
+| **Good** | Reliable connection | Upload photos immediately (uncompressed), save checklist with attachments |
+| **Moderate** | Slow but usable | ⛔ Skip photo upload, save checklist without photos, queue deferred upload |
+| **Poor** | Unreliable | ⛔ Skip photo upload, save checklist without photos, queue deferred upload |
 
 > **Note:** Both "Moderate" and "Poor" are treated as poor connection — triggering the deferred upload path.
 
@@ -472,8 +491,8 @@ These are combined into a **balanced quality** score:
 
 | Scenario | What Happens |
 |----------|-------------|
-| **Good Connection** | Photos uploaded immediately via temp blob URL, checklist saved with attachments, task marked completed |
-| **Poor Connection** | Photo upload skipped entirely, checklist saved without photos, task marked completed, photos saved to device for background upload |
-| **Background Upload** | Every 30 seconds, checks connection → if good, reads local photos, gets fresh URLs, uploads, patches checklist with photo URLs |
+| **Good Connection** | Photos uploaded immediately (no compression) via temp blob URL, checklist saved with attachments, task marked completed |
+| **Poor Connection** | ⛔ Photo upload skipped entirely, checklist saved without photos, task marked completed, photos saved to device for background upload |
+| **Background Upload** | Every 30 seconds, checks connection → if good, reads local photos (uncompressed), gets fresh URLs, uploads, patches checklist with photo URLs |
 | **Retry on Failure** | Exponential backoff (4s → 8s → 16s → ...), up to 50 attempts before marking as permanently failed |
 | **Missing Telemetry Explanation** | When connection is poor, the log shows "0ms for 0 photos" because upload is skipped — photos are uploaded later by the deferred service, which emits its own separate log |

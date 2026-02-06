@@ -8,6 +8,20 @@ This document provides a bird's-eye view and a detailed technical breakdown of t
 
 ---
 
+## Feature Flags Status (Production)
+
+| Flag | Key | Status | Effect |
+|------|-----|--------|--------|
+| Enhance Addon Creation | `41318` | ✅ ON | Enables connection checking & deferred uploads |
+| Network Performance Metrics | `41653` | ✅ ON | Enables network speed monitoring |
+| Pro Pay Amount Show | `39860` | ✅ ON | Shows payout amounts for add-ons |
+| Image Upload Improvement | `image-upload-improvement` | ✅ ON | Batched uploads (2 at a time) |
+| **Adaptive Image Compression** | **`41461`** | **❌ OFF** | **Aggressive compression for poor connections (disabled)** |
+
+> ⚠️ **Key Impact of 41461 being OFF:** On poor connection, photos are **completely skipped** — no upload attempt, no compression. The add-on is created without photos, and the Deferred Service uploads them later when connection improves.
+
+---
+
 ## 1. Bird's-Eye View
 
 A simplified, high-level overview of what happens when a pro creates an add-on request:
@@ -33,22 +47,17 @@ A simplified, high-level overview of what happens when a pro creates an add-on r
                         │                             │
                         ▼                             ▼
                ┌────────────────────┐       ┌────────────────────┐
-               │ Compress & Upload  │       │ Compress Photos    │
-               │ Photos Immediately │       │ with Aggressive    │
-               │ (2 at a time)      │       │ Compression        │
-               └────────┬───────────┘       └────────┬───────────┘
-                        │                             │
-                        ▼                             ▼
-               ┌────────────────────┐       ┌────────────────────┐
-               │ Create Add-on      │       │ Upload Photos      │
-               │ Request via API    │       │ (2 at a time)      │
-               │ (with photos)      │       └────────┬───────────┘
-               └────────┬───────────┘                │
-                        │                             ▼
-                        │                    ┌────────────────────┐
-                        │                    │ Create Add-on      │
-                        │                    │ Request via API    │
-                        │                    │ (with photos)      │
+               │ Compress & Upload  │       │ ⛔ Photo Upload    │
+               │ Photos Immediately │       │    SKIPPED         │
+               │ (2 at a time)      │       │ (no compression,   │
+               └────────┬───────────┘       │  no upload attempt)│
+                        │                    └────────┬───────────┘
+                        ▼                             │
+               ┌────────────────────┐                 ▼
+               │ Create Add-on      │       ┌────────────────────┐
+               │ Request via API    │       │ Create Add-on      │
+               │ (WITH photos)      │       │ Request via API    │
+               └────────┬───────────┘       │ (WITHOUT photos)   │
                         │                    └────────┬───────────┘
                         │                             │
                         │                             ▼
@@ -56,7 +65,7 @@ A simplified, high-level overview of what happens when a pro creates an add-on r
                         │                    │ Save Photos to     │
                         │                    │ Device Storage     │
                         │                    │ for Background     │
-                        │                    │ Re-upload          │
+                        │                    │ Upload Later       │
                         │                    └────────┬───────────┘
                         │                             │
                         ▼                             ▼
@@ -77,7 +86,7 @@ A simplified, high-level overview of what happens when a pro creates an add-on r
 
 ## 2. Detailed Complete Flow — Good Connection Path
 
-When network quality is **good**, all photos are uploaded immediately before creating the add-on:
+When network quality is **good**, photos are compressed and uploaded immediately before creating the add-on:
 
 ```
      ╔═══════════════════════════════════════════════════════════════════════════════╗
@@ -183,7 +192,7 @@ When network quality is **good**, all photos are uploaded immediately before cre
 
 ## 3. Detailed Complete Flow — Poor Connection Path
 
-When network quality is **poor or moderate**, photos are still uploaded immediately but with aggressive compression. Additionally, photos are saved to local storage for a **background retry service** that re-uploads when the connection improves:
+When network quality is **poor or moderate**, photos are **NOT uploaded at all** (because the Adaptive Image Compression flag `41461` is OFF in production). The add-on is created without photos, and photos are saved to local storage for background upload later:
 
 ```
      ╔═══════════════════════════════════════════════════════════════════════════════╗
@@ -206,39 +215,21 @@ When network quality is **poor or moderate**, photos are still uploaded immediat
                                             │
                                             ▼
      ╔═══════════════════════════════════════════════════════════════════════════════╗
-     ║                  FOR EACH ADD-ON REQUEST (in parallel)                       ║
+     ║              ⛔  PHOTO UPLOAD COMPLETELY SKIPPED                             ║
      ╠═══════════════════════════════════════════════════════════════════════════════╣
      ║                                                                              ║
-     ║         ┌─────────────────────────────────────────────────┐                 ║
-     ║         │  STEP 1: GET UPLOAD URLs                        │                 ║
-     ║         │                                                 │                 ║
-     ║         │  For each photo (batched, 2 at a time):         │                 ║
-     ║         │    → Request a unique upload URL from API       │                 ║
-     ║         └────────────────────┬────────────────────────────┘                 ║
-     ║                              │                                               ║
-     ║                              ▼                                               ║
-     ║         ┌─────────────────────────────────────────────────┐                 ║
-     ║         │  STEP 2: COMPRESS PHOTOS (Aggressive)           │                 ║
-     ║         │                                                 │                 ║
-     ║         │  Uses smaller compression (all in parallel):    │                 ║
-     ║         │    → Max resolution: 1000 × 1000                │                 ║
-     ║         │    → Quality: 60%                               │                 ║
-     ║         │    → Maintains aspect ratio                     │                 ║
-     ║         │    → Significantly smaller file size            │                 ║
-     ║         └────────────────────┬────────────────────────────┘                 ║
-     ║                              │                                               ║
-     ║                              ▼                                               ║
-     ║         ┌─────────────────────────────────────────────────┐                 ║
-     ║         │  STEP 3: UPLOAD PHOTOS                          │                 ║
-     ║         │                                                 │                 ║
-     ║         │  For each photo (batched, 2 at a time):         │                 ║
-     ║         │    → PUT compressed image to Blob Storage URL   │                 ║
-     ║         └────────────────────┬────────────────────────────┘                 ║
-     ║                              │                                               ║
-     ║                              ▼                                               ║
+     ║   Because Adaptive Image Compression flag (41461) is OFF:                   ║
+     ║     → No upload URLs requested                                              ║
+     ║     → No compression performed                                              ║
+     ║     → No upload attempted                                                   ║
+     ║     → Empty photo attachments used for add-on request                       ║
+     ║                                                                              ║
+     ║   FOR EACH ADD-ON REQUEST (in parallel):                                    ║
      ║         ┌─────────────────────────────────────────────────┐                 ║
      ║         │  Build Add-on Request Model                     │                 ║
-     ║         │    → Attach uploaded photo URLs                 │                 ║
+     ║         │    → Product ID, Description, Amount            │                 ║
+     ║         │    → Scope (Single Room / Entire Unit)          │                 ║
+     ║         │    → ⚠️  Empty photo attachments                │                 ║
      ║         └─────────────────────────────────────────────────┘                 ║
      ║                                                                              ║
      ╚═══════════════════════════════╤══════════════════════════════════════════════╝
@@ -248,7 +239,7 @@ When network quality is **poor or moderate**, photos are still uploaded immediat
                     │  CALL API: Create Booking Alerts   │
                     │                                    │
                     │  Send all add-on requests to       │
-                    │  backend with photo attachments    │
+                    │  backend WITHOUT photo attachments │
                     │                                    │
                     │  Receive booking alert IDs back    │
                     └───────────────┬────────────────────┘
@@ -259,10 +250,10 @@ When network quality is **poor or moderate**, photos are still uploaded immediat
      ╠═══════════════════════════════════════════════════════════════════════════════╣
      ║                                                                              ║
      ║   For each add-on with photos:                                              ║
-     ║     → Store booking alert ID                                                ║
-     ║     → Store local file paths of original photos                             ║
+     ║     → Store booking alert ID (from API response)                            ║
+     ║     → Store local file paths of original photos on device                   ║
      ║     → Store filenames                                                       ║
-     ║     → Store upload URLs already used                                        ║
+     ║     → Store upload URLs (empty at this point)                               ║
      ║     → Store booking resource booking ID                                     ║
      ║     → Status: PENDING                                                       ║
      ║     → Saved to device's local database (Hive)                               ║
@@ -273,12 +264,13 @@ When network quality is **poor or moderate**, photos are still uploaded immediat
                     ┌────────────────────────────────────┐
                     │  Update Payout Price Cache         │
                     │  + Show New Add-on in UI           │
+                    │  (without photos for now)          │
                     └───────────────┬────────────────────┘
                                     │
                                     ▼
                     ╔════════════════════════════════════╗
                     ║      DONE — Deferred Service       ║
-                    ║      Will Re-upload Later           ║
+                    ║      Will Upload Photos Later       ║
                     ╚════════════════════════════════════╝
 ```
 
@@ -286,7 +278,7 @@ When network quality is **poor or moderate**, photos are still uploaded immediat
 
 ## 4. Deferred Service — Background Upload Process
 
-When photos are saved for deferred upload, a **background service** runs every 30 seconds to check if the connection has improved and re-upload the photos:
+When photos are saved for deferred upload, a **background service** runs every 30 seconds to check if the connection has improved and upload the photos:
 
 ```
      ╔═══════════════════════════════════════════════════════════════════════════════╗
@@ -340,13 +332,13 @@ When photos are saved for deferred upload, a **background service** runs every 3
      ║         ┌─────────────────────────────────────────────────┐                 ║
      ║         │  2. Get Fresh Upload URL for Each Photo         │                 ║
      ║         │     → Request new URL from API                  │                 ║
-     ║         │     → Original URLs may have expired            │                 ║
      ║         └────────────────────┬────────────────────────────┘                 ║
      ║                              │                                               ║
      ║                              ▼                                               ║
      ║         ┌─────────────────────────────────────────────────┐                 ║
      ║         │  3. Upload Each Photo to Blob Storage           │                 ║
      ║         │     → PUT image bytes to new URL                │                 ║
+     ║         │     → ⚠️  NO COMPRESSION — uploads original     │                 ║
      ║         │     → Content-Type: application/octet-stream    │                 ║
      ║         └────────────────────┬────────────────────────────┘                 ║
      ║                              │                                               ║
@@ -382,20 +374,24 @@ When photos are saved for deferred upload, a **background service** runs every 3
 
 ## 5. Photo Processing Details
 
-### Compression Strategies
+### Compression (Only on Good Connection)
+
+Since the Adaptive Image Compression flag (41461) is **OFF** in production, there is only **one compression behavior**:
 
 | Condition | Method | Max Size | Quality | Format |
 |-----------|--------|----------|---------|--------|
 | **Good connection** | Standard Compression | 1920 × 1920 | 85% | JPEG |
-| **Poor connection** | Aggressive Compression | 1000 × 1000 | 60% | JPEG |
+| **Poor connection** | ⛔ No upload / no compression | — | — | — |
 
-- Photos smaller than **100KB** skip standard compression (overhead not worth it)
+- Photos smaller than **100KB** skip compression (overhead not worth it)
 - If compressed file is **larger** than original → keeps original
-- Aggressive compression maintains **aspect ratio** while resizing
+- On poor connection, photos are **not processed at all** — they are saved locally as-is for deferred upload
+
+> **If flag 41461 were turned ON:** Poor connection would use aggressive compression (1000 × 1000, 60% quality) and attempt immediate upload instead of skipping entirely.
 
 ### Upload Strategy
 
-All uploads use **batched concurrency** — max **2 simultaneous** uploads at a time. This prevents network congestion that can occur with fully parallel uploads on slow connections.
+When uploads happen (good connection), they use **batched concurrency** — max **2 simultaneous** uploads at a time:
 
 ```
      ┌─────────────────────────────────────────────────────────────────────┐
@@ -413,6 +409,10 @@ All uploads use **batched concurrency** — max **2 simultaneous** uploads at a 
      │             (uploading)                      ← wait for completion │
      └─────────────────────────────────────────────────────────────────────┘
 ```
+
+### Deferred Service Upload (No Compression)
+
+⚠️ **Important:** When the Deferred Service uploads photos later, it uploads the **original uncompressed** images. There is no compression step in the deferred upload path.
 
 ---
 
@@ -432,19 +432,18 @@ RequestAddonScreenState:onDone: Pricing cache update took 120ms
 RequestAddonScreenState:onDone: Total operation time 5700ms
 ```
 
-### Poor Connection — Upload + Deferred Save Success
+### Poor Connection — Photo Upload Skipped + Deferred Save
 
 ```
 RequestAddonScreenState isConnectionPoor: Connectivity quality poor
-RequestAddonScreenState _processAddonRequest: getUploadUrl for 3 photos took 2800ms
-RequestAddonScreenState _processAddonRequest: compressImage for 3 photos took 600ms
-RequestAddonScreenState _processAddonRequest: putBlobImage for 3 photos took 8200ms
-RequestAddonScreenState _processAddonRequest: Total processing time 11600ms for 3 photos
-onDone: Processing 1 addon requests took 11600ms
+RequestAddonScreenState _processAddonRequest: Total processing time 5ms for 3 photos
+onDone: Processing 1 addon requests took 8ms
 RequestAddonScreenState:onDone: addonsRequest API call took 1200ms
 RequestAddonScreenState:onDone: Pricing cache update took 200ms
-RequestAddonScreenState:onDone: Total operation time 13000ms
+RequestAddonScreenState:onDone: Total operation time 1450ms
 ```
+
+> Note: Processing time is near-zero because **no photo upload happens** on poor connection. Only the API call to create the booking alert (without photos) takes time.
 
 **Later, when connection improves (Deferred Service):**
 
@@ -484,11 +483,11 @@ These are combined into a **balanced quality** score:
 
 | Quality | Meaning | Upload Behavior |
 |---------|---------|-----------------|
-| **Good** | Reliable connection | Standard compression, immediate upload |
-| **Moderate** | Slow but usable | Aggressive compression, immediate upload + deferred backup |
-| **Poor** | Unreliable | Aggressive compression, immediate upload + deferred backup |
+| **Good** | Reliable connection | Standard compression (1920px, 85%), immediate upload |
+| **Moderate** | Slow but usable | ⛔ Photo upload skipped, deferred for later |
+| **Poor** | Unreliable | ⛔ Photo upload skipped, deferred for later |
 
-> **Note:** Both "Moderate" and "Poor" are treated as poor connection — triggering aggressive compression and deferred service backup.
+> **Note:** Both "Moderate" and "Poor" are treated as poor connection — triggering photo skip and deferred service.
 
 ---
 
@@ -497,6 +496,6 @@ These are combined into a **balanced quality** score:
 | Scenario | What Happens |
 |----------|-------------|
 | **Good Connection** | Photos compressed (1920px, 85%), uploaded 2-at-a-time, add-on created with photos, payout prices updated |
-| **Poor Connection** | Photos aggressively compressed (1000px, 60%), uploaded 2-at-a-time, add-on created with photos, photos also saved locally for background re-upload when connection improves |
-| **Background Re-upload** | Every 30 seconds, checks connection → if good, reads local photos, gets fresh URLs, uploads, updates booking alert, deletes local copies |
+| **Poor Connection** | ⛔ Photos completely skipped, add-on created WITHOUT photos, photos saved locally, Deferred Service uploads later |
+| **Background Re-upload** | Every 30 seconds, checks connection → if good, reads local photos (uncompressed), gets fresh URLs, uploads, updates booking alert, deletes local copies |
 | **Retry on Failure** | Exponential backoff (4s → 8s → 16s → ...), up to 50 attempts before marking as permanently failed |
