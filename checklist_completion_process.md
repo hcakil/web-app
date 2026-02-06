@@ -22,152 +22,435 @@ The following feature flag controls checklist completion behavior:
 
 ## High-Level Flow Diagram
 
-```mermaid
-graph TD
-    A[User Taps Complete Button] --> B[completeFormSave Starts]
-    B --> C[Calculate Time Difference]
-    C --> D{Has Enhance Addon Flag?}
-    D -->|Yes| E[Check Connection Quality]
-    D -->|No| F[Skip Connection Check]
-    E --> G{Connection Poor?}
-    G -->|Yes| H[Set connectionPoor = true]
-    G -->|No| I[Set connectionPoor = false]
-    F --> J[Save Checklist]
-    H --> J
-    I --> J
-    J --> K{Connection Poor?}
-    K -->|Yes| L[Save Checklist WITHOUT Photos]
-    K -->|No| M[Upload Photos First]
-    M --> N[Save Checklist WITH Photos]
-    L --> O[Save Task Status]
-    N --> O
-    O --> P{Connection Poor?}
-    P -->|Yes| Q[Save Deferred Inspection Operation]
-    P -->|No| R[Skip Deferred Save]
-    Q --> S[Return Success]
-    R --> S
+```
+┌─────────────────────────┐
+│ User Taps Complete      │
+│      Button             │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│ completeFormSave Starts │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│ Calculate Time          │
+│    Difference           │
+└────────────┬────────────┘
+             │
+             ▼
+    ┌────────────────────┐
+    │ Has Enhance Addon   │
+    │      Flag?         │
+    └────┬───────────┬───┘
+         │           │
+    Yes  │           │  No
+         │           │
+         ▼           ▼
+┌──────────────┐  ┌──────────────────┐
+│ Check        │  │ Skip Connection  │
+│ Connection   │  │     Check       │
+│   Quality    │  └────────┬─────────┘
+└──────┬───────┘           │
+       │                   │
+       ▼                   │
+┌──────────────┐           │
+│ Connection   │           │
+│    Poor?     │           │
+└──┬───────┬───┘           │
+   │       │               │
+Yes│       │No             │
+   │       │               │
+   ▼       ▼               │
+┌──────┐ ┌──────────────┐  │
+│ Set  │ │ Set         │  │
+│conn  │ │connection   │◄─┘
+│Poor= │ │Poor = false │
+│true  │ └──────┬───────┘
+└───┬──┘        │
+    │           │
+    └──────┬────┘
+           │
+           ▼
+    ┌──────────────┐
+    │ Save         │
+    │ Checklist    │
+    └──────┬───────┘
+           │
+           ▼
+    ┌──────────────┐
+    │ Connection   │
+    │    Poor?     │
+    └──┬─────────┬─┘
+       │         │
+    Yes│         │No
+       │         │
+       ▼         ▼
+┌──────────┐ ┌──────────────────┐
+│ Save     │ │ Upload Photos    │
+│Checklist │ │     First        │
+│WITHOUT   │ └────────┬──────────┘
+│ Photos   │          │
+└────┬─────┘          │
+     │                ▼
+     │        ┌──────────────┐
+     │        │ Save         │
+     │        │ Checklist    │
+     │        │ WITH Photos  │
+     │        └──────┬───────┘
+     │               │
+     └───────┬───────┘
+             │
+             ▼
+    ┌──────────────┐
+    │ Save Task    │
+    │   Status     │
+    └──────┬───────┘
+           │
+           ▼
+    ┌──────────────┐
+    │ Connection   │
+    │    Poor?     │
+    └──┬─────────┬─┘
+       │         │
+    Yes│         │No
+       │         │
+       ▼         ▼
+┌──────────┐ ┌──────────────┐
+│ Save     │ │ Skip         │
+│Deferred  │ │ Deferred      │
+│Inspection│ │   Save       │
+│Operation │ └──────┬───────┘
+└────┬─────┘        │
+     │              │
+     └──────┬───────┘
+            │
+            ▼
+    ┌──────────────┐
+    │ Return       │
+    │  Success     │
+    └──────────────┘
 ```
 
 ## Detailed Process Flow
 
 ### 1. Initialization Phase
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant Screen
-    participant State
-    participant ConnectivityUtil
-    participant DeferredService
-
-    User->>Screen: Tap "Complete" Button
-    Screen->>State: completeFormSave(workOrderId, taskId)
-    State->>State: Calculate time difference
-    State->>State: Set isSaveLoading = true
-    
-    alt Has Enhance Addon Flag
-        State->>ConnectivityUtil: isConnectionPoor()
-        ConnectivityUtil-->>State: Connection quality result
-        State->>State: Log connection check telemetry
-        State->>State: Set connectionPoor value
-    end
-    
-    State->>State: saveCheckList(workOrderId, taskId)
+```
+User                    Screen                  State                    ConnectivityUtil          DeferredService
+ │                        │                       │                            │                          │
+ │  Tap "Complete"        │                       │                            │                          │
+ │      Button            │                       │                            │                          │
+ ├────────────────────────>│                       │                            │                          │
+ │                        │  completeFormSave(    │                            │                          │
+ │                        │   workOrderId,        │                            │                          │
+ │                        │   taskId)             │                            │                          │
+ │                        ├───────────────────────>│                            │                          │
+ │                        │                       │  Calculate time difference │                          │
+ │                        │                       │<───────────────────────────┘                          │
+ │                        │                       │  Set isSaveLoading = true                            │
+ │                        │                       │<──────────────────────────────────────────────────────┘
+ │                        │                       │                                                            │
+ │                        │                       │  [Has Enhance Addon Flag?]                               │
+ │                        │                       │       │                                                    │
+ │                        │                       │       │ Yes                                                │
+ │                        │                       │       │                                                    │
+ │                        │                       │       ▼                                                    │
+ │                        │                       │  isConnectionPoor()                                       │
+ │                        │                       ├───────────────────────────>│                          │
+ │                        │                       │                            │  Connection quality result│
+ │                        │                       │<───────────────────────────┤                          │
+ │                        │                       │  Log connection check telemetry                         │
+ │                        │                       │<────────────────────────────────────────────────────────┘
+ │                        │                       │  Set connectionPoor value                                │
+ │                        │                       │<──────────────────────────────────────────────────────────┘
+ │                        │                       │                                                            │
+ │                        │                       │  saveCheckList(workOrderId, taskId)                      │
+ │                        │                       │<──────────────────────────────────────────────────────────┘
+ │                        │                       │                                                            │
 ```
 
 ### 2. Checklist Save Flow
 
-```mermaid
-graph TD
-    A[saveCheckList Starts] --> B{Connection Poor?}
-    B -->|Yes| C[Skip Photo Upload]
-    B -->|No| D[Upload Photos]
-    D --> E[saveImages]
-    E --> F[Get Temp Blob Info]
-    F --> G[Upload All Photos]
-    G --> H[Get Upload Links]
-    C --> I[Create Checklist Request]
-    H --> I
-    I --> J[Call saveChecklist API]
-    J --> K{API Success?}
-    K -->|Yes| L[Log Success Telemetry]
-    K -->|No| M[Log Error Telemetry]
-    L --> N[Return Checklist ID]
-    M --> O[Return Error]
+```
+┌──────────────────────────────┐
+│   saveCheckList Starts       │
+└──────────────┬───────────────┘
+               │
+               ▼
+       ┌───────────────┐
+       │ Connection    │
+       │    Poor?      │
+       └───┬───────┬───┘
+           │       │
+        Yes│       │No
+           │       │
+           ▼       ▼
+┌──────────────┐ ┌──────────────────┐
+│ Skip Photo   │ │ Upload Photos    │
+│   Upload     │ └────────┬─────────┘
+└──────┬───────┘          │
+       │                  ▼
+       │          ┌──────────────┐
+       │          │ saveImages   │
+       │          └──────┬───────┘
+       │                 │
+       │                 ▼
+       │          ┌──────────────┐
+       │          │ Get Temp     │
+       │          │ Blob Info    │
+       │          └──────┬───────┘
+       │                 │
+       │                 ▼
+       │          ┌──────────────┐
+       │          │ Upload All   │
+       │          │   Photos     │
+       │          └──────┬───────┘
+       │                 │
+       │                 ▼
+       │          ┌──────────────┐
+       │          │ Get Upload   │
+       │          │    Links     │
+       │          └──────┬───────┘
+       │                 │
+       └──────────┬──────┘
+                  │
+                  ▼
+       ┌──────────────────┐
+       │ Create Checklist │
+       │     Request      │
+       └──────────┬───────┘
+                  │
+                  ▼
+       ┌──────────────────┐
+       │ Call saveChecklist│
+       │       API         │
+       └──────────┬───────┘
+                  │
+                  ▼
+          ┌───────────────┐
+          │  API Success? │
+          └───┬───────┬───┘
+              │       │
+           Yes│       │No
+              │       │
+              ▼       ▼
+    ┌──────────────┐ ┌──────────────┐
+    │ Log Success  │ │ Log Error     │
+    │ Telemetry    │ │ Telemetry     │
+    └──────┬───────┘ └──────┬───────┘
+           │                │
+           ▼                ▼
+    ┌──────────────┐ ┌──────────────┐
+    │ Return       │ │ Return       │
+    │ Checklist ID │ │   Error      │
+    └──────────────┘ └──────────────┘
 ```
 
 ### 3. Photo Upload Flow (When Connection is Good)
 
-```mermaid
-sequenceDiagram
-    participant State
-    participant ImageService
-    participant VendorService
-    participant BlobStorage
-
-    State->>ImageService: getTempBlobInfo()
-    ImageService-->>State: TempBlobInfo with URL template
-    
-    loop For each photo picker controller
-        State->>State: saveImagesToServer(tempBlobInfo, images)
-        
-        loop For each image
-            State->>State: Build upload URL from template
-            State->>ImageService: putBlobImage(url, image)
-            ImageService->>BlobStorage: PUT request
-            BlobStorage-->>ImageService: Success
-            ImageService-->>State: Upload complete
-        end
-    end
-    
-    State->>State: Collect all upload links
-    State->>State: Map links to question IDs
+```
+State                ImageService         VendorService         BlobStorage
+ │                        │                        │                  │
+ │  getTempBlobInfo()     │                        │                  │
+ ├───────────────────────>│                        │                  │
+ │                        │  TempBlobInfo with      │                  │
+ │                        │  URL template          │                  │
+ │<───────────────────────┤                        │                  │
+ │                        │                        │                  │
+ │  [For each photo       │                        │                  │
+ │   picker controller]   │                        │                  │
+ │       │                 │                        │                  │
+ │       │  saveImagesTo   │                        │                  │
+ │       │  Server(        │                        │                  │
+ │       │   tempBlobInfo, │                        │                  │
+ │       │   images)       │                        │                  │
+ │       │<────────────────┘                        │                  │
+ │       │                 │                        │                  │
+ │       │  [For each image]│                        │                  │
+ │       │       │          │                        │                  │
+ │       │       │  Build   │                        │                  │
+ │       │       │  upload  │                        │                  │
+ │       │       │  URL from│                        │                  │
+ │       │       │  template│                        │                  │
+ │       │       │<─────────┘                        │                  │
+ │       │       │          │                        │                  │
+ │       │       │  putBlob │                        │                  │
+ │       │       │  Image(  │                        │                  │
+ │       │       │   url,   │                        │                  │
+ │       │       │   image) │                        │                  │
+ │       │       ├───────────────────────────────────>│                  │
+ │       │       │          │                        │  PUT request     │
+ │       │       │          │                        ├─────────────────>│
+ │       │       │          │                        │                  │  Success
+ │       │       │          │                        │<─────────────────┤
+ │       │       │          │  Upload complete       │                  │
+ │       │       │<─────────┤                        │                  │
+ │       │       │          │                        │                  │
+ │       │<──────┴──────────┘                        │                  │
+ │       │                 │                        │                  │
+ │<──────┴─────────────────┘                        │                  │
+ │                        │                        │                  │
+ │  Collect all upload    │                        │                  │
+ │       links            │                        │                  │
+ │<────────────────────────┴────────────────────────┴──────────────────┴
+ │                        │                        │                  │
+ │  Map links to          │                        │                  │
+ │  question IDs          │                        │                  │
+ │<────────────────────────┴────────────────────────┴──────────────────┴
+ │                        │                        │                  │
 ```
 
 ### 4. Task Status Update Flow
 
-```mermaid
-sequenceDiagram
-    participant State
-    participant VendorService
-
-    State->>State: Calculate actual duration
-    State->>VendorService: updateTask(workOrderId, taskId, request)
-    
-    alt Success
-        VendorService-->>State: ApiResultSuccess
-        State->>State: Log saveTask telemetry
-        State->>State: Set taskSaved = true
-    else Error
-        VendorService-->>State: ApiResultError/ApiThrow
-        State->>State: Log error telemetry
-        State->>State: Set taskSaved = false
-    end
+```
+State                VendorService
+ │                        │
+ │  Calculate actual      │
+ │      duration          │
+ │<───────────────────────┘
+ │                        │
+ │  updateTask(           │
+ │   workOrderId,         │
+ │   taskId,              │
+ │   request)             │
+ ├───────────────────────>│
+ │                        │
+ │  [Success?]            │
+ │       │                │
+ │    Yes│                │
+ │       │                │
+ │       ▼                │
+ │  ApiResultSuccess      │
+ │<───────────────────────┤
+ │                        │
+ │  Log saveTask          │
+ │   telemetry            │
+ │<───────────────────────┘
+ │                        │
+ │  Set taskSaved = true  │
+ │<───────────────────────┘
+ │                        │
+ │  [Error?]               │
+ │       │                │
+ │    Yes│                │
+ │       │                │
+ │       ▼                │
+ │  ApiResultError/       │
+ │  ApiThrow              │
+ │<───────────────────────┤
+ │                        │
+ │  Log error telemetry   │
+ │<───────────────────────┘
+ │                        │
+ │  Set taskSaved = false │
+ │<───────────────────────┘
+ │                        │
 ```
 
 ### 5. Deferred Inspection Flow (When Connection is Poor)
 
-```mermaid
-graph TD
-    A[Connection Detected as Poor] --> B[Save Checklist WITHOUT Photos]
-    B --> C[Get Checklist ID]
-    C --> D{Checklist ID Exists?}
-    D -->|No| E[Skip Deferred Save]
-    D -->|Yes| F[Create DeferredInspectionOperation]
-    F --> G{Has Questions with Photos?}
-    G -->|No| E
-    G -->|Yes| H[Save to DeferredService]
-    H --> I[DeferredService Periodic Check]
-    I --> J{Connection Good?}
-    J -->|No| K[Wait 30 seconds]
-    K --> I
-    J -->|Yes| L[Process Deferred Inspection]
-    L --> M[Get Upload URLs for All Photos]
-    M --> N[Read Photos from Local Storage]
-    N --> O[Upload Photos]
-    O --> P[Update Checklist with Photo URLs]
-    P --> Q[Mark Operation as Completed]
-    Q --> R[Delete Local Photos]
+```
+┌──────────────────────────────┐
+│ Connection Detected as Poor  │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│ Save Checklist WITHOUT Photos │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│    Get Checklist ID           │
+└──────────────┬───────────────┘
+               │
+               ▼
+       ┌───────────────┐
+       │ Checklist ID  │
+       │   Exists?     │
+       └───┬───────┬───┘
+           │       │
+        No │       │ Yes
+           │       │
+           ▼       ▼
+┌──────────────┐ ┌──────────────────────────┐
+│ Skip         │ │ Create                   │
+│ Deferred     │ │ DeferredInspection       │
+│   Save       │ │ Operation                │
+└──────────────┘ └──────────┬───────────────┘
+                            │
+                            ▼
+                   ┌────────────────┐
+                   │ Has Questions  │
+                   │ with Photos?   │
+                   └───┬─────────┬──┘
+                       │         │
+                    No │         │Yes
+                       │         │
+                       ▼         ▼
+            ┌──────────────┐ ┌──────────────────┐
+            │ Skip         │ │ Save to          │
+            │ Deferred     │ │ DeferredService  │
+            │   Save       │ └──────────┬───────┘
+            └──────────────┘            │
+                                         ▼
+                            ┌──────────────────────────┐
+                            │ DeferredService Periodic │
+                            │        Check             │
+                            └──────────┬───────────────┘
+                                       │
+                                       ▼
+                               ┌───────────────┐
+                               │ Connection    │
+                               │    Good?      │
+                               └───┬───────┬───┘
+                                   │       │
+                                No │       │ Yes
+                                   │       │
+                                   ▼       ▼
+                          ┌──────────┐ ┌──────────────────────────┐
+                          │ Wait 30  │ │ Process Deferred         │
+                          │ seconds  │ │    Inspection            │
+                          └────┬─────┘ └──────────┬───────────────┘
+                               │                  │
+                               └──────────┬───────┘
+                                          │
+                                          ▼
+                                 ┌──────────────────┐
+                                 │ Get Upload URLs  │
+                                 │ for All Photos   │
+                                 └──────────┬───────┘
+                                            │
+                                            ▼
+                                 ┌──────────────────┐
+                                 │ Read Photos from │
+                                 │  Local Storage   │
+                                 └──────────┬───────┘
+                                            │
+                                            ▼
+                                 ┌──────────────────┐
+                                 │ Upload Photos    │
+                                 └──────────┬───────┘
+                                            │
+                                            ▼
+                                 ┌──────────────────┐
+                                 │ Update Checklist │
+                                 │ with Photo URLs  │
+                                 └──────────┬───────┘
+                                            │
+                                            ▼
+                                 ┌──────────────────┐
+                                 │ Mark Operation   │
+                                 │ as Completed     │
+                                 └──────────┬───────┘
+                                            │
+                                            ▼
+                                 ┌──────────────────┐
+                                 │ Delete Local     │
+                                 │    Photos        │
+                                 └──────────────────┘
 ```
 
 ## Detailed Process Steps
@@ -335,15 +618,47 @@ DeferredInspectionOperation {
 **Method:** `DeferredService._startPeriodicCheck()`
 
 **Process:**
-```mermaid
-graph TD
-    A[Periodic Timer Fires] --> B{Connection Good?}
-    B -->|No| C[Skip Processing]
-    B -->|Yes| D[Get All Pending Operations]
-    D --> E[Filter Eligible Operations]
-    E --> F[Process in Batches]
-    F --> G[Max 2 Concurrent]
-    G --> H[Process Each Operation]
+```
+┌──────────────────────────────┐
+│ Periodic Timer Fires         │
+└──────────────┬───────────────┘
+               │
+               ▼
+       ┌───────────────┐
+       │ Connection    │
+       │    Good?      │
+       └───┬───────┬───┘
+           │       │
+        No │       │ Yes
+           │       │
+           ▼       ▼
+┌──────────────┐ ┌──────────────────────────┐
+│ Skip         │ │ Get All Pending         │
+│ Processing   │ │   Operations            │
+└──────────────┘ └──────────┬───────────────┘
+                            │
+                            ▼
+                 ┌──────────────────┐
+                 │ Filter Eligible  │
+                 │   Operations     │
+                 └──────────┬───────┘
+                            │
+                            ▼
+                 ┌──────────────────┐
+                 │ Process in       │
+                 │    Batches       │
+                 └──────────┬───────┘
+                            │
+                            ▼
+                 ┌──────────────────┐
+                 │ Max 2 Concurrent │
+                 └──────────┬───────┘
+                            │
+                            ▼
+                 ┌──────────────────┐
+                 │ Process Each     │
+                 │   Operation      │
+                 └──────────────────┘
 ```
 
 ### Processing Deferred Inspection Operation

@@ -24,97 +24,306 @@ The following feature flags control add-on creation behavior:
 
 ## High-Level Flow Diagram
 
-```mermaid
-graph TD
-    A[User Taps Done Button] --> B[onDone Method Starts]
-    B --> C{Has Enhance Addon Flag?}
-    C -->|Yes| D[Check Connection Quality]
-    C -->|No| E[Skip Connection Check]
-    D --> F{Connection Poor?}
-    F -->|Yes| G[Initialize DeferredService]
-    F -->|No| H[Process Photos Immediately]
-    E --> I[Process All Addon Requests]
-    G --> I
-    H --> I
-    I --> J[Process Each Addon Request in Parallel]
-    J --> K[Get Upload URLs]
-    K --> L[Compress Photos]
-    L --> M[Upload Photos]
-    M --> N{All Uploads Successful?}
-    N -->|No| O[Return Error]
-    N -->|Yes| P[Create Booking Alerts via API]
-    P --> Q{Connection Poor?}
-    Q -->|Yes| R[Save to DeferredService]
-    Q -->|No| S[Update Booking Alert List]
-    R --> T[Update Pricing Cache]
-    S --> T
-    T --> U[Return Success]
-    O --> V[Show Error Dialog]
+```
+┌─────────────────────────┐
+│ User Taps Done Button   │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│ onDone Method Starts    │
+└────────────┬────────────┘
+             │
+             ▼
+    ┌────────────────────┐
+    │ Has Enhance Addon  │
+    │      Flag?         │
+    └────┬───────────┬───┘
+         │           │
+    Yes  │           │  No
+         │           │
+         ▼           ▼
+┌──────────────┐  ┌──────────────────┐
+│ Check        │  │ Skip Connection  │
+│ Connection   │  │     Check       │
+│   Quality    │  └────────┬─────────┘
+└──────┬───────┘           │
+       │                   │
+       ▼                   │
+┌──────────────┐           │
+│ Connection   │           │
+│    Poor?     │           │
+└──┬───────┬───┘           │
+   │       │               │
+Yes│       │No             │
+   │       │               │
+   ▼       ▼               │
+┌──────┐ ┌──────────────┐  │
+│ Init │ │ Process      │  │
+│Defer │ │ Photos       │◄─┘
+│Service│ │Immediately  │
+└───┬───┘ └──────┬───────┘
+    │            │
+    └──────┬─────┘
+           │
+           ▼
+┌──────────────────────────┐
+│ Process All Addon        │
+│      Requests            │
+└────────────┬─────────────┘
+             │
+             ▼
+┌──────────────────────────┐
+│ Process Each Addon       │
+│ Request in Parallel      │
+└────────────┬─────────────┘
+             │
+             ▼
+    ┌────────────────┐
+    │  Get Upload    │
+    │     URLs       │
+    └────────┬───────┘
+             │
+             ▼
+    ┌────────────────┐
+    │ Compress       │
+    │   Photos       │
+    └────────┬───────┘
+             │
+             ▼
+    ┌────────────────┐
+    │ Upload Photos  │
+    └────────┬───────┘
+             │
+             ▼
+    ┌────────────────┐
+    │ All Uploads    │
+    │  Successful?   │
+    └──┬───────────┬─┘
+       │           │
+    No │           │ Yes
+       │           │
+       ▼           ▼
+┌──────────┐  ┌──────────────────┐
+│ Return  │  │ Create Booking   │
+│  Error  │  │ Alerts via API   │
+└────┬─────┘  └────────┬─────────┘
+     │                 │
+     │                 ▼
+     │         ┌──────────────┐
+     │         │ Connection   │
+     │         │    Poor?     │
+     │         └──┬─────────┬─┘
+     │            │         │
+     │         Yes│         │No
+     │            │         │
+     │            ▼         ▼
+     │    ┌──────────┐ ┌──────────────┐
+     │    │ Save to  │ │ Update       │
+     │    │Deferred  │ │ Booking      │
+     │    │ Service  │ │ Alert List   │
+     │    └────┬─────┘ └──────┬───────┘
+     │         │              │
+     │         └──────┬───────┘
+     │                │
+     │                ▼
+     │        ┌──────────────┐
+     │        │ Update       │
+     │        │ Pricing      │
+     │        │   Cache      │
+     │        └──────┬───────┘
+     │               │
+     │               ▼
+     │        ┌──────────────┐
+     │        │ Return       │
+     │        │  Success     │
+     │        └──────────────┘
+     │
+     ▼
+┌──────────────┐
+│ Show Error   │
+│   Dialog     │
+└──────────────┘
 ```
 
 ## Detailed Process Flow
 
 ### 1. Initialization Phase
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant Screen
-    participant State
-    participant ConnectivityUtil
-    participant DeferredService
-    participant NetworkMonitor
-
-    User->>Screen: Tap "Done" Button
-    Screen->>State: onDone()
-    State->>State: Calculate total photo count
-    State->>State: Log start telemetry
-    
-    alt Has Enhance Addon Flag
-        State->>ConnectivityUtil: isConnectionPoor()
-        ConnectivityUtil-->>State: Connection quality result
-        State->>State: Log connection check telemetry
-        
-        alt Connection Poor
-            State->>DeferredService: instance()
-            State->>State: Set connectionPoor = true
-        end
-    end
-    
-    alt Has Network Performance Metrics Flag
-        State->>NetworkMonitor: startSpeedMonitoringOnce()
-    end
+```
+User                    Screen                  State                    ConnectivityUtil          DeferredService         NetworkMonitor
+ │                        │                       │                            │                          │                        │
+ │  Tap "Done" Button     │                       │                            │                          │                        │
+ ├────────────────────────>│                       │                            │                          │                        │
+ │                        │  onDone()             │                            │                          │                        │
+ │                        ├───────────────────────>│                            │                          │                        │
+ │                        │                       │  Calculate total photo count                          │                        │
+ │                        │                       │<───────────────────────────┘                          │                        │
+ │                        │                       │  Log start telemetry                                    │                        │
+ │                        │                       │<────────────────────────────────────────────────────────┘                        │
+ │                        │                       │                                                            │                        │
+ │                        │                       │  [Has Enhance Addon Flag?]                               │                        │
+ │                        │                       │       │                                                    │                        │
+ │                        │                       │       │ Yes                                                │                        │
+ │                        │                       │       │                                                    │                        │
+ │                        │                       │       ▼                                                    │                        │
+ │                        │                       │  isConnectionPoor()                                       │                        │
+ │                        │                       ├───────────────────────────>│                          │                        │
+ │                        │                       │                            │  Connection quality result│                        │
+ │                        │                       │<───────────────────────────┤                          │                        │
+ │                        │                       │  Log connection check telemetry                         │                        │
+ │                        │                       │<────────────────────────────────────────────────────────┘                        │
+ │                        │                       │                                                            │                        │
+ │                        │                       │  [Connection Poor?]                                       │                        │
+ │                        │                       │       │                                                    │                        │
+ │                        │                       │       │ Yes                                                │                        │
+ │                        │                       │       │                                                    │                        │
+ │                        │                       │       ▼                                                    │                        │
+ │                        │                       │  instance()                                                │                        │
+ │                        │                       ├───────────────────────────────────────────────────────────>│                        │
+ │                        │                       │                                                            │                        │
+ │                        │                       │  Set connectionPoor = true                                │                        │
+ │                        │                       │<───────────────────────────────────────────────────────────┘                        │
+ │                        │                       │                                                            │                        │
+ │                        │                       │  [Has Network Performance Metrics Flag?]                │                        │
+ │                        │                       │       │                                                    │                        │
+ │                        │                       │       │ Yes                                                │                        │
+ │                        │                       │       │                                                    │                        │
+ │                        │                       │       ▼                                                    │                        │
+ │                        │                       │  startSpeedMonitoringOnce()                               │                        │
+ │                        │                       ├───────────────────────────────────────────────────────────────────────────────────>│
+ │                        │                       │<───────────────────────────────────────────────────────────────────────────────────┤
+ │                        │                       │                                                            │                        │
 ```
 
 ### 2. Photo Processing Flow
 
-```mermaid
-graph TD
-    A[Start Processing Addon Request] --> B{Has Photos?}
-    B -->|No| C[Return Empty Result]
-    B -->|Yes| D[Step 1: Get Upload URLs]
-    D --> E{Use Fully Parallel Upload?}
-    E -->|Yes| F[Request All URLs in Parallel]
-    E -->|No| G[Request URLs in Batches]
-    F --> H[Wait for All URL Responses]
-    G --> H
-    H --> I{Any URL Request Failed?}
-    I -->|Yes| J[Return Error]
-    I -->|No| K[Step 2: Compress Photos]
-    K --> L{Connection Poor + Has Compress Flag?}
-    L -->|Yes| M[Use makeSmallImage]
-    L -->|No| N[Use compressImage]
-    M --> O[Compress All Photos in Parallel]
-    N --> O
-    O --> P[Step 3: Upload Photos]
-    P --> Q{Use Fully Parallel Upload?}
-    Q -->|Yes| R[Upload All Photos in Parallel]
-    Q -->|No| S[Upload Photos in Batches]
-    R --> T[Wait for All Uploads]
-    S --> T
-    T --> U{All Uploads Successful?}
-    U -->|Yes| V[Return Success with Links]
-    U -->|No| W[Return Error]
+```
+┌──────────────────────────────┐
+│ Start Processing Addon       │
+│        Request               │
+└──────────────┬───────────────┘
+               │
+               ▼
+       ┌───────────────┐
+       │  Has Photos?  │
+       └───┬───────┬───┘
+           │       │
+        No │       │ Yes
+           │       │
+           ▼       ▼
+┌──────────────┐ ┌──────────────────────┐
+│ Return Empty │ │ Step 1: Get Upload   │
+│    Result    │ │        URLs           │
+└──────────────┘ └──────────┬────────────┘
+                            │
+                            ▼
+                   ┌────────────────┐
+                   │ Use Fully      │
+                   │ Parallel       │
+                   │ Upload?        │
+                   └───┬─────────┬──┘
+                       │         │
+                    Yes│         │No
+                       │         │
+                       ▼         ▼
+            ┌──────────────┐ ┌──────────────────┐
+            │ Request All   │ │ Request URLs      │
+            │ URLs in       │ │ in Batches        │
+            │ Parallel      │ │                   │
+            └───────┬───────┘ └────────┬──────────┘
+                    │                  │
+                    └──────────┬───────┘
+                               │
+                               ▼
+                    ┌──────────────────┐
+                    │ Wait for All URL │
+                    │    Responses     │
+                    └──────────┬───────┘
+                               │
+                               ▼
+                       ┌───────────────┐
+                       │ Any URL       │
+                       │ Request       │
+                       │ Failed?       │
+                       └───┬───────┬───┘
+                           │       │
+                        Yes│       │No
+                           │       │
+                           ▼       ▼
+                  ┌──────────┐ ┌──────────────────┐
+                  │ Return   │ │ Step 2: Compress  │
+                  │  Error   │ │     Photos        │
+                  └──────────┘ └──────────┬────────┘
+                                           │
+                                           ▼
+                                  ┌────────────────┐
+                                  │ Connection     │
+                                  │ Poor + Has     │
+                                  │ Compress Flag? │
+                                  └───┬─────────┬──┘
+                                      │         │
+                                   Yes│         │No
+                                      │         │
+                                      ▼         ▼
+                            ┌──────────────┐ ┌──────────────┐
+                            │ Use          │ │ Use          │
+                            │makeSmallImage│ │compressImage │
+                            └──────┬───────┘ └──────┬───────┘
+                                   │                │
+                                   └────────┬───────┘
+                                            │
+                                            ▼
+                                 ┌──────────────────┐
+                                 │ Compress All     │
+                                 │ Photos in        │
+                                 │ Parallel         │
+                                 └──────────┬───────┘
+                                            │
+                                            ▼
+                                 ┌──────────────────┐
+                                 │ Step 3: Upload   │
+                                 │     Photos       │
+                                 └──────────┬───────┘
+                                            │
+                                            ▼
+                                   ┌────────────────┐
+                                   │ Use Fully      │
+                                   │ Parallel       │
+                                   │ Upload?        │
+                                   └───┬─────────┬──┘
+                                       │         │
+                                    Yes│         │No
+                                       │         │
+                                       ▼         ▼
+                            ┌──────────────┐ ┌──────────────────┐
+                            │ Upload All   │ │ Upload Photos    │
+                            │ Photos in    │ │ in Batches        │
+                            │ Parallel     │ │                  │
+                            └───────┬──────┘ └────────┬──────────┘
+                                    │                │
+                                    └────────┬───────┘
+                                             │
+                                             ▼
+                                  ┌──────────────────┐
+                                  │ Wait for All     │
+                                  │    Uploads       │
+                                  └──────────┬───────┘
+                                             │
+                                             ▼
+                                    ┌───────────────┐
+                                    │ All Uploads   │
+                                    │ Successful?   │
+                                    └───┬───────┬───┘
+                                        │       │
+                                     Yes│       │No
+                                        │       │
+                                        ▼       ▼
+                            ┌──────────────┐ ┌──────────┐
+                            │ Return       │ │ Return   │
+                            │ Success with │ │  Error   │
+                            │    Links     │ │          │
+                            └──────────────┘ └──────────┘
 ```
 
 ### 3. Photo Upload Steps (Detailed)
@@ -182,51 +391,143 @@ RequestAddonScreenState _processPhotos: putBlobImage for N photos took Xms
 
 ### 4. Booking Alert Creation Flow
 
-```mermaid
-sequenceDiagram
-    participant State
-    participant VendorService
-    participant DeferredService
-    participant OrderDetailsState
-    participant ProAppState
-
-    State->>State: Process all addon requests
-    State->>VendorService: addonsRequest(bookingID, addonRequests)
-    VendorService-->>State: ApiResultSuccess with booking alert IDs
-    
-    alt Connection Poor
-        State->>DeferredService: save(addonRequests, bookingID)
-        DeferredService->>DeferredService: Save to Hive storage
-    end
-    
-    State->>State: matchBookingAlertIdWithDTO(response)
-    State->>OrderDetailsState: updateBookingAlertList(alert)
-    
-    alt Has Pro Pay Amount Show Flag
-        State->>ProAppState: updatePricingCache()
-    end
+```
+State                VendorService         DeferredService         OrderDetailsState        ProAppState
+ │                        │                        │                         │                      │
+ │  Process all addon     │                        │                         │                      │
+ │      requests          │                        │                         │                      │
+ │<───────────────────────┘                        │                         │                      │
+ │                        │                        │                         │                      │
+ │  addonsRequest(        │                        │                         │                      │
+ │   bookingID,           │                        │                         │                      │
+ │   addonRequests)       │                        │                         │                      │
+ ├───────────────────────>│                        │                         │                      │
+ │                        │                        │                         │                      │
+ │                        │  ApiResultSuccess      │                         │                      │
+ │                        │  with booking          │                         │                      │
+ │                        │  alert IDs             │                         │                      │
+ │<───────────────────────┤                        │                         │                      │
+ │                        │                        │                         │                      │
+ │  [Connection Poor?]    │                        │                         │                      │
+ │       │                │                        │                         │                      │
+ │       │ Yes            │                        │                         │                      │
+ │       │                │                        │                         │                      │
+ │       ▼                │                        │                         │                      │
+ │  save(addonRequests,   │                        │                         │                      │
+ │   bookingID)            │                        │                         │                      │
+ │─────────────────────────────────────────────────>│                         │                      │
+ │                        │                        │  Save to Hive storage    │                      │
+ │                        │                        │<─────────────────────────┘                      │
+ │                        │                        │                         │                      │
+ │                        │                        │                         │                      │
+ │  matchBookingAlertId   │                        │                         │                      │
+ │  WithDTO(response)     │                        │                         │                      │
+ │<───────────────────────┴────────────────────────┴─────────────────────────┴──────────────────────┘
+ │                        │                        │                         │                      │
+ │  updateBookingAlert    │                        │                         │                      │
+ │  List(alert)           │                        │                         │                      │
+ ├───────────────────────────────────────────────────────────────────────────────────────────────────>│
+ │                        │                        │                         │                      │
+ │  [Has Pro Pay Amount   │                        │                         │                      │
+ │   Show Flag?]          │                        │                         │                      │
+ │       │                │                        │                         │                      │
+ │       │ Yes            │                        │                         │                      │
+ │       │                │                        │                         │                      │
+ │       ▼                │                        │                         │                      │
+ │  updatePricingCache()  │                        │                         │                      │
+ ├───────────────────────────────────────────────────────────────────────────────────────────────────>│
+ │                        │                        │                         │                      │
 ```
 
 ### 5. Deferred Service Flow (When Connection is Poor)
 
-```mermaid
-graph TD
-    A[Connection Detected as Poor] --> B[Initialize DeferredService]
-    B --> C[Process Photos Locally]
-    C --> D[Save Photos to Local Storage]
-    D --> E[Create Booking Alert WITHOUT Photos]
-    E --> F[Save Operation to Hive]
-    F --> G[DeferredService Periodic Check]
-    G --> H{Connection Good?}
-    H -->|No| I[Wait 30 seconds]
-    I --> G
-    H -->|Yes| J[Process Deferred Operation]
-    J --> K[Get Upload URLs]
-    K --> L[Read Photos from Local Storage]
-    L --> M[Upload Photos]
-    M --> N[Update Booking Alert with Photo URLs]
-    N --> O[Mark Operation as Completed]
-    O --> P[Delete Local Photos]
+```
+┌──────────────────────────────┐
+│ Connection Detected as Poor  │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│ Initialize DeferredService  │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│ Process Photos Locally       │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│ Save Photos to Local Storage │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│ Create Booking Alert         │
+│    WITHOUT Photos            │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│ Save Operation to Hive       │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│ DeferredService Periodic      │
+│        Check                 │
+└──────────────┬───────────────┘
+               │
+               ▼
+       ┌───────────────┐
+       │ Connection    │
+       │    Good?      │
+       └───┬───────┬───┘
+           │       │
+        No │       │ Yes
+           │       │
+           ▼       ▼
+┌──────────────┐ ┌──────────────────────────┐
+│ Wait 30      │ │ Process Deferred         │
+│  seconds     │ │    Operation            │
+└──────┬───────┘ └──────────┬───────────────┘
+       │                    │
+       └──────────┬─────────┘
+                  │
+                  ▼
+         ┌──────────────────┐
+         │ Get Upload URLs  │
+         └──────────┬───────┘
+                    │
+                    ▼
+         ┌──────────────────┐
+         │ Read Photos from │
+         │  Local Storage   │
+         └──────────┬───────┘
+                    │
+                    ▼
+         ┌──────────────────┐
+         │ Upload Photos    │
+         └──────────┬───────┘
+                    │
+                    ▼
+         ┌──────────────────┐
+         │ Update Booking   │
+         │ Alert with Photo │
+         │      URLs        │
+         └──────────┬───────┘
+                    │
+                    ▼
+         ┌──────────────────┐
+         │ Mark Operation   │
+         │ as Completed     │
+         └──────────┬───────┘
+                    │
+                    ▼
+         ┌──────────────────┐
+         │ Delete Local     │
+         │    Photos        │
+         └──────────────────┘
 ```
 
 **DeferredService Details:**
