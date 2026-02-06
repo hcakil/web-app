@@ -145,36 +145,131 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .tab-button {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .tab-button.active {
+            border-bottom-color: #0d9488;
+            color: #0d9488;
+            font-weight: 600;
+        }
+        .tab-button:hover {
+            color: #0d9488;
+        }
+        .doc-content {
+            display: none;
+        }
+        .doc-content.active {
+            display: block;
+        }
     </style>
 </head>
 <body class="antialiased">
     <div class="container mx-auto max-w-6xl p-4 sm:p-8">
         <header class="mb-8">
-            <h1 class="text-3xl font-bold text-stone-900">QC Workflow Documentation</h1>
-            <p class="text-lg text-stone-700 mt-2">Quality Check (QC) Approval & Zoom Workflow Documentation</p>
+            <h1 class="text-3xl font-bold text-stone-900">Documentation</h1>
+            <p class="text-lg text-stone-700 mt-2">Select a document to view</p>
         </header>
         
+        <!-- Tab Navigation -->
+        <nav class="mb-8 border-b border-stone-300">
+            <div class="flex flex-wrap -mb-px space-x-4">
+                <button class="tab-button active text-lg py-4 px-2 border-b-2 border-transparent" data-doc="readme">
+                    QC Workflow
+                </button>
+                <button class="tab-button text-lg py-4 px-2 border-b-2 border-transparent" data-doc="addon">
+                    Addon Creation
+                </button>
+                <button class="tab-button text-lg py-4 px-2 border-b-2 border-transparent" data-doc="checklist">
+                    Checklist Completion
+                </button>
+            </div>
+        </nav>
+        
         <main>
-            <div id="readme-container" class="markdown-content">
-                <div class="flex items-center justify-center py-8">
-                    <div class="loading-spinner mr-3"></div>
-                    <span class="text-stone-600">Loading documentation...</span>
+            <!-- README.md Content -->
+            <div id="readme-content" class="doc-content active">
+                <div id="readme-container" class="markdown-content">
+                    <div class="flex items-center justify-center py-8">
+                        <div class="loading-spinner mr-3"></div>
+                        <span class="text-stone-600">Loading documentation...</span>
                     </div>
                 </div>
+            </div>
+            
+            <!-- Addon Creation Content -->
+            <div id="addon-content" class="doc-content">
+                <div id="addon-container" class="markdown-content">
+                    <div class="flex items-center justify-center py-8">
+                        <div class="loading-spinner mr-3"></div>
+                        <span class="text-stone-600">Loading documentation...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Checklist Completion Content -->
+            <div id="checklist-content" class="doc-content">
+                <div id="checklist-container" class="markdown-content">
+                    <div class="flex items-center justify-center py-8">
+                        <div class="loading-spinner mr-3"></div>
+                        <span class="text-stone-600">Loading documentation...</span>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Load and render README.md
-            async function loadReadme() {
+            // Document configuration
+            const documents = {
+                readme: {
+                    file: 'README.md',
+                    container: 'readme-container',
+                    content: 'readme-content'
+                },
+                addon: {
+                    file: 'addon_creation_process.md',
+                    container: 'addon-container',
+                    content: 'addon-content'
+                },
+                checklist: {
+                    file: 'checklist_completion_process.md',
+                    container: 'checklist-container',
+                    content: 'checklist-content'
+                }
+            };
+            
+            // Configure marked to generate heading IDs
+            marked.setOptions({
+                headerIds: true,
+                mangle: false
+            });
+            
+            // Load and render a markdown file
+            async function loadMarkdown(docKey) {
+                const doc = documents[docKey];
+                if (!doc) return;
+                
+                const container = document.getElementById(doc.container);
+                if (!container) return;
+                
+                // Show loading state
+                container.innerHTML = `
+                    <div class="flex items-center justify-center py-8">
+                        <div class="loading-spinner mr-3"></div>
+                        <span class="text-stone-600">Loading documentation...</span>
+                    </div>
+                `;
+                
                 try {
                     // Try multiple possible paths for GitHub Pages
                     const paths = [
-                        'README.md',
-                        './README.md',
-                        '/web-app/README.md',
-                        '/README.md'
+                        doc.file,
+                        './' + doc.file,
+                        '/web-app/' + doc.file,
+                        '/' + doc.file
                     ];
                     
                     let response = null;
@@ -193,45 +288,87 @@
                     }
                     
                     if (!response || !response.ok) {
-                        throw new Error(lastError?.message || 'Failed to load README.md');
+                        throw new Error(lastError?.message || `Failed to load ${doc.file}`);
                     }
                     
                     const markdown = await response.text();
-                    
-                    // Configure marked to generate heading IDs
-                    marked.setOptions({
-                        headerIds: true,
-                        mangle: false
-                    });
-                    
                     const html = marked.parse(markdown);
-                    const container = document.getElementById('readme-container');
-                    if (container) {
-                        container.innerHTML = html;
-                        
-                        // Fix anchor links after rendering
-                        fixAnchorLinks(container);
-                        
-                        // Handle initial hash if present
-                        if (window.location.hash) {
-                            setTimeout(() => {
-                                scrollToAnchor(window.location.hash.substring(1));
-                            }, 100);
-                        }
+                    
+                    container.innerHTML = html;
+                    
+                    // Fix anchor links after rendering
+                    fixAnchorLinks(container);
+                    
+                    // Handle initial hash if present
+                    if (window.location.hash) {
+                        setTimeout(() => {
+                            scrollToAnchor(window.location.hash.substring(1));
+                        }, 100);
                     }
                 } catch (error) {
-                    const container = document.getElementById('readme-container');
-                    if (container) {
-                        container.innerHTML = `
-                            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-                                <p class="text-red-700 font-semibold">Error loading documentation</p>
-                                <p class="text-red-600 mt-2">${error.message}</p>
-                                <p class="text-red-600 mt-2">Please ensure README.md is available in the repository.</p>
-                            </div>
-                        `;
-                    }
+                    container.innerHTML = `
+                        <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                            <p class="text-red-700 font-semibold">Error loading documentation</p>
+                            <p class="text-red-600 mt-2">${error.message}</p>
+                            <p class="text-red-600 mt-2">Please ensure ${doc.file} is available in the repository.</p>
+                        </div>
+                    `;
                 }
             }
+            
+            // Switch between documents
+            function switchDocument(docKey) {
+                // Update tab buttons
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.getAttribute('data-doc') === docKey) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                // Update content visibility
+                Object.keys(documents).forEach(key => {
+                    const content = document.getElementById(documents[key].content);
+                    if (content) {
+                        if (key === docKey) {
+                            content.classList.add('active');
+                        } else {
+                            content.classList.remove('active');
+                        }
+                    }
+                });
+                
+                // Update URL without reload
+                const url = new URL(window.location);
+                url.searchParams.set('doc', docKey);
+                window.history.pushState({ doc: docKey }, '', url);
+                
+                // Load the document if not already loaded
+                const container = document.getElementById(documents[docKey].container);
+                if (container && container.innerHTML.includes('Loading documentation')) {
+                    loadMarkdown(docKey);
+                }
+            }
+            
+            // Set up tab button event listeners
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const docKey = this.getAttribute('data-doc');
+                    switchDocument(docKey);
+                });
+            });
+            
+            // Check URL parameter for initial document
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialDoc = urlParams.get('doc') || 'readme';
+            
+            // Load all documents
+            Object.keys(documents).forEach(docKey => {
+                loadMarkdown(docKey);
+            });
+            
+            // Switch to initial document
+            switchDocument(initialDoc);
             
             // Function to generate anchor ID from text (matching GitHub markdown behavior)
             function generateAnchorId(text) {
@@ -299,8 +436,12 @@
                 }
             });
             
-            // Load README on page load
-            loadReadme();
+            // Handle browser back/forward buttons
+            window.addEventListener('popstate', function(event) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const doc = urlParams.get('doc') || 'readme';
+                switchDocument(doc);
+            });
         });
     </script>
 </body>
