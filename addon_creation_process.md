@@ -1,705 +1,502 @@
-# Add-on Creation Process - Technical Documentation
+# Add-on Creation Process — Pro App
 
 ## Overview
 
-This document provides a comprehensive technical overview of the add-on creation process in the Pro App, including flow diagrams, telemetry details, feature flags, and connection handling mechanisms.
+This document provides a bird's-eye view and a detailed technical breakdown of the **Add-on Creation** process in the Pro App. It covers how photos are uploaded, how add-ons are created via the API, and how the system handles poor network conditions through deferred (background) uploads.
 
-## Entry Point
+**Entry Point:** User fills add-on details on the request screen and taps **"Done"**
 
-**Screen:** `lib/screens/request_addon_bundled/request_addon_screen.dart`  
-**State Management:** `lib/screens/request_addon_bundled/request_addon_screen_state.dart`  
-**Trigger:** User taps "Done" button → `onButtonDoneTap()` → `RequestAddonScreenState.onDone()`
+---
 
-## Feature Flags
+## 1. Bird's-Eye View
 
-The following feature flags control add-on creation behavior:
-
-| Feature Flag | Key | Description |
-|--------------|-----|-------------|
-| **Enhance Addon Creation** | `41318-enhance-addon-creation-in-pro-app-for-robustness-on-low-connectivity-or-intermittent-networks` | Enables connection quality checking and deferred uploads |
-| **Network Performance Metrics** | `41653-network-performance-metrics` | Enables network speed monitoring and telemetry |
-| **Pro Pay Amount Show** | `39860-show-payout-amounts-for-services-and-addons-in-pro-app` | Shows payout amounts for addons |
-
-**Note:** All three flags are currently open for all users.
-
-## High-Level Flow Diagram
+A simplified, high-level overview of what happens when a pro creates an add-on request:
 
 ```
-┌─────────────────────────┐
-│ User Taps Done Button   │
-└────────────┬────────────┘
-             │
-             ▼
-┌─────────────────────────┐
-│ onDone Method Starts    │
-└────────────┬────────────┘
-             │
-             ▼
-    ┌────────────────────┐
-    │ Has Enhance Addon  │
-    │      Flag?         │
-    └────┬───────────┬───┘
-         │           │
-    Yes  │           │  No
-         │           │
-         ▼           ▼
-┌──────────────┐  ┌──────────────────┐
-│ Check        │  │ Skip Connection  │
-│ Connection   │  │     Check       │
-│   Quality    │  └────────┬─────────┘
-└──────┬───────┘           │
-       │                   │
-       ▼                   │
-┌──────────────┐           │
-│ Connection   │           │
-│    Poor?     │           │
-└──┬───────┬───┘           │
-   │       │               │
-Yes│       │No             │
-   │       │               │
-   ▼       ▼               │
-┌──────┐ ┌──────────────┐  │
-│ Init │ │ Process      │  │
-│Defer │ │ Photos       │◄─┘
-│Service│ │Immediately  │
-└───┬───┘ └──────┬───────┘
-    │            │
-    └──────┬─────┘
-           │
-           ▼
-┌──────────────────────────┐
-│ Process All Addon        │
-│      Requests            │
-└────────────┬─────────────┘
-             │
-             ▼
-┌──────────────────────────┐
-│ Process Each Addon       │
-│ Request in Parallel      │
-└────────────┬─────────────┘
-             │
-             ▼
-    ┌────────────────┐
-    │  Get Upload    │
-    │     URLs       │
-    └────────┬───────┘
-             │
-             ▼
-    ┌────────────────┐
-    │ Compress       │
-    │   Photos       │
-    └────────┬───────┘
-             │
-             ▼
-    ┌────────────────┐
-    │ Upload Photos  │
-    └────────┬───────┘
-             │
-             ▼
-    ┌────────────────┐
-    │ All Uploads    │
-    │  Successful?   │
-    └──┬───────────┬─┘
-       │           │
-    No │           │ Yes
-       │           │
-       ▼           ▼
-┌──────────┐  ┌──────────────────┐
-│ Return  │  │ Create Booking   │
-│  Error  │  │ Alerts via API   │
-└────┬─────┘  └────────┬─────────┘
-     │                 │
-     │                 ▼
-     │         ┌──────────────┐
-     │         │ Connection   │
-     │         │    Poor?     │
-     │         └──┬─────────┬─┘
-     │            │         │
-     │         Yes│         │No
-     │            │         │
-     │            ▼         ▼
-     │    ┌──────────┐ ┌──────────────┐
-     │    │ Save to  │ │ Update       │
-     │    │Deferred  │ │ Booking      │
-     │    │ Service  │ │ Alert List   │
-     │    └────┬─────┘ └──────┬───────┘
-     │         │              │
-     │         └──────┬───────┘
-     │                │
-     │                ▼
-     │        ┌──────────────┐
-     │        │ Update       │
-     │        │ Pricing      │
-     │        │   Cache      │
-     │        └──────┬───────┘
-     │               │
-     │               ▼
-     │        ┌──────────────┐
-     │        │ Return       │
-     │        │  Success     │
-     │        └──────────────┘
-     │
-     ▼
-┌──────────────┐
-│ Show Error   │
-│   Dialog     │
-└──────────────┘
+                        ╔══════════════════════════════════╗
+                        ║   Pro Taps "Done" to Submit      ║
+                        ║       Add-on Request(s)          ║
+                        ╚════════════════╤═════════════════╝
+                                         │
+                                         ▼
+                        ╔══════════════════════════════════╗
+                        ║   App Checks Network Quality     ║
+                        ║   (Good / Moderate / Poor)       ║
+                        ╚════════════════╤═════════════════╝
+                                         │
+                          ┌──────────────┴──────────────┐
+                          │                             │
+                          ▼                             ▼
+               ╔═══════════════════╗         ╔═══════════════════╗
+               ║  GOOD CONNECTION  ║         ║  POOR CONNECTION  ║
+               ╚════════╤══════════╝         ╚════════╤══════════╝
+                        │                             │
+                        ▼                             ▼
+               ┌────────────────────┐       ┌────────────────────┐
+               │ Compress & Upload  │       │ Compress Photos    │
+               │ Photos Immediately │       │ with Aggressive    │
+               │ (2 at a time)      │       │ Compression        │
+               └────────┬───────────┘       └────────┬───────────┘
+                        │                             │
+                        ▼                             ▼
+               ┌────────────────────┐       ┌────────────────────┐
+               │ Create Add-on      │       │ Upload Photos      │
+               │ Request via API    │       │ (2 at a time)      │
+               │ (with photos)      │       └────────┬───────────┘
+               └────────┬───────────┘                │
+                        │                             ▼
+                        │                    ┌────────────────────┐
+                        │                    │ Create Add-on      │
+                        │                    │ Request via API    │
+                        │                    │ (with photos)      │
+                        │                    └────────┬───────────┘
+                        │                             │
+                        │                             ▼
+                        │                    ┌────────────────────┐
+                        │                    │ Save Photos to     │
+                        │                    │ Device Storage     │
+                        │                    │ for Background     │
+                        │                    │ Re-upload          │
+                        │                    └────────┬───────────┘
+                        │                             │
+                        ▼                             ▼
+               ┌────────────────────┐       ┌────────────────────┐
+               │ Update Payout      │       │ Background Service │
+               │ Prices & Show      │       │ Retries Upload     │
+               │ New Add-on in List │       │ Every 30s When     │
+               └────────┬───────────┘       │ Connection Improves│
+                        │                    └────────┬───────────┘
+                        ▼                             ▼
+               ╔══════════════════════════════════════════════╗
+               ║              Add-on Created                  ║
+               ║    (Visible in Work Order Details)           ║
+               ╚══════════════════════════════════════════════╝
 ```
 
-## Detailed Process Flow
+---
 
-### 1. Initialization Phase
+## 2. Detailed Complete Flow — Good Connection Path
 
-```
-User                    Screen                  State                    ConnectivityUtil          DeferredService         NetworkMonitor
- │                        │                       │                            │                          │                        │
- │  Tap "Done" Button     │                       │                            │                          │                        │
- ├────────────────────────>│                       │                            │                          │                        │
- │                        │  onDone()             │                            │                          │                        │
- │                        ├───────────────────────>│                            │                          │                        │
- │                        │                       │  Calculate total photo count                          │                        │
- │                        │                       │<───────────────────────────┘                          │                        │
- │                        │                       │  Log start telemetry                                    │                        │
- │                        │                       │<────────────────────────────────────────────────────────┘                        │
- │                        │                       │                                                            │                        │
- │                        │                       │  [Has Enhance Addon Flag?]                               │                        │
- │                        │                       │       │                                                    │                        │
- │                        │                       │       │ Yes                                                │                        │
- │                        │                       │       │                                                    │                        │
- │                        │                       │       ▼                                                    │                        │
- │                        │                       │  isConnectionPoor()                                       │                        │
- │                        │                       ├───────────────────────────>│                          │                        │
- │                        │                       │                            │  Connection quality result│                        │
- │                        │                       │<───────────────────────────┤                          │                        │
- │                        │                       │  Log connection check telemetry                         │                        │
- │                        │                       │<────────────────────────────────────────────────────────┘                        │
- │                        │                       │                                                            │                        │
- │                        │                       │  [Connection Poor?]                                       │                        │
- │                        │                       │       │                                                    │                        │
- │                        │                       │       │ Yes                                                │                        │
- │                        │                       │       │                                                    │                        │
- │                        │                       │       ▼                                                    │                        │
- │                        │                       │  instance()                                                │                        │
- │                        │                       ├───────────────────────────────────────────────────────────>│                        │
- │                        │                       │                                                            │                        │
- │                        │                       │  Set connectionPoor = true                                │                        │
- │                        │                       │<───────────────────────────────────────────────────────────┘                        │
- │                        │                       │                                                            │                        │
- │                        │                       │  [Has Network Performance Metrics Flag?]                │                        │
- │                        │                       │       │                                                    │                        │
- │                        │                       │       │ Yes                                                │                        │
- │                        │                       │       │                                                    │                        │
- │                        │                       │       ▼                                                    │                        │
- │                        │                       │  startSpeedMonitoringOnce()                               │                        │
- │                        │                       ├───────────────────────────────────────────────────────────────────────────────────>│
- │                        │                       │<───────────────────────────────────────────────────────────────────────────────────┤
- │                        │                       │                                                            │                        │
-```
-
-### 2. Photo Processing Flow
+When network quality is **good**, all photos are uploaded immediately before creating the add-on:
 
 ```
-┌──────────────────────────────┐
-│ Start Processing Addon       │
-│        Request               │
-└──────────────┬───────────────┘
-               │
-               ▼
-       ┌───────────────┐
-       │  Has Photos?  │
-       └───┬───────┬───┘
-           │       │
-        No │       │ Yes
-           │       │
-           ▼       ▼
-┌──────────────┐ ┌──────────────────────┐
-│ Return Empty │ │ Step 1: Get Upload   │
-│    Result    │ │        URLs           │
-└──────────────┘ └──────────┬────────────┘
-                            │
-                            ▼
-                   ┌────────────────┐
-                   │ Use Fully      │
-                   │ Parallel       │
-                   │ Upload?        │
-                   └───┬─────────┬──┘
-                       │         │
-                    Yes│         │No
-                       │         │
-                       ▼         ▼
-            ┌──────────────┐ ┌──────────────────┐
-            │ Request All   │ │ Request URLs      │
-            │ URLs in       │ │ in Batches        │
-            │ Parallel      │ │                   │
-            └───────┬───────┘ └────────┬──────────┘
-                    │                  │
-                    └──────────┬───────┘
-                               │
-                               ▼
-                    ┌──────────────────┐
-                    │ Wait for All URL │
-                    │    Responses     │
-                    └──────────┬───────┘
-                               │
-                               ▼
-                       ┌───────────────┐
-                       │ Any URL       │
-                       │ Request       │
-                       │ Failed?       │
-                       └───┬───────┬───┘
-                           │       │
-                        Yes│       │No
-                           │       │
-                           ▼       ▼
-                  ┌──────────┐ ┌──────────────────┐
-                  │ Return   │ │ Step 2: Compress  │
-                  │  Error   │ │     Photos        │
-                  └──────────┘ └──────────┬────────┘
-                                           │
-                                           ▼
-                                  ┌────────────────┐
-                                  │ Connection     │
-                                  │ Poor + Has     │
-                                  │ Compress Flag? │
-                                  └───┬─────────┬──┘
-                                      │         │
-                                   Yes│         │No
-                                      │         │
-                                      ▼         ▼
-                            ┌──────────────┐ ┌──────────────┐
-                            │ Use          │ │ Use          │
-                            │makeSmallImage│ │compressImage │
-                            └──────┬───────┘ └──────┬───────┘
-                                   │                │
-                                   └────────┬───────┘
-                                            │
-                                            ▼
-                                 ┌──────────────────┐
-                                 │ Compress All     │
-                                 │ Photos in        │
-                                 │ Parallel         │
-                                 └──────────┬───────┘
-                                            │
-                                            ▼
-                                 ┌──────────────────┐
-                                 │ Step 3: Upload   │
-                                 │     Photos       │
-                                 └──────────┬───────┘
-                                            │
-                                            ▼
-                                   ┌────────────────┐
-                                   │ Use Fully      │
-                                   │ Parallel       │
-                                   │ Upload?        │
-                                   └───┬─────────┬──┘
-                                       │         │
-                                    Yes│         │No
-                                       │         │
-                                       ▼         ▼
-                            ┌──────────────┐ ┌──────────────────┐
-                            │ Upload All   │ │ Upload Photos    │
-                            │ Photos in    │ │ in Batches        │
-                            │ Parallel     │ │                  │
-                            └───────┬──────┘ └────────┬──────────┘
-                                    │                │
-                                    └────────┬───────┘
+     ╔═══════════════════════════════════════════════════════════════════════════════╗
+     ║                         PRO TAPS "DONE" BUTTON                              ║
+     ╚═══════════════════════════════════════╤═══════════════════════════════════════╝
                                              │
                                              ▼
-                                  ┌──────────────────┐
-                                  │ Wait for All     │
-                                  │    Uploads       │
-                                  └──────────┬───────┘
+                            ┌────────────────────────────────┐
+                            │  Check Network Quality         │
+                            │  (HTTP latency + Ping test)    │
+                            │  Result: GOOD                  │
+                            └───────────────┬────────────────┘
+                                            │
+                                            ▼
+                            ┌────────────────────────────────┐
+                            │  Start Network Speed Monitor   │
+                            │  (one-time speed measurement)  │
+                            └───────────────┬────────────────┘
+                                            │
+                                            ▼
+     ╔═══════════════════════════════════════════════════════════════════════════════╗
+     ║                  FOR EACH ADD-ON REQUEST (in parallel)                       ║
+     ╠═══════════════════════════════════════════════════════════════════════════════╣
+     ║                                                                              ║
+     ║         ┌─────────────────────────────────────────────────┐                 ║
+     ║         │  STEP 1: GET UPLOAD URLs                        │                 ║
+     ║         │                                                 │                 ║
+     ║         │  For each photo (batched, 2 at a time):         │                 ║
+     ║         │    → Request a unique upload URL from API       │                 ║
+     ║         │    → URL points to Azure Blob Storage           │                 ║
+     ║         │                                                 │                 ║
+     ║         │  If any URL request fails → entire add-on fails │                 ║
+     ║         └────────────────────┬────────────────────────────┘                 ║
+     ║                              │                                               ║
+     ║                              ▼                                               ║
+     ║         ┌─────────────────────────────────────────────────┐                 ║
+     ║         │  STEP 2: COMPRESS PHOTOS                        │                 ║
+     ║         │                                                 │                 ║
+     ║         │  Standard compression (all in parallel):        │                 ║
+     ║         │    → Max resolution: 1920 × 1920                │                 ║
+     ║         │    → Quality: 85%                               │                 ║
+     ║         │    → Format: JPEG                               │                 ║
+     ║         │    → Skip if image < 100KB                      │                 ║
+     ║         │    → Keep original if compressed is larger      │                 ║
+     ║         └────────────────────┬────────────────────────────┘                 ║
+     ║                              │                                               ║
+     ║                              ▼                                               ║
+     ║         ┌─────────────────────────────────────────────────┐                 ║
+     ║         │  STEP 3: UPLOAD PHOTOS                          │                 ║
+     ║         │                                                 │                 ║
+     ║         │  For each photo (batched, 2 at a time):         │                 ║
+     ║         │    → PUT compressed image to Blob Storage URL   │                 ║
+     ║         │    → Content-Type: application/octet-stream     │                 ║
+     ║         │    → Track upload progress percentage           │                 ║
+     ║         │                                                 │                 ║
+     ║         │  If any upload fails → entire add-on fails      │                 ║
+     ║         └────────────────────┬────────────────────────────┘                 ║
+     ║                              │                                               ║
+     ║                              ▼                                               ║
+     ║         ┌─────────────────────────────────────────────────┐                 ║
+     ║         │  Build Add-on Request Model                     │                 ║
+     ║         │    → Product ID, Description, Amount            │                 ║
+     ║         │    → Scope (Single Room / Entire Unit)          │                 ║
+     ║         │    → Attach uploaded photo URLs                 │                 ║
+     ║         └─────────────────────────────────────────────────┘                 ║
+     ║                                                                              ║
+     ╚═══════════════════════════════╤══════════════════════════════════════════════╝
+                                     │
+                                     ▼
+                    ┌────────────────────────────────────┐
+                    │  CALL API: Create Booking Alerts   │
+                    │                                    │
+                    │  Send all add-on requests at once  │
+                    │  to backend (Stella API)           │
+                    │                                    │
+                    │  Receive booking alert IDs back    │
+                    └───────────────┬────────────────────┘
+                                    │
+                                    ▼
+                    ┌────────────────────────────────────┐
+                    │  Update Payout Price Cache         │
+                    │                                    │
+                    │  For each non-custom add-on:       │
+                    │    → Refresh pricing data from API │
+                    │    → Update local price cache      │
+                    └───────────────┬────────────────────┘
+                                    │
+                                    ▼
+                    ┌────────────────────────────────────┐
+                    │  Show New Add-on in UI             │
+                    │                                    │
+                    │  → Add booking alert to detail list│
+                    │  → Immediately visible to pro      │
+                    └───────────────┬────────────────────┘
+                                    │
+                                    ▼
+                    ╔════════════════════════════════════╗
+                    ║         DONE — SUCCESS             ║
+                    ╚════════════════════════════════════╝
+```
+
+---
+
+## 3. Detailed Complete Flow — Poor Connection Path
+
+When network quality is **poor or moderate**, photos are still uploaded immediately but with aggressive compression. Additionally, photos are saved to local storage for a **background retry service** that re-uploads when the connection improves:
+
+```
+     ╔═══════════════════════════════════════════════════════════════════════════════╗
+     ║                         PRO TAPS "DONE" BUTTON                              ║
+     ╚═══════════════════════════════════════╤═══════════════════════════════════════╝
                                              │
                                              ▼
-                                    ┌───────────────┐
-                                    │ All Uploads   │
-                                    │ Successful?   │
-                                    └───┬───────┬───┘
-                                        │       │
-                                     Yes│       │No
-                                        │       │
-                                        ▼       ▼
-                            ┌──────────────┐ ┌──────────┐
-                            │ Return       │ │ Return   │
-                            │ Success with │ │  Error   │
-                            │    Links     │ │          │
-                            └──────────────┘ └──────────┘
+                            ┌────────────────────────────────┐
+                            │  Check Network Quality         │
+                            │  (HTTP latency + Ping test)    │
+                            │  Result: POOR / MODERATE       │
+                            └───────────────┬────────────────┘
+                                            │
+                                            ▼
+                            ┌────────────────────────────────┐
+                            │  Initialize Deferred Service   │
+                            │  (background upload manager)   │
+                            │  + Start Network Speed Monitor │
+                            └───────────────┬────────────────┘
+                                            │
+                                            ▼
+     ╔═══════════════════════════════════════════════════════════════════════════════╗
+     ║                  FOR EACH ADD-ON REQUEST (in parallel)                       ║
+     ╠═══════════════════════════════════════════════════════════════════════════════╣
+     ║                                                                              ║
+     ║         ┌─────────────────────────────────────────────────┐                 ║
+     ║         │  STEP 1: GET UPLOAD URLs                        │                 ║
+     ║         │                                                 │                 ║
+     ║         │  For each photo (batched, 2 at a time):         │                 ║
+     ║         │    → Request a unique upload URL from API       │                 ║
+     ║         └────────────────────┬────────────────────────────┘                 ║
+     ║                              │                                               ║
+     ║                              ▼                                               ║
+     ║         ┌─────────────────────────────────────────────────┐                 ║
+     ║         │  STEP 2: COMPRESS PHOTOS (Aggressive)           │                 ║
+     ║         │                                                 │                 ║
+     ║         │  Uses smaller compression (all in parallel):    │                 ║
+     ║         │    → Max resolution: 1000 × 1000                │                 ║
+     ║         │    → Quality: 60%                               │                 ║
+     ║         │    → Maintains aspect ratio                     │                 ║
+     ║         │    → Significantly smaller file size            │                 ║
+     ║         └────────────────────┬────────────────────────────┘                 ║
+     ║                              │                                               ║
+     ║                              ▼                                               ║
+     ║         ┌─────────────────────────────────────────────────┐                 ║
+     ║         │  STEP 3: UPLOAD PHOTOS                          │                 ║
+     ║         │                                                 │                 ║
+     ║         │  For each photo (batched, 2 at a time):         │                 ║
+     ║         │    → PUT compressed image to Blob Storage URL   │                 ║
+     ║         └────────────────────┬────────────────────────────┘                 ║
+     ║                              │                                               ║
+     ║                              ▼                                               ║
+     ║         ┌─────────────────────────────────────────────────┐                 ║
+     ║         │  Build Add-on Request Model                     │                 ║
+     ║         │    → Attach uploaded photo URLs                 │                 ║
+     ║         └─────────────────────────────────────────────────┘                 ║
+     ║                                                                              ║
+     ╚═══════════════════════════════╤══════════════════════════════════════════════╝
+                                     │
+                                     ▼
+                    ┌────────────────────────────────────┐
+                    │  CALL API: Create Booking Alerts   │
+                    │                                    │
+                    │  Send all add-on requests to       │
+                    │  backend with photo attachments    │
+                    │                                    │
+                    │  Receive booking alert IDs back    │
+                    └───────────────┬────────────────────┘
+                                    │
+                                    ▼
+     ╔═══════════════════════════════════════════════════════════════════════════════╗
+     ║                    SAVE TO DEFERRED SERVICE                                  ║
+     ╠═══════════════════════════════════════════════════════════════════════════════╣
+     ║                                                                              ║
+     ║   For each add-on with photos:                                              ║
+     ║     → Store booking alert ID                                                ║
+     ║     → Store local file paths of original photos                             ║
+     ║     → Store filenames                                                       ║
+     ║     → Store upload URLs already used                                        ║
+     ║     → Store booking resource booking ID                                     ║
+     ║     → Status: PENDING                                                       ║
+     ║     → Saved to device's local database (Hive)                               ║
+     ║                                                                              ║
+     ╚═══════════════════════════════╤══════════════════════════════════════════════╝
+                                     │
+                                     ▼
+                    ┌────────────────────────────────────┐
+                    │  Update Payout Price Cache         │
+                    │  + Show New Add-on in UI           │
+                    └───────────────┬────────────────────┘
+                                    │
+                                    ▼
+                    ╔════════════════════════════════════╗
+                    ║      DONE — Deferred Service       ║
+                    ║      Will Re-upload Later           ║
+                    ╚════════════════════════════════════╝
 ```
 
-### 3. Photo Upload Steps (Detailed)
+---
 
-#### Step 1: Get Upload URLs
+## 4. Deferred Service — Background Upload Process
 
-**Method:** `_processPhotos()` → `_vendorService.getUploadUrl()`
-
-**Process:**
-- **Fully Parallel Mode:** All URL requests sent simultaneously
-- **Batched Mode:** Requests sent in batches of `maxConcurrentUploads` (default: 2)
-
-**Telemetry Logs:**
-```
-RequestAddonScreenState _processPhotos: Step 1 - Getting upload URLs for N photos
-RequestAddonScreenState _processPhotos: Requesting upload URL 1/N - filename: photo1.jpg
-RequestAddonScreenState _processPhotos: getUploadUrl for N photos took Xms
-```
-
-**Failure Handling:**
-- If any URL request fails, entire process fails
-- Error logged to telemetry with failure count
-
-#### Step 2: Compress Photos
-
-**Methods:**
-- `_imageService.compressImage()` - Standard compression (max 1920x1920, quality 85)
-- `_imageService.makeSmallImage()` - Aggressive compression for poor connections (max 1000x1000, quality 60)
-
-**Decision Logic:**
-```dart
-connectionPoor.value && hasImageCompressFlag 
-    ? makeSmallImage() 
-    : compressImage()
-```
-
-**Telemetry Logs:**
-```
-RequestAddonScreenState _processPhotos: Step 2 - Compressing N photos
-RequestAddonScreenState _processPhotos: Compressing photo 1/N - original size: X KB
-RequestAddonScreenState _processPhotos: Photo 1 compressed - original: X KB, compressed: Y KB, ratio: Z%
-RequestAddonScreenState _processPhotos: compressImage for N photos took Xms
-```
-
-#### Step 3: Upload Photos
-
-**Method:** `_imageService.putBlobImage()`
-
-**Process:**
-- **Fully Parallel Mode:** All uploads start simultaneously
-- **Batched Mode:** Uploads processed in batches of `maxConcurrentUploads`
-
-**Per-Photo Logging:**
-- Start: Logs photo index, size, filename
-- Completion: Logs success
-- Error: Logs error details with stack trace
-
-**Telemetry Logs:**
-```
-RequestAddonScreenState _processPhotos: Step 3 - Uploading N photos
-RequestAddonScreenState _processPhotos: Starting upload 1/N - size: X KB, filename: photo1.jpg
-RequestAddonScreenState _processPhotos: Completed upload 1/N - filename: photo1.jpg
-RequestAddonScreenState _processPhotos: putBlobImage for N photos took Xms
-```
-
-### 4. Booking Alert Creation Flow
+When photos are saved for deferred upload, a **background service** runs every 30 seconds to check if the connection has improved and re-upload the photos:
 
 ```
-State                VendorService         DeferredService         OrderDetailsState        ProAppState
- │                        │                        │                         │                      │
- │  Process all addon     │                        │                         │                      │
- │      requests          │                        │                         │                      │
- │<───────────────────────┘                        │                         │                      │
- │                        │                        │                         │                      │
- │  addonsRequest(        │                        │                         │                      │
- │   bookingID,           │                        │                         │                      │
- │   addonRequests)       │                        │                         │                      │
- ├───────────────────────>│                        │                         │                      │
- │                        │                        │                         │                      │
- │                        │  ApiResultSuccess      │                         │                      │
- │                        │  with booking          │                         │                      │
- │                        │  alert IDs             │                         │                      │
- │<───────────────────────┤                        │                         │                      │
- │                        │                        │                         │                      │
- │  [Connection Poor?]    │                        │                         │                      │
- │       │                │                        │                         │                      │
- │       │ Yes            │                        │                         │                      │
- │       │                │                        │                         │                      │
- │       ▼                │                        │                         │                      │
- │  save(addonRequests,   │                        │                         │                      │
- │   bookingID)            │                        │                         │                      │
- │─────────────────────────────────────────────────>│                         │                      │
- │                        │                        │  Save to Hive storage    │                      │
- │                        │                        │<─────────────────────────┘                      │
- │                        │                        │                         │                      │
- │                        │                        │                         │                      │
- │  matchBookingAlertId   │                        │                         │                      │
- │  WithDTO(response)     │                        │                         │                      │
- │<───────────────────────┴────────────────────────┴─────────────────────────┴──────────────────────┘
- │                        │                        │                         │                      │
- │  updateBookingAlert    │                        │                         │                      │
- │  List(alert)           │                        │                         │                      │
- ├───────────────────────────────────────────────────────────────────────────────────────────────────>│
- │                        │                        │                         │                      │
- │  [Has Pro Pay Amount   │                        │                         │                      │
- │   Show Flag?]          │                        │                         │                      │
- │       │                │                        │                         │                      │
- │       │ Yes            │                        │                         │                      │
- │       │                │                        │                         │                      │
- │       ▼                │                        │                         │                      │
- │  updatePricingCache()  │                        │                         │                      │
- ├───────────────────────────────────────────────────────────────────────────────────────────────────>│
- │                        │                        │                         │                      │
+     ╔═══════════════════════════════════════════════════════════════════════════════╗
+     ║              DEFERRED SERVICE — RUNS EVERY 30 SECONDS                        ║
+     ╚═══════════════════════════════════════╤═══════════════════════════════════════╝
+                                             │
+                                             ▼
+                            ┌────────────────────────────────┐
+                            │  Check Network Quality         │
+                            │  Is connection still poor?     │
+                            └───────────┬────────────┬───────┘
+                                        │            │
+                                   POOR │            │ GOOD
+                                        │            │
+                                        ▼            ▼
+                              ┌──────────────┐  ┌────────────────────────┐
+                              │  Skip.       │  │  Get All Pending       │
+                              │  Wait for    │  │  Operations from       │
+                              │  next cycle. │  │  Local Database (Hive) │
+                              └──────────────┘  └───────────┬────────────┘
+                                                            │
+                                                            ▼
+                                        ┌────────────────────────────────┐
+                                        │  Filter Eligible Operations    │
+                                        │                                │
+                                        │  → Status must be PENDING      │
+                                        │  → Respect backoff timing:     │
+                                        │    Wait = 2 × 2^retryCount    │
+                                        │    (exponential backoff)       │
+                                        │  → Max 50 retry attempts       │
+                                        └───────────────┬────────────────┘
+                                                        │
+                                                        ▼
+                                        ┌────────────────────────────────┐
+                                        │  Process in Batches            │
+                                        │  (max 2 at a time)            │
+                                        └───────────────┬────────────────┘
+                                                        │
+                                                        ▼
+     ╔═══════════════════════════════════════════════════════════════════════════════╗
+     ║              FOR EACH DEFERRED ADD-ON OPERATION                              ║
+     ╠═══════════════════════════════════════════════════════════════════════════════╣
+     ║                                                                              ║
+     ║         ┌─────────────────────────────────────────────────┐                 ║
+     ║         │  1. Read Photo Files from Device Storage        │                 ║
+     ║         │     → Check if each file still exists           │                 ║
+     ║         │     → Read image bytes from local path          │                 ║
+     ║         └────────────────────┬────────────────────────────┘                 ║
+     ║                              │                                               ║
+     ║                              ▼                                               ║
+     ║         ┌─────────────────────────────────────────────────┐                 ║
+     ║         │  2. Get Fresh Upload URL for Each Photo         │                 ║
+     ║         │     → Request new URL from API                  │                 ║
+     ║         │     → Original URLs may have expired            │                 ║
+     ║         └────────────────────┬────────────────────────────┘                 ║
+     ║                              │                                               ║
+     ║                              ▼                                               ║
+     ║         ┌─────────────────────────────────────────────────┐                 ║
+     ║         │  3. Upload Each Photo to Blob Storage           │                 ║
+     ║         │     → PUT image bytes to new URL                │                 ║
+     ║         │     → Content-Type: application/octet-stream    │                 ║
+     ║         └────────────────────┬────────────────────────────┘                 ║
+     ║                              │                                               ║
+     ║                              ▼                                               ║
+     ║         ┌─────────────────────────────────────────────────┐                 ║
+     ║         │  4. Update Booking Alert via API                │                 ║
+     ║         │     → PATCH booking alert with new photo URLs   │                 ║
+     ║         │     → Links photos to the already-created alert │                 ║
+     ║         └────────────────────┬────────────────────────────┘                 ║
+     ║                              │                                               ║
+     ║                              ▼                                               ║
+     ║         ┌─────────────────────────────────────────────────┐                 ║
+     ║         │  5. Cleanup                                     │                 ║
+     ║         │     → Mark operation as COMPLETED in Hive       │                 ║
+     ║         │     → Delete local photo files from device      │                 ║
+     ║         └─────────────────────────────────────────────────┘                 ║
+     ║                                                                              ║
+     ╚═══════════════════════════════════════════════════════════════════════════════╝
+
+     ┌───────────────────────────────────────────────────────────────────────────────┐
+     │                        ERROR HANDLING                                         │
+     │                                                                               │
+     │  If any step fails:                                                          │
+     │    → Increment retry counter                                                 │
+     │    → Record last attempt time                                                │
+     │    → Next retry after exponential backoff: 2 × 2^retryCount seconds          │
+     │       Retry 1: wait 4s │ Retry 2: wait 8s │ Retry 3: wait 16s │ ...         │
+     │    → After 50 failed attempts → mark as FAILED (stop retrying)              │
+     └───────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 5. Deferred Service Flow (When Connection is Poor)
+---
+
+## 5. Photo Processing Details
+
+### Compression Strategies
+
+| Condition | Method | Max Size | Quality | Format |
+|-----------|--------|----------|---------|--------|
+| **Good connection** | Standard Compression | 1920 × 1920 | 85% | JPEG |
+| **Poor connection** | Aggressive Compression | 1000 × 1000 | 60% | JPEG |
+
+- Photos smaller than **100KB** skip standard compression (overhead not worth it)
+- If compressed file is **larger** than original → keeps original
+- Aggressive compression maintains **aspect ratio** while resizing
+
+### Upload Strategy
+
+All uploads use **batched concurrency** — max **2 simultaneous** uploads at a time. This prevents network congestion that can occur with fully parallel uploads on slow connections.
 
 ```
-┌──────────────────────────────┐
-│ Connection Detected as Poor  │
-└──────────────┬───────────────┘
-               │
-               ▼
-┌──────────────────────────────┐
-│ Initialize DeferredService  │
-└──────────────┬───────────────┘
-               │
-               ▼
-┌──────────────────────────────┐
-│ Process Photos Locally       │
-└──────────────┬───────────────┘
-               │
-               ▼
-┌──────────────────────────────┐
-│ Save Photos to Local Storage │
-└──────────────┬───────────────┘
-               │
-               ▼
-┌──────────────────────────────┐
-│ Create Booking Alert         │
-│    WITHOUT Photos            │
-└──────────────┬───────────────┘
-               │
-               ▼
-┌──────────────────────────────┐
-│ Save Operation to Hive       │
-└──────────────┬───────────────┘
-               │
-               ▼
-┌──────────────────────────────┐
-│ DeferredService Periodic      │
-│        Check                 │
-└──────────────┬───────────────┘
-               │
-               ▼
-       ┌───────────────┐
-       │ Connection    │
-       │    Good?      │
-       └───┬───────┬───┘
-           │       │
-        No │       │ Yes
-           │       │
-           ▼       ▼
-┌──────────────┐ ┌──────────────────────────┐
-│ Wait 30      │ │ Process Deferred         │
-│  seconds     │ │    Operation            │
-└──────┬───────┘ └──────────┬───────────────┘
-       │                    │
-       └──────────┬─────────┘
-                  │
-                  ▼
-         ┌──────────────────┐
-         │ Get Upload URLs  │
-         └──────────┬───────┘
-                    │
-                    ▼
-         ┌──────────────────┐
-         │ Read Photos from │
-         │  Local Storage   │
-         └──────────┬───────┘
-                    │
-                    ▼
-         ┌──────────────────┐
-         │ Upload Photos    │
-         └──────────┬───────┘
-                    │
-                    ▼
-         ┌──────────────────┐
-         │ Update Booking   │
-         │ Alert with Photo │
-         │      URLs        │
-         └──────────┬───────┘
-                    │
-                    ▼
-         ┌──────────────────┐
-         │ Mark Operation   │
-         │ as Completed     │
-         └──────────┬───────┘
-                    │
-                    ▼
-         ┌──────────────────┐
-         │ Delete Local     │
-         │    Photos        │
-         └──────────────────┘
+     ┌─────────────────────────────────────────────────────────────────────┐
+     │                    BATCHED UPLOAD (2 at a time)                     │
+     │                                                                     │
+     │   Photos: [P1] [P2] [P3] [P4] [P5]                                │
+     │                                                                     │
+     │   Batch 1:  [P1] ────────►  [P2] ────────►                        │
+     │             (uploading)      (uploading)     ← wait for both       │
+     │                                                                     │
+     │   Batch 2:  [P3] ────────►  [P4] ────────►                        │
+     │             (uploading)      (uploading)     ← wait for both       │
+     │                                                                     │
+     │   Batch 3:  [P5] ────────►                                         │
+     │             (uploading)                      ← wait for completion │
+     └─────────────────────────────────────────────────────────────────────┘
 ```
 
-**DeferredService Details:**
-- **Check Interval:** Every 30 seconds
-- **Max Concurrent Operations:** 2
-- **Max Retry Attempts:** 50
-- **Backoff Strategy:** Exponential (2 * 2^retryCount seconds)
+---
 
-## Telemetry Events
+## 6. Telemetry — Success Scenario Logs
 
-### Custom Events
-
-| Event Name | Description | Properties |
-|------------|-------------|------------|
-| `DynamicForm:TaskReceived` | When tasks are received | `workOrderId`, `taskIds` |
-| `DynamicForm:SaveChecklist` | When checklist is saved | `workOrderId`, `taskId` |
-| `DynamicForm:SaveTask` | When task is saved | `workOrderId`, `taskId` |
-| `Connectivity:PeriodicNetworkMonitoring` | Network quality monitoring | `httpConnectionQuality`, `pingConnectionQuality`, `balancedQuality` |
-
-### Trace Logs
-
-All major operations log trace events with the following pattern:
+### Good Connection — Full Upload Success
 
 ```
-RequestAddonScreenState:onDone: Starting - N addon requests, M total photos
-RequestAddonScreenState:onDone: Connection quality check - connectionPoor: true/false
-RequestAddonScreenState _processAddonRequest: Starting - ProductID: X, Photos: N
-RequestAddonScreenState _processPhotos: Starting photo processing - N photos
-RequestAddonScreenState _processPhotos: Step 1 - Getting upload URLs
-RequestAddonScreenState _processPhotos: Step 2 - Compressing photos
-RequestAddonScreenState _processPhotos: Step 3 - Uploading photos
-RequestAddonScreenState:onDone: Creating booking alerts - BookingID: X, WorkOrderID: Y
-RequestAddonScreenState:onDone: Total operation time Xms
-```
-
-### Error Logs
-
-Errors are logged with severity `Severity.error` and include:
-- Error message
-- Stack trace (where applicable)
-- Context (ProductID, photo count, etc.)
-
-## Connection Quality Detection
-
-**Method:** `ConnectivityUtil.connectivityInformation()`
-
-**Metrics Evaluated:**
-1. **HTTP Connection Quality:** Based on HTTP request latency
-2. **Ping Connection Quality:** Based on ICMP ping latency
-3. **Balanced Quality:** Combined assessment
-
-**Quality Levels:**
-- `Good` - Connection is reliable
-- `Moderate` - Connection may be slow but usable
-- `Poor` - Connection is unreliable, use deferred uploads
-
-**Decision Logic:**
-```dart
-if (hasEnhanceAddonFlag) {
-    connectionPoor.value = await isConnectionPoor();
-    if (connectionPoor.value) {
-        deferredService = DeferredService.instance();
-    }
-}
-```
-
-## Photo Upload Strategies
-
-### Fully Parallel Upload
-
-**When Used:** When `imageUploadImprovement` feature flag is **NOT** active
-
-**Behavior:**
-- All upload URL requests sent simultaneously
-- All photo uploads start simultaneously
-- Maximum throughput but may cause network congestion
-
-### Batched Upload
-
-**When Used:** When `imageUploadImprovement` feature flag **IS** active
-
-**Behavior:**
-- Upload URL requests batched (default: 2 concurrent)
-- Photo uploads batched (default: 2 concurrent)
-- Reduces network congestion
-- More predictable performance
-
-**Configuration:**
-```dart
-static const int maxConcurrentUploads = 2;
-bool get useFullyParallelUpload => 
-    !(Get.find<FeatureFlagService>().userActiveKey.contains(FeatureFlagKeys.imageUploadImprovement));
-```
-
-## Error Handling
-
-### Photo Upload Failures
-
-1. **Upload URL Request Failure:**
-   - Logged with error severity
-   - Process stops, returns `null`
-   - User sees error dialog
-
-2. **Photo Compression Failure:**
-   - Falls back to original image
-   - Process continues
-   - Logged as warning
-
-3. **Photo Upload Failure:**
-   - Logged per-photo with error details
-   - Entire process fails if any upload fails
-   - User sees error dialog with retry option
-
-### API Failures
-
-1. **addonsRequest API Failure:**
-   - Logged with error severity
-   - Process stops
-   - User sees error dialog
-
-2. **Booking Alert Creation Failure:**
-   - Logged with error severity
-   - Process stops
-   - User sees error dialog
-
-## Performance Metrics
-
-### Logged Metrics
-
-- **Total Operation Time:** From `onDone()` start to completion
-- **Photo Processing Time:** Per addon request
-- **Upload URL Retrieval Time:** Per batch/all photos
-- **Compression Time:** Per batch/all photos
-- **Upload Time:** Per batch/all photos
-- **API Call Duration:** Booking alert creation
-
-### Example Telemetry Output
-
-```
-RequestAddonScreenState:onDone: Starting - 2 addon requests, 5 total photos
-RequestAddonScreenState:onDone: Connection quality check - connectionPoor: false
-RequestAddonScreenState _processAddonRequest: Starting - ProductID: abc-123, Photos: 3
-RequestAddonScreenState _processPhotos: Step 1 - Getting upload URLs for 3 photos
-RequestAddonScreenState _processPhotos: getUploadUrl for 3 photos took 450ms
-RequestAddonScreenState _processPhotos: Step 2 - Compressing 3 photos
-RequestAddonScreenState _processPhotos: compressImage for 3 photos took 1200ms
-RequestAddonScreenState _processPhotos: Step 3 - Uploading 3 photos
-RequestAddonScreenState _processPhotos: putBlobImage for 3 photos took 3500ms
-RequestAddonScreenState:onDone: Processing 2 addon requests took 5200ms
+RequestAddonScreenState isConnectionPoor: Connectivity quality good
+RequestAddonScreenState _processAddonRequest: getUploadUrl for 3 photos took 450ms
+RequestAddonScreenState _processAddonRequest: compressImage for 3 photos took 1200ms
+RequestAddonScreenState _processAddonRequest: putBlobImage for 3 photos took 3500ms
+RequestAddonScreenState _processAddonRequest: Total processing time 5150ms for 3 photos
+onDone: Processing 2 addon requests took 5200ms
 RequestAddonScreenState:onDone: addonsRequest API call took 380ms
-RequestAddonScreenState:onDone: Total operation time 5600ms
+RequestAddonScreenState:onDone: Pricing cache update took 120ms
+RequestAddonScreenState:onDone: Total operation time 5700ms
 ```
 
-## Key Files and Methods
+### Poor Connection — Upload + Deferred Save Success
 
-| File | Key Methods | Purpose |
-|------|-------------|---------|
-| `request_addon_screen.dart` | `onButtonDoneTap()` | Entry point, UI handling |
-| `request_addon_screen_state.dart` | `onDone()` | Main orchestration |
-| `request_addon_screen_state.dart` | `_processAddonRequest()` | Process single addon |
-| `request_addon_screen_state.dart` | `_processPhotos()` | Photo upload pipeline |
-| `deferred_service.dart` | `save()` | Save deferred operations |
-| `deferred_service.dart` | `processSingleOperation()` | Process deferred uploads |
-| `image_service.dart` | `putBlobImage()` | Upload photo to blob storage |
-| `vendors_service.dart` | `addonsRequest()` | Create booking alerts via API |
-| `connectivity_util.dart` | `connectivityInformation()` | Check connection quality |
+```
+RequestAddonScreenState isConnectionPoor: Connectivity quality poor
+RequestAddonScreenState _processAddonRequest: getUploadUrl for 3 photos took 2800ms
+RequestAddonScreenState _processAddonRequest: compressImage for 3 photos took 600ms
+RequestAddonScreenState _processAddonRequest: putBlobImage for 3 photos took 8200ms
+RequestAddonScreenState _processAddonRequest: Total processing time 11600ms for 3 photos
+onDone: Processing 1 addon requests took 11600ms
+RequestAddonScreenState:onDone: addonsRequest API call took 1200ms
+RequestAddonScreenState:onDone: Pricing cache update took 200ms
+RequestAddonScreenState:onDone: Total operation time 13000ms
+```
+
+**Later, when connection improves (Deferred Service):**
+
+```
+DeferredService: Connection is good, processing 1 pending operations
+DeferredService: Starting deferred upload for booking alert BA-12345
+DeferredService: putBlobImage completed for 3 photos
+DeferredService: Booking Alert Updated Successfully
+DeferredService: Operation completed, local photos deleted
+```
+
+---
+
+## 7. Key Files Reference
+
+| File | Purpose |
+|------|---------|
+| `lib/screens/request_addon_bundled/request_addon_screen.dart` | UI screen — entry point |
+| `lib/screens/request_addon_bundled/request_addon_screen_state.dart` | Main logic — orchestrates the full process |
+| `lib/services/deferred/deferred_service.dart` | Background upload manager — retries failed uploads |
+| `lib/services/hive_operation/hive_operation_service.dart` | Local database — stores pending deferred operations |
+| `lib/services/image/image_service.dart` | Photo compression & blob storage upload |
+| `lib/services/vendors/vendors_service.dart` | API calls — create booking alerts, get upload URLs |
+| `lib/utils/connectivity_util.dart` | Network quality detection (HTTP + Ping tests) |
+| `lib/models/deferred_operation.dart` | Data model for deferred add-on operations |
+
+---
+
+## 8. Connection Quality Detection
+
+The app evaluates network quality using **two tests**:
+
+1. **HTTP Connection Test:** Measures response latency of an HTTP request
+2. **Ping Connection Test:** Measures ICMP ping latency
+
+These are combined into a **balanced quality** score:
+
+| Quality | Meaning | Upload Behavior |
+|---------|---------|-----------------|
+| **Good** | Reliable connection | Standard compression, immediate upload |
+| **Moderate** | Slow but usable | Aggressive compression, immediate upload + deferred backup |
+| **Poor** | Unreliable | Aggressive compression, immediate upload + deferred backup |
+
+> **Note:** Both "Moderate" and "Poor" are treated as poor connection — triggering aggressive compression and deferred service backup.
+
+---
 
 ## Summary
 
-The add-on creation process is designed to handle both good and poor network conditions:
-
-1. **Good Connection:** Photos uploaded immediately, booking alerts created with photo attachments
-2. **Poor Connection:** Photos saved locally, booking alerts created without photos, photos uploaded later via DeferredService
-
-The system includes comprehensive telemetry logging at every step, allowing for detailed analysis of performance and failure points. Feature flags control upload strategies and connection handling, providing flexibility for A/B testing and gradual rollouts.
+| Scenario | What Happens |
+|----------|-------------|
+| **Good Connection** | Photos compressed (1920px, 85%), uploaded 2-at-a-time, add-on created with photos, payout prices updated |
+| **Poor Connection** | Photos aggressively compressed (1000px, 60%), uploaded 2-at-a-time, add-on created with photos, photos also saved locally for background re-upload when connection improves |
+| **Background Re-upload** | Every 30 seconds, checks connection → if good, reads local photos, gets fresh URLs, uploads, updates booking alert, deletes local copies |
+| **Retry on Failure** | Exponential backoff (4s → 8s → 16s → ...), up to 50 attempts before marking as permanently failed |
