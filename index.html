@@ -1,128 +1,290 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Schedule Delays V4 - Dual Modules</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Kat Karşılığı Arsa Fizibilite Aracı</title>
     <style>
-        body { background-color: #f9fafb; font-family: 'Inter', sans-serif; }
-        .impact-text { color: #9A3412; } /* Deep Amber for contrast */
-        .table-head { font-size: 11px; letter-spacing: 0.05em; color: #9ca3af; text-transform: uppercase; font-weight: 700; }
+        :root {
+            --primary: #2c3e50;
+            --secondary: #18bc9c;
+            --bg-color: #f8f9fa;
+            --text-color: #333;
+            --card-bg: #ffffff;
+            --border-radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            background-color: var(--primary);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.8;
+            font-size: 0.95rem;
+        }
+
+        .inputs-section {
+            padding: 30px;
+            border-right: 1px solid #eee;
+        }
+
+        .results-section {
+            padding: 30px;
+            background-color: #fdfdfd;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .input-group label span {
+            color: var(--secondary);
+            font-weight: bold;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+            accent-color: var(--secondary);
+        }
+
+        .result-card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #eee;
+            margin-bottom: 15px;
+            transition: transform 0.2s;
+        }
+
+        .result-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .result-title {
+            font-size: 0.9rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .result-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .highlight-card {
+            background: var(--secondary);
+            color: white;
+            border: none;
+        }
+
+        .highlight-card .result-title {
+            color: rgba(255,255,255,0.9);
+        }
+
+        .highlight-card .result-value {
+            color: white;
+            font-size: 2rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            .inputs-section {
+                border-right: none;
+                border-bottom: 1px solid #eee;
+            }
+        }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body>
 
-    <div class="max-w-6xl mx-auto space-y-12">
-        
-        <section class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div class="px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100">
-                <div class="flex items-center gap-2">
-                    <span class="text-red-500">⚠️</span>
-                    <h2 class="text-sm font-bold text-gray-800 uppercase tracking-tight">Recent Alerts</h2>
-                </div>
-                <div class="relative">
-                    <input type="text" placeholder="Search Recent..." class="pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-100 w-full md:w-64">
-                    <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
-                </div>
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left border-collapse">
-                    <thead class="bg-gray-50 border-b border-gray-200 table-head">
-                        <tr>
-                            <th class="px-6 py-4 text-right">Created</th>
-                            <th class="px-6 py-4 text-right">Unit</th>
-                            <th class="px-6 py-4">Service</th>
-                            <th class="px-6 py-4 text-right">Requested</th>
-                            <th class="px-6 py-4 text-right">Scheduled</th>
-                            <th class="px-6 py-4">Scheduled Pro</th>
-                            <th class="px-6 py-4 text-center">Impact</th>
-                            <th class="px-6 py-4 text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-6 py-4 text-right text-gray-500 whitespace-nowrap">2/16/26</td>
-                            <td class="px-6 py-4 text-right font-semibold text-gray-900">401</td>
-                            <td class="px-6 py-4 font-medium text-gray-700">Paint</td>
-                            <td class="px-6 py-4 text-right text-gray-500">3/8/26</td>
-                            <td class="px-6 py-4 text-right text-gray-500">3/11/26</td>
-                            <td class="px-6 py-4 font-bold text-gray-900">Color Masters</td>
-                            <td class="px-6 py-4 text-center">
-                                <span class="bg-orange-50 border border-orange-100 impact-text px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap">+3 days</span>
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                <div class="flex items-center justify-center gap-2">
-                                    <button class="px-4 py-1.5 border-2 border-teal-600 text-teal-600 rounded-md hover:bg-teal-50 text-xs font-bold">Keep</button>
-                                    <button class="px-4 py-1.5 border-2 border-red-400 text-red-400 rounded-md hover:bg-red-50 text-xs font-bold">Override</button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="px-6 py-3 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
-                <button class="px-4 py-1.5 bg-white border border-gray-300 rounded text-xs font-bold text-gray-600 hover:bg-gray-100">Previous</button>
-                <button class="px-4 py-1.5 bg-white border border-gray-300 rounded text-xs font-bold text-gray-600 hover:bg-gray-100">Next</button>
-            </div>
-        </section>
-
-        <section class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div class="px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100">
-                <div class="flex items-center gap-2">
-                    <span class="text-teal-500">🕒</span>
-                    <h2 class="text-sm font-bold text-gray-800 uppercase tracking-tight">Upcoming Services</h2>
-                </div>
-                <div class="relative">
-                    <input type="text" placeholder="Search Upcoming..." class="pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-100 w-full md:w-64">
-                    <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
-                </div>
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left border-collapse">
-                    <thead class="bg-gray-50 border-b border-gray-200 table-head">
-                        <tr>
-                            <th class="px-6 py-4 text-right">Created</th>
-                            <th class="px-6 py-4 text-right">Unit</th>
-                            <th class="px-6 py-4">Service</th>
-                            <th class="px-6 py-4 text-right">Requested</th>
-                            <th class="px-6 py-4 text-right">Scheduled</th>
-                            <th class="px-6 py-4">Scheduled Pro</th>
-                            <th class="px-6 py-4 text-center">Impact</th>
-                            <th class="px-6 py-4 text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-6 py-4 text-right text-gray-500 whitespace-nowrap">2/5/26</td>
-                            <td class="px-6 py-4 text-right font-semibold text-gray-900">202</td>
-                            <td class="px-6 py-4 font-medium text-gray-700">Maintenance</td>
-                            <td class="px-6 py-4 text-right text-gray-500">3/4/26</td>
-                            <td class="px-6 py-4 text-right text-gray-500">3/18/26</td>
-                            <td class="px-6 py-4 font-bold text-gray-900">General Handyman</td>
-                            <td class="px-6 py-4 text-center">
-                                <span class="bg-orange-50 border border-orange-100 impact-text px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap">+14 days</span>
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                <div class="flex items-center justify-center gap-2">
-                                    <button class="px-4 py-1.5 border-2 border-teal-600 text-teal-600 rounded-md hover:bg-teal-50 text-xs font-bold">Keep</button>
-                                    <button class="px-4 py-1.5 border-2 border-red-400 text-red-400 rounded-md hover:bg-red-50 text-xs font-bold">Override</button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="px-6 py-3 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
-                <button class="px-4 py-1.5 bg-white border border-gray-300 rounded text-xs font-bold text-gray-600 hover:bg-gray-100">Previous</button>
-                <button class="px-4 py-1.5 bg-white border border-gray-300 rounded text-xs font-bold text-gray-600 hover:bg-gray-100">Next</button>
-            </div>
-        </section>
-
+<div class="container">
+    <div class="header">
+        <h1>🏢 Kat Karşılığı Arsa Fizibilite Aracı</h1>
+        <p>Değerleri kaydırarak arsanın maksimum mantıklı alış fiyatını anında hesaplayın.</p>
     </div>
+
+    <div class="inputs-section">
+        <div class="input-group">
+            <label>Arsa Alanı (m²) <span id="valArea">1.943</span></label>
+            <input type="range" id="inpArea" min="100" max="10000" step="1" value="1943">
+        </div>
+
+        <div class="input-group">
+            <label>İmar Emsali (E) <span id="valEmsal">2.0</span></label>
+            <input type="range" id="inpEmsal" min="0.1" max="4.0" step="0.1" value="2.0">
+        </div>
+
+        <div class="input-group">
+            <label>Ortalama Daire Büyüklüğü (m²) <span id="valAptSize">50</span></label>
+            <input type="range" id="inpAptSize" min="30" max="250" step="5" value="50">
+        </div>
+
+        <div class="input-group">
+            <label>Müteahhit Anlaşması (Arsa Sahibi Payı %) <span id="valShare">40%</span></label>
+            <input type="range" id="inpShare" min="10" max="90" step="1" value="40">
+        </div>
+
+        <div class="input-group">
+            <label>Tahmini Daire Satış Fiyatı (TL) <span id="valPrice">2.000.000 ₺</span></label>
+            <input type="range" id="inpPrice" min="500000" max="15000000" step="100000" value="2000000">
+        </div>
+
+        <div class="input-group">
+            <label>Hedeflenen Net Kar Marjı (%) <span id="valMargin">40%</span></label>
+            <input type="range" id="inpMargin" min="10" max="100" step="5" value="40">
+        </div>
+    </div>
+
+    <div class="results-section">
+        <div class="result-card">
+            <div class="result-title">Toplam İnşaat Alanı</div>
+            <div class="result-value" id="resTotalArea">0 m²</div>
+        </div>
+
+        <div class="result-card">
+            <div class="result-title">Çıkacak Toplam Daire Sayısı</div>
+            <div class="result-value" id="resTotalApts">0 Adet</div>
+        </div>
+
+        <div class="result-card">
+            <div class="result-title">Size Kalacak Daire Sayısı</div>
+            <div class="result-value" id="resYourApts">0 Adet</div>
+        </div>
+
+        <div class="result-card">
+            <div class="result-title">Beklenen Brüt Gelir</div>
+            <div class="result-value" id="resRevenue">0 ₺</div>
+        </div>
+
+        <div class="result-card highlight-card">
+            <div class="result-title">Mantıklı Maksimum Alış Fiyatı</div>
+            <div class="result-value" id="resMaxPrice">0 ₺</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // DOM Elementlerini Seç
+    const inputs = {
+        area: document.getElementById('inpArea'),
+        emsal: document.getElementById('inpEmsal'),
+        aptSize: document.getElementById('inpAptSize'),
+        share: document.getElementById('inpShare'),
+        price: document.getElementById('inpPrice'),
+        margin: document.getElementById('inpMargin')
+    };
+
+    const labels = {
+        area: document.getElementById('valArea'),
+        emsal: document.getElementById('valEmsal'),
+        aptSize: document.getElementById('valAptSize'),
+        share: document.getElementById('valShare'),
+        price: document.getElementById('valPrice'),
+        margin: document.getElementById('valMargin')
+    };
+
+    const results = {
+        totalArea: document.getElementById('resTotalArea'),
+        totalApts: document.getElementById('resTotalApts'),
+        yourApts: document.getElementById('resYourApts'),
+        revenue: document.getElementById('resRevenue'),
+        maxPrice: document.getElementById('resMaxPrice')
+    };
+
+    // Para birimi ve sayı formatlayıcı
+    const formatNumber = (num) => new Intl.NumberFormat('tr-TR').format(num);
+    const formatCurrency = (num) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(num);
+
+    // Hesaplama Fonksiyonu
+    function calculate() {
+        // Değerleri Al
+        const area = parseFloat(inputs.area.value);
+        const emsal = parseFloat(inputs.emsal.value);
+        const aptSize = parseFloat(inputs.aptSize.value);
+        const share = parseFloat(inputs.share.value);
+        const price = parseFloat(inputs.price.value);
+        const margin = parseFloat(inputs.margin.value);
+
+        // Label'ları Güncelle
+        labels.area.innerText = formatNumber(area);
+        labels.emsal.innerText = emsal.toFixed(1);
+        labels.aptSize.innerText = aptSize;
+        labels.share.innerText = share + '%';
+        labels.price.innerText = formatCurrency(price);
+        labels.margin.innerText = margin + '%';
+
+        // Matematiksel Hesaplamalar
+        const totalBuildArea = area * emsal;
+        const totalApts = Math.floor(totalBuildArea / aptSize); // Aşağı yuvarla (yarım daire satılamaz)
+        const yourApts = Math.floor(totalApts * (share / 100)); // Arsa sahibinin payı
+        const totalRevenue = yourApts * price;
+        const maxBuyPrice = totalRevenue / (1 + (margin / 100)); // Kar marjı düşülmüş mantıklı alış fiyatı
+
+        // Sonuçları Ekrana Yazdır
+        results.totalArea.innerText = formatNumber(totalBuildArea) + ' m²';
+        results.totalApts.innerText = formatNumber(totalApts) + ' Adet';
+        results.yourApts.innerText = formatNumber(yourApts) + ' Adet';
+        results.revenue.innerText = formatCurrency(totalRevenue);
+        results.maxPrice.innerText = formatCurrency(maxBuyPrice);
+    }
+
+    // Tüm inputlara event listener ekle
+    Object.values(inputs).forEach(input => {
+        input.addEventListener('input', calculate);
+    });
+
+    // Sayfa yüklendiğinde ilk hesaplamayı yap
+    calculate();
+</script>
 </body>
 </html>
