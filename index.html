@@ -90,6 +90,149 @@
             accent-color: var(--secondary);
         }
 
+        .field-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .field-row input[type="text"] {
+            flex: 0 0 8.5rem;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .field-row input[type="text"]:focus {
+            outline: 2px solid rgba(24, 188, 156, 0.35);
+            border-color: var(--secondary);
+        }
+
+        .field-row input[type="text"].input-error {
+            border-color: #e74c3c;
+        }
+
+        .input-hint {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .input-warning {
+            font-size: 0.78rem;
+            color: #c0392b;
+            margin-top: 4px;
+            min-height: 1.1em;
+        }
+
+        .building-wrap {
+            margin-top: 22px;
+            padding: 16px;
+            background: #fff;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+
+        .building-wrap .result-title {
+            margin-bottom: 12px;
+        }
+
+        .building-visual {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            padding: 12px;
+            background: linear-gradient(180deg, #ecf0f1 0%, #dfe6e9 100%);
+            border-radius: 8px;
+            min-height: 120px;
+        }
+
+        .building-roof {
+            width: 55%;
+            height: 14px;
+            background: var(--primary);
+            border-radius: 4px 4px 0 0;
+            margin-bottom: -1px;
+            z-index: 1;
+        }
+
+        .building-body {
+            width: 100%;
+            max-width: 280px;
+            padding: 10px 12px 12px;
+            background: linear-gradient(90deg, #95a5a6 0%, #7f8c8d 50%, #95a5a6 100%);
+            border-radius: 0 0 6px 6px;
+            box-shadow: inset 0 -4px 0 rgba(0,0,0,0.12);
+        }
+
+        .building-floor {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 6px;
+        }
+
+        .building-floor:first-child {
+            margin-top: 0;
+        }
+
+        .window-cell {
+            width: 14px;
+            height: 18px;
+            border-radius: 2px;
+            background: rgba(255,255,255,0.35);
+            border: 1px solid rgba(0,0,0,0.15);
+            box-shadow: inset 0 2px 0 rgba(255,255,255,0.25);
+            transition: background 0.2s, transform 0.15s;
+        }
+
+        .window-cell.owner {
+            background: rgba(24, 188, 156, 0.95);
+            border-color: rgba(0,0,0,0.12);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 0 8px rgba(24, 188, 156, 0.35);
+        }
+
+        .window-cell.other {
+            background: rgba(52, 73, 94, 0.55);
+        }
+
+        .building-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-top: 12px;
+            font-size: 0.8rem;
+            color: #555;
+        }
+
+        .building-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .building-legend i {
+            display: inline-block;
+            width: 12px;
+            height: 14px;
+            border-radius: 2px;
+        }
+
+        .building-legend .lg-owner {
+            background: var(--secondary);
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .building-legend .lg-other {
+            background: rgba(52, 73, 94, 0.55);
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
         .result-card {
             background: #fff;
             padding: 20px;
@@ -156,32 +299,62 @@
     <div class="inputs-section">
         <div class="input-group">
             <label>Arsa Alanı (m²) <span id="valArea">1.943</span></label>
-            <input type="range" id="inpArea" min="100" max="10000" step="1" value="1943">
+            <input type="range" id="inpArea" min="100" max="50000" step="1" value="1943">
+            <div class="field-row">
+                <input type="text" id="txtArea" inputmode="decimal" autocomplete="off" aria-label="Arsa alanı metin">
+            </div>
+            <div class="input-hint">100 – 50.000 m². Nokta binlik ayırıcı olabilir (örn. 1.943).</div>
+            <div class="input-warning" id="warnArea" role="status"></div>
         </div>
 
         <div class="input-group">
             <label>İmar Emsali (E) <span id="valEmsal">2.0</span></label>
-            <input type="range" id="inpEmsal" min="0.1" max="4.0" step="0.1" value="2.0">
+            <input type="range" id="inpEmsal" min="0.1" max="6.0" step="0.1" value="2.0">
+            <div class="field-row">
+                <input type="text" id="txtEmsal" inputmode="decimal" autocomplete="off" aria-label="Emsal metin">
+            </div>
+            <div class="input-hint">0,1 – 6,0 (ondalık için virgül veya nokta).</div>
+            <div class="input-warning" id="warnEmsal" role="status"></div>
         </div>
 
         <div class="input-group">
             <label>Ortalama Daire Büyüklüğü (m²) <span id="valAptSize">50</span></label>
-            <input type="range" id="inpAptSize" min="30" max="250" step="5" value="50">
+            <input type="range" id="inpAptSize" min="30" max="400" step="5" value="50">
+            <div class="field-row">
+                <input type="text" id="txtAptSize" inputmode="numeric" autocomplete="off" aria-label="Daire büyüklüğü metin">
+            </div>
+            <div class="input-hint">30 – 400 m².</div>
+            <div class="input-warning" id="warnAptSize" role="status"></div>
         </div>
 
         <div class="input-group">
             <label>Müteahhit Anlaşması (Arsa Sahibi Payı %) <span id="valShare">40%</span></label>
-            <input type="range" id="inpShare" min="10" max="90" step="1" value="40">
+            <input type="range" id="inpShare" min="5" max="95" step="1" value="40">
+            <div class="field-row">
+                <input type="text" id="txtShare" inputmode="numeric" autocomplete="off" aria-label="Arsa payı metin">
+            </div>
+            <div class="input-hint">%5 – %95.</div>
+            <div class="input-warning" id="warnShare" role="status"></div>
         </div>
 
         <div class="input-group">
             <label>Tahmini Daire Satış Fiyatı (TL) <span id="valPrice">2.000.000 ₺</span></label>
-            <input type="range" id="inpPrice" min="500000" max="15000000" step="100000" value="2000000">
+            <input type="range" id="inpPrice" min="500000" max="500000000" step="500000" value="2000000">
+            <div class="field-row">
+                <input type="text" id="txtPrice" inputmode="decimal" autocomplete="off" aria-label="Daire fiyatı metin">
+            </div>
+            <div class="input-hint">500.000 – 500.000.000 ₺. Kaydırıcı üst sınırı aşan değerleri buraya yazın.</div>
+            <div class="input-warning" id="warnPrice" role="status"></div>
         </div>
 
         <div class="input-group">
             <label>Hedeflenen Net Kar Marjı (%) <span id="valMargin">40%</span></label>
-            <input type="range" id="inpMargin" min="10" max="100" step="5" value="40">
+            <input type="range" id="inpMargin" min="5" max="100" step="1" value="40">
+            <div class="field-row">
+                <input type="text" id="txtMargin" inputmode="numeric" autocomplete="off" aria-label="Kar marjı metin">
+            </div>
+            <div class="input-hint">%5 – %100.</div>
+            <div class="input-warning" id="warnMargin" role="status"></div>
         </div>
     </div>
 
@@ -201,6 +374,21 @@
             <div class="result-value" id="resYourApts">0 Adet</div>
         </div>
 
+        <div class="building-wrap">
+            <div class="result-title">Payınız (dinamik bina özeti)</div>
+            <p class="input-hint" style="margin-bottom:10px;" id="buildingCaption">Toplam daire içinde size düşen pay pencerelerle gösterilir.</p>
+            <div class="building-visual" aria-hidden="true">
+                <div class="building-roof"></div>
+                <div class="building-body" id="buildingBody">
+                    <div id="buildingFloors"></div>
+                </div>
+            </div>
+            <div class="building-legend">
+                <span><i class="lg-owner"></i> Size kalan daire</span>
+                <span><i class="lg-other"></i> Müteahhit / diğer pay</span>
+            </div>
+        </div>
+
         <div class="result-card">
             <div class="result-title">Beklenen Brüt Gelir</div>
             <div class="result-value" id="resRevenue">0 ₺</div>
@@ -214,7 +402,6 @@
 </div>
 
 <script>
-    // DOM Elementlerini Seç
     const inputs = {
         area: document.getElementById('inpArea'),
         emsal: document.getElementById('inpEmsal'),
@@ -222,6 +409,24 @@
         share: document.getElementById('inpShare'),
         price: document.getElementById('inpPrice'),
         margin: document.getElementById('inpMargin')
+    };
+
+    const texts = {
+        area: document.getElementById('txtArea'),
+        emsal: document.getElementById('txtEmsal'),
+        aptSize: document.getElementById('txtAptSize'),
+        share: document.getElementById('txtShare'),
+        price: document.getElementById('txtPrice'),
+        margin: document.getElementById('txtMargin')
+    };
+
+    const warns = {
+        area: document.getElementById('warnArea'),
+        emsal: document.getElementById('warnEmsal'),
+        aptSize: document.getElementById('warnAptSize'),
+        share: document.getElementById('warnShare'),
+        price: document.getElementById('warnPrice'),
+        margin: document.getElementById('warnMargin')
     };
 
     const labels = {
@@ -241,13 +446,210 @@
         maxPrice: document.getElementById('resMaxPrice')
     };
 
-    // Para birimi ve sayı formatlayıcı
+    const buildingFloors = document.getElementById('buildingFloors');
+    const buildingCaption = document.getElementById('buildingCaption');
+
     const formatNumber = (num) => new Intl.NumberFormat('tr-TR').format(num);
     const formatCurrency = (num) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(num);
 
-    // Hesaplama Fonksiyonu
+    const limits = {
+        area: { min: 100, max: 50000, step: 1 },
+        emsal: { min: 0.1, max: 6.0, step: 0.1 },
+        aptSize: { min: 30, max: 400, step: 5 },
+        share: { min: 5, max: 95, step: 1 },
+        price: { min: 500_000, max: 500_000_000, step: 50_000 },
+        margin: { min: 5, max: 100, step: 1 }
+    };
+
+    /** Türkçe binlik noktası ve ondalık virgülü destekleyen tamsayı ayrıştırma */
+    function parseIntegerLoose(raw) {
+        const s = String(raw).trim().replace(/\s/g, '');
+        if (!s) return NaN;
+        const bad = s.match(/[^\d.,]/g);
+        if (bad) return { n: NaN, invalidChars: [...new Set(bad)] };
+        const hasComma = s.includes(',');
+        const hasDot = s.includes('.');
+        let cleaned = s;
+        if (hasComma && hasDot) {
+            cleaned = s.replace(/\./g, '').replace(',', '.');
+        } else if (hasComma) {
+            cleaned = s.replace(/\./g, '').replace(',', '.');
+        } else if (hasDot) {
+            const parts = s.split('.');
+            const restAreTriple = parts.length > 1 && parts.slice(1).every((p) => p.length === 3);
+            if (restAreTriple)
+                cleaned = parts.join('');
+            else if (parts.length === 2 && parts[1].length <= 2)
+                cleaned = parts[0] + '.' + parts[1];
+            else if (parts.length > 2 && parts[parts.length - 1].length <= 2)
+                cleaned = parts.slice(0, -1).join('') + '.' + parts[parts.length - 1];
+            else
+                cleaned = parts.join('');
+        }
+        const n = Number(cleaned);
+        return { n: Number.isFinite(n) ? Math.round(n) : NaN, invalidChars: null };
+    }
+
+    function parseEmsalLoose(raw) {
+        const s = String(raw).trim().replace(/\s/g, '');
+        if (!s) return NaN;
+        if (s.match(/[^\d.,]/g)) return NaN;
+        const hasComma = s.includes(',');
+        const hasDot = s.includes('.');
+        let normalized;
+        if (hasComma && hasDot)
+            normalized = s.replace(/\./g, '').replace(',', '.');
+        else if (hasComma)
+            normalized = s.replace(/\./g, '').replace(',', '.');
+        else if (hasDot) {
+            const parts = s.split('.');
+            if (parts.length === 2 && parts[1].length <= 2)
+                normalized = parts[0] + '.' + parts[1];
+            else {
+                const restAreTriple = parts.length > 1 && parts.slice(1).every((p) => p.length === 3);
+                normalized = restAreTriple ? parts.join('') : s.replace(/\./g, '');
+            }
+        } else
+            normalized = s;
+        const n = parseFloat(normalized);
+        return Number.isFinite(n) ? n : NaN;
+    }
+
+    function clamp(n, lo, hi) {
+        return Math.min(hi, Math.max(lo, n));
+    }
+
+    function snapToStep(n, step) {
+        if (step >= 1) return Math.round(n / step) * step;
+        const inv = Math.round(1 / step);
+        return Math.round(n * inv) / inv;
+    }
+
+    function setWarning(key, msg) {
+        warns[key].textContent = msg || '';
+        texts[key].classList.toggle('input-error', Boolean(msg));
+    }
+
+    function syncSlider(key, value) {
+        const el = inputs[key];
+        const lo = parseFloat(el.min);
+        const hi = parseFloat(el.max);
+        const v = clamp(value, lo, hi);
+        el.value = String(v);
+    }
+
+    function formatTextBox(key, value) {
+        if (key === 'emsal') {
+            texts[key].value = String(value).replace('.', ',');
+            return;
+        }
+        if (key === 'price' || key === 'area') {
+            texts[key].value = formatNumber(Math.round(value));
+            return;
+        }
+        texts[key].value = String(Math.round(value));
+    }
+
+    function readFromSliders() {
+        return {
+            area: parseFloat(inputs.area.value),
+            emsal: parseFloat(inputs.emsal.value),
+            aptSize: parseFloat(inputs.aptSize.value),
+            share: parseFloat(inputs.share.value),
+            price: parseFloat(inputs.price.value),
+            margin: parseFloat(inputs.margin.value)
+        };
+    }
+
+    let fromText = false;
+
+    function applyParsed(key, num) {
+        const L = limits[key];
+        if (!Number.isFinite(num)) {
+            setWarning(key, 'Geçerli bir sayı girin.');
+            return false;
+        }
+        let v = clamp(num, L.min, L.max);
+        v = snapToStep(v, L.step);
+        v = clamp(v, L.min, L.max);
+        if (num < L.min || num > L.max)
+            setWarning(key, `İzin verilen aralık: ${formatNumber(L.min)} – ${formatNumber(L.max)}. Kaydedilen değer sınıra çekildi.`);
+        else if (Math.abs(num - v) > 1e-9)
+            setWarning(key, 'En yakın izin verilen adıma yuvarlandı.');
+        else
+            setWarning(key, '');
+        syncSlider(key, v);
+        formatTextBox(key, v);
+        return true;
+    }
+
+    function onTextCommit(key) {
+        const raw = texts[key].value;
+        try {
+            if (key === 'emsal') {
+                const n = parseEmsalLoose(raw);
+                if (raw.match(/[^\d.,\s]/)) {
+                    setWarning(key, 'İstenmeyen karakter: yalnızca rakam, virgül veya nokta kullanın.');
+                    return;
+                }
+                if (!Number.isFinite(n)) {
+                    setWarning(key, 'Geçerli bir emsal girin (örn. 2 veya 2,1).');
+                    return;
+                }
+                if (!applyParsed(key, n)) return;
+                calculate();
+                return;
+            }
+            const { n, invalidChars } = parseIntegerLoose(raw);
+            if (invalidChars && invalidChars.length) {
+                setWarning(key, 'İstenmeyen karakter: ' + invalidChars.map((c) => `"${c}"`).join(', ') + '. Yalnızca rakam ve binlik ayırıcı (.) kullanın.');
+                return;
+            }
+            if (!Number.isFinite(n)) {
+                setWarning(key, 'Geçerli bir sayı girin.');
+                return;
+            }
+            if (!applyParsed(key, n)) return;
+            calculate();
+        } finally {
+            fromText = false;
+        }
+    }
+
+    function renderBuilding(totalApts, yourApts) {
+        buildingFloors.innerHTML = '';
+        if (totalApts <= 0) {
+            buildingCaption.textContent = 'Toplam daire 0 olduğu için pay özeti gösterilemiyor.';
+            return;
+        }
+        const MAX_CELLS = 56;
+        const cells = Math.min(totalApts, MAX_CELLS);
+        let ownerCells = Math.round((yourApts / totalApts) * cells);
+        if (yourApts > 0 && ownerCells === 0) ownerCells = 1;
+        if (yourApts >= totalApts) ownerCells = cells;
+        ownerCells = clamp(ownerCells, 0, cells);
+        const cols = Math.min(8, Math.max(4, Math.ceil(Math.sqrt(cells))));
+        const rows = Math.ceil(cells / cols);
+        let idx = 0;
+        for (let r = 0; r < rows; r++) {
+            const row = document.createElement('div');
+            row.className = 'building-floor';
+            for (let c = 0; c < cols && idx < cells; c++, idx++) {
+                const cell = document.createElement('div');
+                const isOwner = idx < ownerCells;
+                cell.className = 'window-cell ' + (isOwner ? 'owner' : 'other');
+                cell.title = isOwner ? 'Arsa sahibi payı (siz)' : 'Müteahhit / diğer pay';
+                row.appendChild(cell);
+            }
+            buildingFloors.appendChild(row);
+        }
+        const scaleNote = totalApts > MAX_CELLS
+            ? `En fazla ${MAX_CELLS} pencere; her biri ortalama ${(totalApts / MAX_CELLS).toFixed(1)} daireyi temsil eder. `
+            : 'Her pencere bir daireyi temsil eder. ';
+        buildingCaption.textContent = scaleNote + `Toplam ${formatNumber(totalApts)} daireden ${formatNumber(yourApts)} tanesi size (${((yourApts / totalApts) * 100).toFixed(1)}%).`;
+    }
+
     function calculate() {
-        // Değerleri Al
         const area = parseFloat(inputs.area.value);
         const emsal = parseFloat(inputs.emsal.value);
         const aptSize = parseFloat(inputs.aptSize.value);
@@ -255,35 +657,63 @@
         const price = parseFloat(inputs.price.value);
         const margin = parseFloat(inputs.margin.value);
 
-        // Label'ları Güncelle
         labels.area.innerText = formatNumber(area);
         labels.emsal.innerText = emsal.toFixed(1);
-        labels.aptSize.innerText = aptSize;
+        labels.aptSize.innerText = formatNumber(aptSize);
         labels.share.innerText = share + '%';
         labels.price.innerText = formatCurrency(price);
         labels.margin.innerText = margin + '%';
 
-        // Matematiksel Hesaplamalar
+        if (!fromText) {
+            formatTextBox('area', area);
+            formatTextBox('emsal', emsal);
+            formatTextBox('aptSize', aptSize);
+            formatTextBox('share', share);
+            formatTextBox('price', price);
+            formatTextBox('margin', margin);
+        }
         const totalBuildArea = area * emsal;
-        const totalApts = Math.floor(totalBuildArea / aptSize); // Aşağı yuvarla (yarım daire satılamaz)
-        const yourApts = Math.floor(totalApts * (share / 100)); // Arsa sahibinin payı
+        const totalApts = Math.floor(totalBuildArea / aptSize);
+        const yourApts = Math.floor(totalApts * (share / 100));
         const totalRevenue = yourApts * price;
-        const maxBuyPrice = totalRevenue / (1 + (margin / 100)); // Kar marjı düşülmüş mantıklı alış fiyatı
+        const maxBuyPrice = totalRevenue / (1 + (margin / 100));
 
-        // Sonuçları Ekrana Yazdır
         results.totalArea.innerText = formatNumber(totalBuildArea) + ' m²';
         results.totalApts.innerText = formatNumber(totalApts) + ' Adet';
         results.yourApts.innerText = formatNumber(yourApts) + ' Adet';
         results.revenue.innerText = formatCurrency(totalRevenue);
         results.maxPrice.innerText = formatCurrency(maxBuyPrice);
+
+        renderBuilding(totalApts, yourApts);
     }
 
-    // Tüm inputlara event listener ekle
-    Object.values(inputs).forEach(input => {
-        input.addEventListener('input', calculate);
+    Object.values(inputs).forEach((input) => {
+        input.addEventListener('input', () => {
+            calculate();
+        });
     });
 
-    // Sayfa yüklendiğinde ilk hesaplamayı yap
+    Object.keys(texts).forEach((key) => {
+        const el = texts[key];
+        el.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                fromText = true;
+                onTextCommit(key);
+            }
+        });
+        el.addEventListener('blur', () => {
+            fromText = true;
+            onTextCommit(key);
+        });
+    });
+
+    (function initTextFromSliders() {
+        const v = readFromSliders();
+        Object.keys(texts).forEach((key) => formatTextBox(key, v[key]));
+        Object.keys(warns).forEach((k) => setWarning(k, ''));
+    })();
+
     calculate();
 </script>
 </body>
