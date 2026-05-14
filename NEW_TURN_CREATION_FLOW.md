@@ -1,10 +1,4 @@
 # New Turn Creation Flow — Full Data & Request Map
-
-> **Branch:** `tech/43731/ep_connection_ordered_pros_new_turn`
-> **Scope:** New Turn only (not Edit Turn). `smartFiltersFlagKey` = **true**, all other FFs open.
-> **Goal:** Map every API request, its trigger, its data, and where it's consumed.
-> **Key files:** `turn.dart` (orchestrator) → `turn_new_state.dart` (state) → `turn_unit_form.dart` (step 1) → `turn_service_desktop.dart` (step 2..N) → `create_turn_utils.dart` (save)
-
 ---
 
 ## High-Level Flow Overview
