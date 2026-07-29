@@ -1,725 +1,198 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kat Karşılığı Arsa Fizibilite Aracı</title>
+    <title>New Turn Creation Flow — Documentation</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
     <style>
         :root {
-            --primary: #2c3e50;
-            --secondary: #18bc9c;
-            --bg-color: #f8f9fa;
-            --text-color: #333;
-            --card-bg: #ffffff;
-            --border-radius: 12px;
+            --bg: #f6f8fa;
+            --card: #fff;
+            --text: #24292f;
+            --border: #d0d7de;
+            --link: #0969da;
+            --code-bg: #f6f8fa;
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
+        * { box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            line-height: 1.6;
-            padding: 20px;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.55;
         }
-
-        .container {
-            max-width: 1000px;
-            margin: 40px auto;
-            background: var(--card-bg);
-            border-radius: var(--border-radius);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-            overflow: hidden;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-        }
-
-        .header {
-            grid-column: 1 / -1;
-            background-color: var(--primary);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 1.8rem;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            opacity: 0.8;
-            font-size: 0.95rem;
-        }
-
-        .inputs-section {
-            padding: 30px;
-            border-right: 1px solid #eee;
-        }
-
-        .results-section {
-            padding: 30px;
-            background-color: #fdfdfd;
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        .input-group label {
+        .toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
             display: flex;
-            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            padding: 12px 20px;
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .toolbar a {
+            color: var(--link);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .toolbar a:hover { text-decoration: underline; }
+        .toolbar h1 {
+            margin: 0;
+            font-size: 1rem;
             font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 0.95rem;
+            flex: 1;
+            min-width: 200px;
         }
-
-        .input-group label span {
-            color: var(--secondary);
-            font-weight: bold;
+        #doc {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 28px 20px 64px;
+            background: var(--card);
+            min-height: 60vh;
+            border-radius: 0;
         }
-
-        input[type="range"] {
+        @media (min-width: 1040px) {
+            #doc {
+                margin: 24px auto;
+                padding: 40px 48px 80px;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+            }
+        }
+        #doc :is(h1, h2, h3, h4) { margin-top: 1.4em; margin-bottom: 0.5em; line-height: 1.25; }
+        #doc h1 { font-size: 1.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3em; }
+        #doc h2 { font-size: 1.35rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25em; }
+        #doc h3 { font-size: 1.15rem; }
+        #doc p { margin: 0.75em 0; }
+        #doc a { color: var(--link); }
+        #doc blockquote {
+            margin: 0.75em 0;
+            padding: 0 1em;
+            color: #57606a;
+            border-left: 4px solid var(--border);
+        }
+        #doc table {
             width: 100%;
-            cursor: pointer;
-            accent-color: var(--secondary);
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            margin: 1em 0;
+            display: block;
+            overflow-x: auto;
         }
-
-        .field-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 6px;
+        #doc th, #doc td {
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            text-align: left;
         }
-
-        .field-row input[type="text"] {
-            flex: 0 0 8.5rem;
-            padding: 8px 10px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-variant-numeric: tabular-nums;
+        #doc th { background: var(--code-bg); font-weight: 600; }
+        #doc pre:not(.mermaid) {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 14px 16px;
+            overflow-x: auto;
+            font-size: 0.82rem;
         }
-
-        .field-row input[type="text"]:focus {
-            outline: 2px solid rgba(24, 188, 156, 0.35);
-            border-color: var(--secondary);
+        #doc code {
+            font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+            font-size: 0.88em;
         }
-
-        .field-row input[type="text"].input-error {
-            border-color: #e74c3c;
+        #doc :not(pre) > code {
+            background: rgba(175,184,193,0.25);
+            padding: 0.15em 0.4em;
+            border-radius: 4px;
         }
-
-        .input-hint {
-            font-size: 0.75rem;
-            color: #888;
-            margin-top: 4px;
+        #doc hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
+        #doc .mermaid {
+            margin: 1.25em 0;
+            text-align: center;
+            overflow-x: auto;
         }
-
-        .input-warning {
-            font-size: 0.78rem;
-            color: #c0392b;
-            margin-top: 4px;
-            min-height: 1.1em;
-        }
-
-        .building-wrap {
-            margin-top: 22px;
-            padding: 16px;
-            background: #fff;
-            border-radius: 8px;
-            border: 1px solid #eee;
-        }
-
-        .building-wrap .result-title {
-            margin-bottom: 12px;
-        }
-
-        .building-visual {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0;
-            padding: 12px;
-            background: linear-gradient(180deg, #ecf0f1 0%, #dfe6e9 100%);
-            border-radius: 8px;
-            min-height: 120px;
-        }
-
-        .building-roof {
-            width: 55%;
-            height: 14px;
-            background: var(--primary);
-            border-radius: 4px 4px 0 0;
-            margin-bottom: -1px;
-            z-index: 1;
-        }
-
-        .building-body {
-            width: 100%;
-            max-width: 280px;
-            padding: 10px 12px 12px;
-            background: linear-gradient(90deg, #95a5a6 0%, #7f8c8d 50%, #95a5a6 100%);
-            border-radius: 0 0 6px 6px;
-            box-shadow: inset 0 -4px 0 rgba(0,0,0,0.12);
-        }
-
-        .building-floor {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-top: 6px;
-        }
-
-        .building-floor:first-child {
-            margin-top: 0;
-        }
-
-        .window-cell {
-            width: 14px;
-            height: 18px;
-            border-radius: 2px;
-            background: rgba(255,255,255,0.35);
-            border: 1px solid rgba(0,0,0,0.15);
-            box-shadow: inset 0 2px 0 rgba(255,255,255,0.25);
-            transition: background 0.2s, transform 0.15s;
-        }
-
-        .window-cell.owner {
-            background: rgba(24, 188, 156, 0.95);
-            border-color: rgba(0,0,0,0.12);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 0 8px rgba(24, 188, 156, 0.35);
-        }
-
-        .window-cell.other {
-            background: rgba(52, 73, 94, 0.55);
-        }
-
-        .building-legend {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 14px;
-            margin-top: 12px;
-            font-size: 0.8rem;
-            color: #555;
-        }
-
-        .building-legend span {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .building-legend i {
-            display: inline-block;
-            width: 12px;
-            height: 14px;
-            border-radius: 2px;
-        }
-
-        .building-legend .lg-owner {
-            background: var(--secondary);
-            border: 1px solid rgba(0,0,0,0.1);
-        }
-
-        .building-legend .lg-other {
-            background: rgba(52, 73, 94, 0.55);
-            border: 1px solid rgba(0,0,0,0.1);
-        }
-
-        .result-card {
-            background: #fff;
+        #err {
+            max-width: 720px;
+            margin: 40px auto;
             padding: 20px;
+            background: #fff8f8;
+            border: 1px solid #f0b4b4;
             border-radius: 8px;
-            border: 1px solid #eee;
-            margin-bottom: 15px;
-            transition: transform 0.2s;
+            color: #9a1c1c;
         }
-
-        .result-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        }
-
-        .result-title {
-            font-size: 0.9rem;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 5px;
-        }
-
-        .result-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--primary);
-        }
-
-        .highlight-card {
-            background: var(--secondary);
-            color: white;
-            border: none;
-        }
-
-        .highlight-card .result-title {
-            color: rgba(255,255,255,0.9);
-        }
-
-        .highlight-card .result-value {
-            color: white;
-            font-size: 2rem;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
-            .inputs-section {
-                border-right: none;
-                border-bottom: 1px solid #eee;
-            }
-        }
+        #err[hidden] { display: none; }
     </style>
 </head>
 <body>
-
-<div class="container">
-    <div class="header">
-        <h1>🏢 Kat Karşılığı Arsa Fizibilite Aracı</h1>
-        <p>Değerleri kaydırarak arsanın maksimum mantıklı alış fiyatını anında hesaplayın.</p>
-    </div>
-
-    <div class="inputs-section">
-        <div class="input-group">
-            <label>Arsa Alanı (m²) <span id="valArea">1.943</span></label>
-            <input type="range" id="inpArea" min="100" max="50000" step="1" value="1943">
-            <div class="field-row">
-                <input type="text" id="txtArea" inputmode="decimal" autocomplete="off" aria-label="Arsa alanı metin">
-            </div>
-            <div class="input-hint">100 – 50.000 m². Nokta binlik ayırıcı olabilir (örn. 1.943).</div>
-            <div class="input-warning" id="warnArea" role="status"></div>
-        </div>
-
-        <div class="input-group">
-            <label>İmar Emsali (E) <span id="valEmsal">2.0</span></label>
-            <input type="range" id="inpEmsal" min="0.1" max="6.0" step="0.1" value="2.0">
-            <div class="field-row">
-                <input type="text" id="txtEmsal" inputmode="decimal" autocomplete="off" aria-label="Emsal metin">
-            </div>
-            <div class="input-hint">0,1 – 6,0 (ondalık için virgül veya nokta).</div>
-            <div class="input-warning" id="warnEmsal" role="status"></div>
-        </div>
-
-        <div class="input-group">
-            <label>Ortalama Daire Büyüklüğü (m²) <span id="valAptSize">50</span></label>
-            <input type="range" id="inpAptSize" min="30" max="400" step="5" value="50">
-            <div class="field-row">
-                <input type="text" id="txtAptSize" inputmode="numeric" autocomplete="off" aria-label="Daire büyüklüğü metin">
-            </div>
-            <div class="input-hint">30 – 400 m².</div>
-            <div class="input-warning" id="warnAptSize" role="status"></div>
-        </div>
-
-        <div class="input-group">
-            <label>Müteahhit Anlaşması (Arsa Sahibi Payı %) <span id="valShare">40%</span></label>
-            <input type="range" id="inpShare" min="5" max="95" step="1" value="40">
-            <div class="field-row">
-                <input type="text" id="txtShare" inputmode="numeric" autocomplete="off" aria-label="Arsa payı metin">
-            </div>
-            <div class="input-hint">%5 – %95.</div>
-            <div class="input-warning" id="warnShare" role="status"></div>
-        </div>
-
-        <div class="input-group">
-            <label>Tahmini Daire Satış Fiyatı (TL) <span id="valPrice">2.000.000 ₺</span></label>
-            <input type="range" id="inpPrice" min="500000" max="500000000" step="500000" value="2000000">
-            <div class="field-row">
-                <input type="text" id="txtPrice" inputmode="decimal" autocomplete="off" aria-label="Daire fiyatı metin">
-            </div>
-            <div class="input-hint">500.000 – 500.000.000 ₺. Kaydırıcı üst sınırı aşan değerleri buraya yazın.</div>
-            <div class="input-warning" id="warnPrice" role="status"></div>
-        </div>
-
-        <div class="input-group">
-            <label>Hedeflenen Net Kar Marjı (%) <span id="valMargin">40%</span></label>
-            <input type="range" id="inpMargin" min="5" max="100" step="1" value="40">
-            <div class="field-row">
-                <input type="text" id="txtMargin" inputmode="numeric" autocomplete="off" aria-label="Kar marjı metin">
-            </div>
-            <div class="input-hint">%5 – %100.</div>
-            <div class="input-warning" id="warnMargin" role="status"></div>
-        </div>
-    </div>
-
-    <div class="results-section">
-        <div class="result-card">
-            <div class="result-title">Toplam İnşaat Alanı</div>
-            <div class="result-value" id="resTotalArea">0 m²</div>
-        </div>
-
-        <div class="result-card">
-            <div class="result-title">Çıkacak Toplam Daire Sayısı</div>
-            <div class="result-value" id="resTotalApts">0 Adet</div>
-        </div>
-
-        <div class="result-card">
-            <div class="result-title">Size Kalacak Daire Sayısı</div>
-            <div class="result-value" id="resYourApts">0 Adet</div>
-        </div>
-
-        <div class="building-wrap">
-            <div class="result-title">Payınız (dinamik bina özeti)</div>
-            <p class="input-hint" style="margin-bottom:10px;" id="buildingCaption">Toplam daire içinde size düşen pay pencerelerle gösterilir.</p>
-            <div class="building-visual" aria-hidden="true">
-                <div class="building-roof"></div>
-                <div class="building-body" id="buildingBody">
-                    <div id="buildingFloors"></div>
-                </div>
-            </div>
-            <div class="building-legend">
-                <span><i class="lg-owner"></i> Size kalan daire</span>
-                <span><i class="lg-other"></i> Müteahhit / diğer pay</span>
-            </div>
-        </div>
-
-        <div class="result-card">
-            <div class="result-title">Beklenen Brüt Gelir</div>
-            <div class="result-value" id="resRevenue">0 ₺</div>
-        </div>
-
-        <div class="result-card highlight-card">
-            <div class="result-title">Mantıklı Maksimum Alış Fiyatı</div>
-            <div class="result-value" id="resMaxPrice">0 ₺</div>
-        </div>
-    </div>
-</div>
-
-<footer style="max-width:1000px;margin:24px auto 32px;padding:0 20px;font-size:0.85rem;color:#666;text-align:center;">
-    <a href="new-turn-creation-flow.html" style="color:#18bc9c;">New Turn Creation Flow</a>
-    (docs)
-</footer>
-
-<script>
-    const inputs = {
-        area: document.getElementById('inpArea'),
-        emsal: document.getElementById('inpEmsal'),
-        aptSize: document.getElementById('inpAptSize'),
-        share: document.getElementById('inpShare'),
-        price: document.getElementById('inpPrice'),
-        margin: document.getElementById('inpMargin')
-    };
-
-    const texts = {
-        area: document.getElementById('txtArea'),
-        emsal: document.getElementById('txtEmsal'),
-        aptSize: document.getElementById('txtAptSize'),
-        share: document.getElementById('txtShare'),
-        price: document.getElementById('txtPrice'),
-        margin: document.getElementById('txtMargin')
-    };
-
-    const warns = {
-        area: document.getElementById('warnArea'),
-        emsal: document.getElementById('warnEmsal'),
-        aptSize: document.getElementById('warnAptSize'),
-        share: document.getElementById('warnShare'),
-        price: document.getElementById('warnPrice'),
-        margin: document.getElementById('warnMargin')
-    };
-
-    const labels = {
-        area: document.getElementById('valArea'),
-        emsal: document.getElementById('valEmsal'),
-        aptSize: document.getElementById('valAptSize'),
-        share: document.getElementById('valShare'),
-        price: document.getElementById('valPrice'),
-        margin: document.getElementById('valMargin')
-    };
-
-    const results = {
-        totalArea: document.getElementById('resTotalArea'),
-        totalApts: document.getElementById('resTotalApts'),
-        yourApts: document.getElementById('resYourApts'),
-        revenue: document.getElementById('resRevenue'),
-        maxPrice: document.getElementById('resMaxPrice')
-    };
-
-    const buildingFloors = document.getElementById('buildingFloors');
-    const buildingCaption = document.getElementById('buildingCaption');
-
-    const formatNumber = (num) => new Intl.NumberFormat('tr-TR').format(num);
-    const formatCurrency = (num) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(num);
-
-    const limits = {
-        area: { min: 100, max: 50000, step: 1 },
-        emsal: { min: 0.1, max: 6.0, step: 0.1 },
-        aptSize: { min: 30, max: 400, step: 5 },
-        share: { min: 5, max: 95, step: 1 },
-        price: { min: 500_000, max: 500_000_000, step: 50_000 },
-        margin: { min: 5, max: 100, step: 1 }
-    };
-
-    /** Türkçe binlik noktası ve ondalık virgülü destekleyen tamsayı ayrıştırma */
-    function parseIntegerLoose(raw) {
-        const s = String(raw).trim().replace(/\s/g, '');
-        if (!s) return NaN;
-        const bad = s.match(/[^\d.,]/g);
-        if (bad) return { n: NaN, invalidChars: [...new Set(bad)] };
-        const hasComma = s.includes(',');
-        const hasDot = s.includes('.');
-        let cleaned = s;
-        if (hasComma && hasDot) {
-            cleaned = s.replace(/\./g, '').replace(',', '.');
-        } else if (hasComma) {
-            cleaned = s.replace(/\./g, '').replace(',', '.');
-        } else if (hasDot) {
-            const parts = s.split('.');
-            const restAreTriple = parts.length > 1 && parts.slice(1).every((p) => p.length === 3);
-            if (restAreTriple)
-                cleaned = parts.join('');
-            else if (parts.length === 2 && parts[1].length <= 2)
-                cleaned = parts[0] + '.' + parts[1];
-            else if (parts.length > 2 && parts[parts.length - 1].length <= 2)
-                cleaned = parts.slice(0, -1).join('') + '.' + parts[parts.length - 1];
-            else
-                cleaned = parts.join('');
-        }
-        const n = Number(cleaned);
-        return { n: Number.isFinite(n) ? Math.round(n) : NaN, invalidChars: null };
-    }
-
-    function parseEmsalLoose(raw) {
-        const s = String(raw).trim().replace(/\s/g, '');
-        if (!s) return NaN;
-        if (s.match(/[^\d.,]/g)) return NaN;
-        const hasComma = s.includes(',');
-        const hasDot = s.includes('.');
-        let normalized;
-        if (hasComma && hasDot)
-            normalized = s.replace(/\./g, '').replace(',', '.');
-        else if (hasComma)
-            normalized = s.replace(/\./g, '').replace(',', '.');
-        else if (hasDot) {
-            const parts = s.split('.');
-            if (parts.length === 2 && parts[1].length <= 2)
-                normalized = parts[0] + '.' + parts[1];
-            else {
-                const restAreTriple = parts.length > 1 && parts.slice(1).every((p) => p.length === 3);
-                normalized = restAreTriple ? parts.join('') : s.replace(/\./g, '');
-            }
-        } else
-            normalized = s;
-        const n = parseFloat(normalized);
-        return Number.isFinite(n) ? n : NaN;
-    }
-
-    function clamp(n, lo, hi) {
-        return Math.min(hi, Math.max(lo, n));
-    }
-
-    function snapToStep(n, step) {
-        if (step >= 1) return Math.round(n / step) * step;
-        const inv = Math.round(1 / step);
-        return Math.round(n * inv) / inv;
-    }
-
-    function setWarning(key, msg) {
-        warns[key].textContent = msg || '';
-        texts[key].classList.toggle('input-error', Boolean(msg));
-    }
-
-    function syncSlider(key, value) {
-        const el = inputs[key];
-        const lo = parseFloat(el.min);
-        const hi = parseFloat(el.max);
-        const v = clamp(value, lo, hi);
-        el.value = String(v);
-    }
-
-    function formatTextBox(key, value) {
-        if (key === 'emsal') {
-            texts[key].value = String(value).replace('.', ',');
-            return;
-        }
-        if (key === 'price' || key === 'area') {
-            texts[key].value = formatNumber(Math.round(value));
-            return;
-        }
-        texts[key].value = String(Math.round(value));
-    }
-
-    function readFromSliders() {
-        return {
-            area: parseFloat(inputs.area.value),
-            emsal: parseFloat(inputs.emsal.value),
-            aptSize: parseFloat(inputs.aptSize.value),
-            share: parseFloat(inputs.share.value),
-            price: parseFloat(inputs.price.value),
-            margin: parseFloat(inputs.margin.value)
-        };
-    }
-
-    let fromText = false;
-
-    function applyParsed(key, num) {
-        const L = limits[key];
-        if (!Number.isFinite(num)) {
-            setWarning(key, 'Geçerli bir sayı girin.');
-            return false;
-        }
-        let v = clamp(num, L.min, L.max);
-        v = snapToStep(v, L.step);
-        v = clamp(v, L.min, L.max);
-        if (num < L.min || num > L.max)
-            setWarning(key, `İzin verilen aralık: ${formatNumber(L.min)} – ${formatNumber(L.max)}. Kaydedilen değer sınıra çekildi.`);
-        else if (Math.abs(num - v) > 1e-9)
-            setWarning(key, 'En yakın izin verilen adıma yuvarlandı.');
-        else
-            setWarning(key, '');
-        syncSlider(key, v);
-        formatTextBox(key, v);
-        return true;
-    }
-
-    function onTextCommit(key) {
-        const raw = texts[key].value;
-        try {
-            if (key === 'emsal') {
-                const n = parseEmsalLoose(raw);
-                if (raw.match(/[^\d.,\s]/)) {
-                    setWarning(key, 'İstenmeyen karakter: yalnızca rakam, virgül veya nokta kullanın.');
-                    return;
+    <nav class="toolbar">
+        <h1>New Turn Creation Flow</h1>
+        <a href="NEW_TURN_CREATION_FLOW.md" download>Download .md</a>
+        <a href="feasibility.html">Feasibility tool</a>
+    </nav>
+    <div id="err" hidden></div>
+    <article id="doc">Loading…</article>
+    <script>
+        (function () {
+            function extractMermaidBlocks(src) {
+                const bodies = [];
+                const marker = function (i) { return '\n`MERMAIDINLINE' + i + '`\n'; };
+                let out = '';
+                let rest = src;
+                while (true) {
+                    const start = rest.indexOf('```mermaid\n');
+                    if (start === -1) {
+                        out += rest;
+                        break;
+                    }
+                    out += rest.slice(0, start);
+                    const after = start + 11;
+                    const fence = rest.indexOf('\n```', after);
+                    if (fence === -1) {
+                        out += rest.slice(start);
+                        break;
+                    }
+                    const body = rest.slice(after, fence);
+                    const id = bodies.length;
+                    bodies.push(body);
+                    out += marker(id);
+                    rest = rest.slice(fence + 4);
                 }
-                if (!Number.isFinite(n)) {
-                    setWarning(key, 'Geçerli bir emsal girin (örn. 2 veya 2,1).');
-                    return;
+                return { md: out, bodies: bodies };
+            }
+
+            function injectMermaid(html, bodies) {
+                var result = html;
+                for (var i = 0; i < bodies.length; i++) {
+                    var token = '<code>MERMAIDINLINE' + i + '</code>';
+                    var div = '<div class="mermaid">' + bodies[i] + '</div>';
+                    result = result.split(token).join(div);
                 }
-                if (!applyParsed(key, n)) return;
-                calculate();
-                return;
+                return result;
             }
-            const { n, invalidChars } = parseIntegerLoose(raw);
-            if (invalidChars && invalidChars.length) {
-                setWarning(key, 'İstenmeyen karakter: ' + invalidChars.map((c) => `"${c}"`).join(', ') + '. Yalnızca rakam ve binlik ayırıcı (.) kullanın.');
-                return;
+
+            async function main() {
+                var errEl = document.getElementById('err');
+                var docEl = document.getElementById('doc');
+                try {
+                    var res = await fetch('NEW_TURN_CREATION_FLOW.md', { cache: 'no-cache' });
+                    if (!res.ok) throw new Error('Could not load NEW_TURN_CREATION_FLOW.md (' + res.status + ').');
+                    var raw = await res.text();
+                    var extracted = extractMermaidBlocks(raw);
+                    var html = marked.parse(extracted.md);
+                    docEl.innerHTML = injectMermaid(html, extracted.bodies);
+                    mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose' });
+                    await mermaid.run({ querySelector: '#doc .mermaid' });
+                } catch (e) {
+                    docEl.textContent = '';
+                    errEl.hidden = false;
+                    errEl.textContent = e.message || String(e);
+                }
             }
-            if (!Number.isFinite(n)) {
-                setWarning(key, 'Geçerli bir sayı girin.');
-                return;
-            }
-            if (!applyParsed(key, n)) return;
-            calculate();
-        } finally {
-            fromText = false;
-        }
-    }
-
-    function renderBuilding(totalApts, yourApts) {
-        buildingFloors.innerHTML = '';
-        if (totalApts <= 0) {
-            buildingCaption.textContent = 'Toplam daire 0 olduğu için pay özeti gösterilemiyor.';
-            return;
-        }
-        const MAX_CELLS = 56;
-        const cells = Math.min(totalApts, MAX_CELLS);
-        let ownerCells = Math.round((yourApts / totalApts) * cells);
-        if (yourApts > 0 && ownerCells === 0) ownerCells = 1;
-        if (yourApts >= totalApts) ownerCells = cells;
-        ownerCells = clamp(ownerCells, 0, cells);
-        const cols = Math.min(8, Math.max(4, Math.ceil(Math.sqrt(cells))));
-        const rows = Math.ceil(cells / cols);
-        let idx = 0;
-        for (let r = 0; r < rows; r++) {
-            const row = document.createElement('div');
-            row.className = 'building-floor';
-            for (let c = 0; c < cols && idx < cells; c++, idx++) {
-                const cell = document.createElement('div');
-                const isOwner = idx < ownerCells;
-                cell.className = 'window-cell ' + (isOwner ? 'owner' : 'other');
-                cell.title = isOwner ? 'Arsa sahibi payı (siz)' : 'Müteahhit / diğer pay';
-                row.appendChild(cell);
-            }
-            buildingFloors.appendChild(row);
-        }
-        const scaleNote = totalApts > MAX_CELLS
-            ? `En fazla ${MAX_CELLS} pencere; her biri ortalama ${(totalApts / MAX_CELLS).toFixed(1)} daireyi temsil eder. `
-            : 'Her pencere bir daireyi temsil eder. ';
-        buildingCaption.textContent = scaleNote + `Toplam ${formatNumber(totalApts)} daireden ${formatNumber(yourApts)} tanesi size (${((yourApts / totalApts) * 100).toFixed(1)}%).`;
-    }
-
-    function calculate() {
-        const area = parseFloat(inputs.area.value);
-        const emsal = parseFloat(inputs.emsal.value);
-        const aptSize = parseFloat(inputs.aptSize.value);
-        const share = parseFloat(inputs.share.value);
-        const price = parseFloat(inputs.price.value);
-        const margin = parseFloat(inputs.margin.value);
-
-        labels.area.innerText = formatNumber(area);
-        labels.emsal.innerText = emsal.toFixed(1);
-        labels.aptSize.innerText = formatNumber(aptSize);
-        labels.share.innerText = share + '%';
-        labels.price.innerText = formatCurrency(price);
-        labels.margin.innerText = margin + '%';
-
-        if (!fromText) {
-            formatTextBox('area', area);
-            formatTextBox('emsal', emsal);
-            formatTextBox('aptSize', aptSize);
-            formatTextBox('share', share);
-            formatTextBox('price', price);
-            formatTextBox('margin', margin);
-        }
-        const totalBuildArea = area * emsal;
-        const totalApts = Math.floor(totalBuildArea / aptSize);
-        const yourApts = Math.floor(totalApts * (share / 100));
-        const totalRevenue = yourApts * price;
-        const maxBuyPrice = totalRevenue / (1 + (margin / 100));
-
-        results.totalArea.innerText = formatNumber(totalBuildArea) + ' m²';
-        results.totalApts.innerText = formatNumber(totalApts) + ' Adet';
-        results.yourApts.innerText = formatNumber(yourApts) + ' Adet';
-        results.revenue.innerText = formatCurrency(totalRevenue);
-        results.maxPrice.innerText = formatCurrency(maxBuyPrice);
-
-        renderBuilding(totalApts, yourApts);
-    }
-
-    Object.values(inputs).forEach((input) => {
-        input.addEventListener('input', () => {
-            calculate();
-        });
-    });
-
-    Object.keys(texts).forEach((key) => {
-        const el = texts[key];
-        el.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                fromText = true;
-                onTextCommit(key);
-            }
-        });
-        el.addEventListener('blur', () => {
-            fromText = true;
-            onTextCommit(key);
-        });
-    });
-
-    (function initTextFromSliders() {
-        const v = readFromSliders();
-        Object.keys(texts).forEach((key) => formatTextBox(key, v[key]));
-        Object.keys(warns).forEach((k) => setWarning(k, ''));
-    })();
-
-    calculate();
-</script>
+            main();
+        })();
+    </script>
 </body>
 </html>

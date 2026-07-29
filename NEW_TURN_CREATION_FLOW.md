@@ -1,488 +1,254 @@
-# New Turn Creation Flow — Full Data & Request Map
----
+Ekseni düzelttim: ana çıktı artık mimari ve migration derinliği; AI doğrulama sistemi yalnızca bunu destekleyen bir araç. Puanlamadan ondalıklı skorları kaldırdım.
 
-## High-Level Flow Overview
-
-```mermaid
-flowchart TD
-    A["🏠 Property Board"] -->|Navigate to New Turn| B["turn.dart orchestrator"]
-    B --> B1["updateSelectedPropertyId()"]
-    B1 --> B2["updateSelectedProperty()"]
-    B2 --> B3["initTurnForm()"]
-    B3 --> B4["getServiceConfigs()"]
-    B4 --> B5["getFloorPlans()"]
-    B5 --> B6["handleIntegrationReminder()"]
-    B6 --> C["Turn Unit Form<br/>(turn_unit_form.dart)"]
-    C -->|User fills form & presses Next| D["suggestTurnServices()"]
-    D --> E["Service Forms Loop<br/>(turn_service_desktop.dart)<br/>activeTurnFormIndex = 1..N"]
-    E -->|User presses Next per service| F["setTurnFormActiveIndex(i+1)"]
-    F --> E
-    E -->|Last service: Complete pressed| G["TotalPrice Popup<br/>(create_turn_utils.dart)"]
-    G -->|User confirms| H["processTurnRequest()"]
-    H --> I["createTurn() → scheduleWorkOrders()"]
-    I --> J["saveProStatus() + saveAllProRates()"]
-    J --> K["✅ Navigate to Property Board"]
-```
-
-### Navigation Model (`activeTurnFormIndex`)
-
-```
-Index 0  → Turn Unit Form (unit name, floor plan, move-out, PO)
-Index 1  → Service 1 (e.g. Painting)
-Index 2  → Service 2 (e.g. Cleaning)
-Index N  → Service N (last service shows "Complete" instead of "Next")
-
-Desktop: TurnFormDesktop splits left sidebar (service list) + right panel (active form)
-Mobile:  TurnFormMobile uses sliding panel controlled by panelController
-```
+Bir sınır hatırlatması: aşağıdaki envanter, matris ve test özeti **sizin üreteceğiniz** teslimlerdir. Şirket repolarını topluca incelemiyorum; benim katkım bu teslimlerin yapısını ve karar kriterlerini vermek. İhtiyaç duyduğunuzda anonim özet veya izinli küçük parça üzerinden birlikte çalışırız.
 
 ---
 
-## Phase 0: Page Load & Initialization
+# 1. Üç alternatif rota (revize)
 
-**Trigger:** User navigates to New Turn page.
-**Orchestrator:** `turn.dart` → calls methods on `TurnNewState` (extends `GetxController`, implements `RRTurn`)
-**File:** `turn.dart` (parent), `turn_new_state.dart` (state)
+## Rota 1 — Flutter mimarisi, migration ve ürün mühendisliği derinliği; AI destekli doğrulama sistemiyle
 
-The **Turn page** (`turn.dart`) runs this sequence on first frame:
+**Ana amaç** — Yaklaşan üç mimari kararda (Flutter upgrade, mobil→web, GetX→BLoC) teknik zemini kuran ve kararı yazabilen kişi olmak. AI, bu kararların doğrulanmasında kullanılan bir araç; hedefin kendisi değil.
 
-```mermaid
-flowchart TD
-    nav["User navigates to New Turn"] --> usp["updateSelectedPropertyId(propertyId)<br/>→ fetchPermissionInfo()"]
-    usp --> usProp["updateSelectedProperty()<br/>→ resolve property from OrganizationPropertiesNewState"]
-    usProp --> init["initTurnForm()"]
-    init --> clearState["Clear ALL state<br/>(services, prices, pros, maps, snapshots)"]
-    clearState --> FF["getFeatureFlagValues()<br/>~20 LaunchDarkly flags + 4 market-scoped flags"]
-    FF --> proPref["fetchProPreferences()<br/>→ Dataverse MSDynRequirementResourcePreference"]
-    proPref --> svc["getServiceConfigs(propertyId)<br/>→ Dataverse RRTurnProfile"]
-    svc --> fp["getFloorPlans(propertyId)<br/>→ Dataverse Account + PriceLevel"]
-    fp --> reminder["handleIntegrationReminder()<br/>→ Integration reminder logs"]
-    reminder --> ready["Unit Form displayed ✅"]
-```
+**Neden mantıklı** — Hedefiniz AI ile daha güçlü mimari karar verebilen kıdemli Flutter/ürün mühendisi olmak ve bu üç karar henüz verilmemiş durumda. Zorlandığınızı söylediğiniz alan tam olarak burası. Ek bütçe, yeni erişim veya sahiplik ataması gerektirmiyor: envanter, matris ve karar kriterleri sahiplik verilmese bile üretilebilir ve dışa taşınabilir kanıt olur.
 
-### Requests in Phase 0
+**Neden riskli** — Sahiplik atanmış değil, şirket zamanı garanti değil, normal feature/bug yükü sürüyor. Envanter ve matris üretimi kendi zamanınıza binerse haftalık 12 saat hızla dolar. Ayrıca kararlar sizin katkınız olmadan alınabilir; bu durumda çıktı kişisel kanıt olarak kalır.
 
-| # | Method | API / Source | Data Returned | Stored In |
-|---|--------|-------------|---------------|-----------|
-| 0 | `fetchPermissionInfo()` | `IBookingAlertRepository.getApprovalPin()` (conditional: only if addon approval pins FF enabled) | Approval pin info | `approvalPin` |
-| 1 | `getFeatureFlagValues()` | LaunchDarkly (`FeatureFlagService`) + `FeatureFlagServiceRepository` (market-scoped) | Boolean flags: `proDetailsFeatureFlag`, `proPricingFlag`, `nteFeatureFlag`, `costRankingFlag`, `smartFiltersFlag`, `marketPlaceProductFlag`, `townHomeWOCCapacityFlag`, `inspectionFlag`, `inspectionV4Flag`, `allowEditPendingJobsFlag`, `integrationReminderFlag`, `backgroundPhotoUploadFlag`, `downloadReportFlag`, `fixedValueAddonRequestedMoreThanOneFlag`, `downloadPostMoveOutInspectionReportFlag` | Individual flag fields on state |
-| 2 | `fetchProPreferences()` | `dataRepositoryService.getEntities<MSDynRequirementResourcePreference>` → Dataverse | Pro preference list (favorite/restricted/neutral per property) | `proPreferences` |
-| 3 | `getServiceConfigs()` | `dataRepositoryService.getEntities<RRTurnProfile>` → Dataverse (cached) | Turn profile list (Painting, Cleaning, Flooring, etc.) with vendor, order, config | `services` (as `TurnServiceModel` list), `updatedRRTurnProfile` |
-| 4 | `getFloorPlans()` | `dataRepositoryService.getEntities<Account>` + `getEntities<PriceLevel>` → Dataverse | Property account details + floor plan/price level list | `property`, `floorPlans` |
-| 5 | `handleIntegrationReminder()` | `IIntegrationReminderLogsRepository` → integration reminder logs | Survey display decision | UI-only |
+**90 gün sonundaki somut çıktı** — Flutter upgrade dependency ve breaking-change envanteri, mobil→web uyumluluk matrisi, GetX→BLoC ağrı noktaları ve karar kriterleri, mevcut test tabanının özeti, kararı test eden çalışan bir POC, ve bunlardan türetilmiş 2 karar dokümanı.
 
----
+**Haftalık zaman** — 8 saat (12 saatlik tabanın içinde).
 
-## Phase 1: Turn Unit Form (`turn_unit_form.dart`)
+**Tahmini maliyet** — 0 USD.
 
-User fills: **Unit Name**, **Floor Plan**, **Move-Out Date**, optionally **PO Number**.
+**Kariyer getirisi** — Yüksek; hem mevcut işte hem dışarıda anlatılabilir.
 
-By the time the user sees the form, Phase 0 has already loaded `services`, `floorPlans`, and `proPreferences`. The form widget (`TurnUnitForm`) only runs `_setupControllers()` and `_setupListeners()` in `initState` — **no API calls** from the widget itself.
+**Gelir ihtimali** — 90 günde düşük ve dolaylı.
 
-### Step 1a: User Selects Floor Plan → `onFloorPlanChange()`
+**Transfer edilebilirlik** — Yüksek; migration ve karar yazımı becerisi şirket ve teknoloji değişse de taşınır.
 
-**Trigger:** Floor plan dropdown selection.
+**Tükenmişlik riski** — Düşük-orta.
 
-```mermaid
-flowchart TD
-    FPChange["onFloorPlanChange(floorPlan)"] --> getAddons["getAddons(floorPlan)"]
-    getAddons --> PPL["PriceService.getProductPriceLevelList()"]
-    getAddons --> AC["PriceService.getAddonConfigurationList()"]
-    getAddons --> PL["PriceService.getProductList()"]
-    getAddons --> MAT["TurnPricesUtils.getRRProductRRColor()<br/>TurnPricesUtils.getRRColor()"]
-    getAddons --> FPD["TurnPricesUtils.getFloorPlanDetail()<br/>TurnPricesUtils.getRooms()"]
-    getAddons --> PREP["preparePriceList()"]
-    PREP --> calcPrices["calculateTotalPrices()"]
-    calcPrices --> autoCore["Auto-select core services"]
-```
+**Vazgeçilen işler** — Upwork kampanyası, İmarSinyal'de yeni geliştirme, yeni SEO içeriği, geniş kullanıcı doğrulaması, LiveKit/QC tarafı.
 
-| # | Method | API / Source | Data Returned | Stored In |
-|---|--------|-------------|---------------|-----------|
-| 6 | `PriceService().getProductPriceLevelList()` | `dataRepositoryService` → Dataverse | Product price levels for this floor plan | `productPriceLevels` |
-| 7 | `PriceService().getAddonConfigurationList()` | `dataRepositoryService` → Dataverse | Addon configuration rules | local var |
-| 8 | `PriceService().getProductList()` | `dataRepositoryService` → Dataverse | Products (addons) + materials | `products` |
-| 9 | `TurnPricesUtils.getRRProductRRColor()` | `dataRepositoryService` → Dataverse | Product-color mappings | `productsAndColors` |
-| 10 | `TurnPricesUtils.getRRColor()` | `dataRepositoryService` → Dataverse | Color entities | merged into `productsAndColors` |
-| 11 | `TurnPricesUtils.getFloorPlanDetail()` | `dataRepositoryService` → Dataverse | Floor plan detail (room data) | local var |
-| 12 | `TurnPricesUtils.getRooms()` | `dataRepositoryService` → Dataverse | Rooms list | `rooms` |
-| 13 | `preparePriceListForTurn()` | In-memory computation + optional `MSDynUnit` fetch | Grouped products by skillset, addon prices, repair products | `groupedProduct`, `addonPrices`, `repairProducts` |
-| 14 | `refetchProsPricingOnFloorplanChange()` | `/matching/1.5/.../pros/pricing` (only if `proPricingFlag` AND `proCorePrices` non-empty) | Updated pro pricing for new floor plan | `proCorePrices`, `proPricingProducts` |
+## Rota 2 — Tekrarlanabilir ikinci gelir kanalı
 
-**Total Dataverse calls in onFloorPlanChange: ~7 entity fetches + conditional pricing re-fetch**
+**Ana amaç** — Niş pozisyonlama ve Upwork maruziyetiyle ilk ücretli tekrarlanabilir iş sinyalini üretmek.
 
-After `getAddons()`, also runs:
-- `updateUnitDiscrepancyAddons()` — marks unit discrepancy addons
-- `updateTrashOutAddons()` — marks trash-out addons
-- `calculateTotalPrices()` — auto-selects core service addons for new turns
+**Neden mantıklı** — 12 aylık yön hedefiniz aylık 1.000 USD recurring ve freelance/retainer da sayılıyor; kanal sonuçsuz değil, maruziyeti yetersiz.
+
+**Neden riskli** — Kanıt düzeyi en zayıf rota; başvuru sayısı bile ölçülmemiş. Ek gelir zorunlu değil, dolayısıyla riskin karşılığı düşük. Ne satacağınız netleşmeden maruziyet artırmak düşük getirili. Satış işi 12 saatlik bütçede en çok yer kaplayan ve moral açısından en yorucu kalemdir.
+
+**90 gün sonundaki somut çıktı** — Pozisyonlanmış profil, ölçülmüş başvuru ve görüşme sayısı, en iyi senaryoda 1 ücretli iş.
+
+**Haftalık zaman** — 8-10 saat. **Maliyet** — 0-30 USD. **Kariyer getirisi** — Orta. **Gelir ihtimali** — En yüksek ama belirsiz. **Transfer edilebilirlik** — Orta. **Tükenmişlik riski** — Yüksek.
+
+**Vazgeçilen işler** — Migration kararlarını etkileme penceresi, mimari derinlik, test disiplini.
+
+## Rota 3 — NextMatchAI'da sınırlı doğrulama
+
+**Ana amaç** — Tekrarlanabilir talep sinyali ya da net bir "hayır" üretmek.
+
+**Neden mantıklı** — Ürünün kökeni gerçek bir yaşanmış problem; yapılandırılmış görüşme sayısı 0, yani en ucuz deney hiç yapılmamış; metrik tanımları eksik olduğu için 14 ve 191 sayıları yorumlanamıyor.
+
+**Neden riskli** — Doğrulanmış konuşmaya açık IMG sayısı 0 ve kardeşinizden bunu istemek şu an uygun değil; recruitment maliyeti **bilinmiyor**. Yazılı not alışkanlığı olmadığı için çıkan bilgi kalıcı olmayabilir.
+
+**90 gün sonundaki somut çıktı** — Tanımı netleşmiş 3 metrik, recruitment deneyinin sonucu, yazılı görüşme notları (eğer isim gelirse).
+
+**Haftalık zaman** — 6-8 saat tam rota olarak. **Maliyet** — 0 USD. **Kariyer getirisi** — Düşük-orta. **Gelir ihtimali** — Düşük. **Transfer edilebilirlik** — Orta. **Tükenmişlik riski** — Orta.
+
+**Vazgeçilen işler** — Migration derinliği, AI doğrulama disiplini.
 
 ---
 
-## Phase 2: User Presses "Next" → `suggestTurnServices()`
+# 2. Karar matrisi (tahmini, sayısal skor yok)
 
-**Trigger:** Next button on Turn Unit Form (enabled only when `validateUnitForm()` is true — unit name, floor plan, move-out all set, PO rules satisfied).
-**File:** `turn_new_state.dart` → `suggestTurnServices()`
-**Key:** This is the **MAIN DATA FETCH** for pro/date suggestions — the heaviest phase.
+**ÇIKARIM** — Aşağıdaki değerlendirmeler **tahmindir**, ölçüm değildir. Bilinçli olarak ondalıklı toplam puan üretmiyorum; 7,95 gibi bir sayı, elimizde olmayan bir kesinliği ima eder. Rotalar kriter kriter karşılaştırılıyor, sonuç sıralama olarak veriliyor.
 
-The button calls `await suggestTurnServices()` then `clearNextAvailableData()`.
+| Kriter | Ağırlık | Rota 1 | Rota 2 | Rota 3 |
+|---|---|---|---|---|
+| 12 aylık kariyer getirisi | Yüksek | Yüksek | Orta | Düşük-orta |
+| 3 aylık ölçülebilir çıktı | Orta | Yüksek | Orta-yüksek | Orta |
+| Mevcut işte kullanılabilirlik | Yüksek | Yüksek | Düşük | Düşük |
+| Piyasadaki ücretli değer | Orta | Orta-yüksek | Yüksek | Düşük |
+| Yan gelir potansiyeli | Düşük | Düşük | Yüksek | Düşük-orta |
+| Kanıt düzeyi | Orta | Yüksek | Düşük | Düşük |
+| Uygulama kolaylığı | Düşük-orta | Orta-yüksek | Orta | Düşük-orta |
+| Zaman sınırına uygunluk | Yüksek | Yüksek | Orta | Orta |
+| Tükenmişlik riski (düşük risk iyidir) | Orta | Düşük risk | Yüksek risk | Orta risk |
+| Geri döndürülebilirlik | Düşük | Yüksek | Yüksek | Yüksek |
 
-### Primary Flow (smartFiltersFlag = true — this branch)
+**ÇIKARIM** — Ağırlıklar cevaplarınızdan çıktı: hedef bilgi ve istihdam edilebilirlik olduğu için kariyer getirisi ve mevcut işte kullanılabilirlik en ağır; gelir bağlayıcı olmadığı için yan gelir en hafif; haftalık 12 saat gerçek kısıt olduğu için zaman uygunluğu ağır.
 
-```mermaid
-flowchart TD
-    Next["User presses Next"] --> suggest["suggestTurnServices()"]
-    suggest --> checkFF{"smartFiltersFlag?"}
-    checkFF -->|true| ordered["getSuggestedDateWithOrderedPros()"]
-    checkFF -->|false| legacy["getSuggestedDate() (above)"]
-    
-    ordered --> loop["FOR EACH skillset sequentially"]
-    loop --> orderedAPI["🌐 POST orderedPros<br/>(single skillset)"]
-    orderedAPI --> sort["Sort by suggestedOrder / costOrder / qualityOrder<br/>Take top 5 each"]
-    sort --> storePros["Store in serviceOrderedPros[serviceId]"]
-    
-    storePros --> NTE2{"nteFeatureFlag?"}
-    NTE2 -->|yes| budget2["🌐 GET BudgetExceededCheck<br/>(per displayed pro)"]
-    NTE2 -->|no| pricing2
-    budget2 --> pricing2
-    
-    pricing2 --> proPricing2{"proPricingFlag?"}
-    proPricing2 -->|yes| fetchPricing2["🌐 POST pros/pricing<br/>(this skillset only)"]
-    proPricing2 -->|no| showSkillset
-    fetchPricing2 --> showSkillset["Mark skillset loaded → UI shows it"]
-    
-    showSkillset --> moreSkillsets{"More skillsets?"}
-    moreSkillsets -->|yes| nextDate["nextServiceDate = suggestedDate + 1 day"]
-    nextDate --> orderedAPI
-    moreSkillsets -->|no| allDone["All done"]
-```
-
-| # | Method | API Endpoint | HTTP | Request Body | Data Returned | Stored In |
-|---|--------|-------------|------|-------------|---------------|-----------|
-| 15 | `getOrderedPros()` (per skillset) | `/matching/1.5/properties/{propId}/floorplans/{fpId}/orderedPros` | POST | `{ serviceDate: "...", skillset: "...", workOrderServices: [...] }` | `{ data: { skillset, suggestedDate, resources[], emptyListReason } }` | `serviceOrderedPros[serviceId]` → `OrderedProsData` (3 sorted lists: suggested, cost, quality) |
-| 16 | `getBudgetExceedCheck()` (per displayed pro) | `/matching/1.5/properties/{propId}/pros/{proId}/BudgetExceededCheck` | GET | — | List of exceeded skillset names `["Painting"]` | `proExceededSkillsets[proId]` |
-| 17 | `getProsPricing()` (per skillset) | `/matching/1.5/properties/{propId}/floorplans/{fpId}/pros/pricing` | POST | `{ skillset, proIds[] }` | Pro pricing products per pro | `proPricingProducts[skillset][proId]` → `proCorePrices` |
-| 17b | `getProsPricing()` (Repair — painting only) | Same endpoint | POST | `{ skillset: "Repair", proIds[] }` | Repair addon pricing | merged into `proPricingProducts` |
-| 18 | `selectedProInformationFetch()` | `getProDetailedInformation()` → `/matching/1.5/pros/{proId}` | GET | — | BookableResource (pro BRB data), last completed WO, quality checks | `bookableResources`, `selectedQuantitativeBrbList` |
-| 19 | `getProRates()` | `dataRepositoryService` → Dataverse (RRProFeedback entities) | — | Pro feedback scores | `rrProFeedbacks` |
-
-**Key behavior with smart filters:**
-- `unawaited()` — the function returns immediately, UI shows progressive loading per skillset
-- `onSkillsetCompleted` callback fires after each skillset → `updateSelectedQuantitativeProListWithUniquePros()` + `update()`
-- `serviceSkillsetLoaded` tracks which service config IDs have finished loading
-- `serviceSkillsetRequested` tracks which have been requested
-- UI in `turn_service_desktop.dart` shows `PreLoader` while skillset not yet loaded
-
-**Key difference from legacy:** Sequential per-skillset instead of all-at-once. UI updates progressively. Each skillset gets its own budget check + pricing calls before moving to the next.
-
-### Legacy Flow (smartFiltersFlag = false — old path, unchanged)
-
-```mermaid
-flowchart TD
-    Next["User presses Next"] --> suggest["suggestTurnServices()"]
-    suggest --> initStatus["initServiceStatus()<br/>updateFieldsForDisabledServices()"]
-    initStatus --> getSugDate["getSuggestedDate()"]
-    
-    getSugDate --> arrangeAPI["🌐 POST arrangeProsByDates<br/>(ALL skillsets at once)"]
-    arrangeAPI --> assignPros["assignServiceSuggestedDateFromInitialResourceList()"]
-    
-    assignPros --> NTE{"nteFeatureFlag?"}
-    NTE -->|yes| budget["🌐 GET BudgetExceededCheck (per pro)"]
-    NTE -->|no| pricing
-    budget --> pricing{"proPricingFlag?"}
-    pricing -->|yes| fetchPricing["🌐 POST pros/pricing (per skillset)"]
-    pricing -->|no| done
-    fetchPricing --> done["onCompleted → services navigation"]
-```
-
-| # | Method | API Endpoint | HTTP | Details |
-|---|--------|-------------|------|---------|
-| 15-legacy | `getArrangeProsByDates()` | `/matching/1.5/.../arrangeProsByDates` | POST | Sends ALL skillsets at once, blocks until all return |
-
-**Key insight (legacy):** Single blocking call for all skillsets. User waits for the slowest one. This is what the smart filters path replaces.
+**ÇIKARIM (tahmini sıralama)** — Rota 1 açık ara önde; Rota 2 ikinci; Rota 3 üçüncü. Fark tek kriterden gelmiyor: Rota 1 dört ağır kriterde birden önde (kariyer getirisi, mevcut işte kullanılabilirlik, kanıt düzeyi, zaman uygunluğu). Rota 2'yi geride bırakan şey kalitesi değil, sıralaması: ne satılacağı netleşmeden maruziyet artırmanın getirisi düşük. Rota 3'ün geride kalma nedeni recruitment maliyetinin bilinmemesi.
 
 ---
 
-## Phase 3: Service Forms Loop (`turn_service_desktop.dart`)
+# 3. Ana rota
 
-For each enabled service (Painting, Cleaning, Flooring, etc.), user sees:
-- **Suggested Date** (from Phase 2)
-- **Pro List** (from Phase 2)
-- **Addons** (from Phase 1b)
-- **Vendor selection** (if applicable)
+> Önümüzdeki 90 günün ana odağı: Flutter mimarisi, migration ve ürün mühendisliği derinliği; AI destekli doğrulama sistemiyle.
 
-### Per-Service User Actions & Requests
+**Neden bu rota** — Şirketteki üç karar henüz verilmemiş ve bunlar sizin zorlandığınızı söylediğiniz alanın tam merkezinde. Bu rota hem işten çıkarılma senaryosuna karşı gerçek kanıt üretir hem de sahiplik atanmasa bile tamamlanabilir.
 
-```mermaid
-flowchart TD
-    ServiceForm["Service Form Displayed<br/>(date, pros, addons pre-loaded)"]
-    
-    ServiceForm --> selectPro["User selects a Pro"]
-    selectPro --> updatePro["updateServicePro()"]
-    updatePro --> WOC["hasSelectedProEnoughWOC()"]
-    WOC --> capacityCheck{"Pro capacity >= required WOC?"}
-    capacityCheck -->|no| showError["Show 'Update Pro List' error"]
-    capacityCheck -->|yes| proSelected["Pro selection stored"]
-    
-    ServiceForm --> changeDate["User changes service date"]
-    changeDate --> updateDate["updateSuggestedDate()"]
-    updateDate --> reFetch["Re-fetch: getSuggestedDate() or getSuggestedDateWithOrderedPros()<br/>for THIS service only"]
-    
-    ServiceForm --> toggleAddon["User toggles addon"]
-    toggleAddon --> updateAddonList["updateAddonList()"]
-    updateAddonList --> recalcPrice["calculateTotalPrices()"]
-    
-    ServiceForm --> nextBtn["User presses Next"]
-    nextBtn --> setIndex["setTurnFormActiveIndex(index + 1)"]
-```
+**Neden diğerleri değil** — Rota 2 en yüksek tükenmişlik riskini taşıyor ve satılacak uzmanlık netleşmeden erken; yine de tamamen kapatılmıyor, haftada 30 dakikalık piyasa taramasıyla canlı tutuluyor. Rota 3'ün recruitment maliyeti bilinmiyor; tek bir sınırlı deneye indirildi.
 
-| # | Trigger | Method | API Call? | Details |
-|---|---------|--------|-----------|---------|
-| 20 | Pro selected | `updateServicePro()` | No | Updates `service.selectedProId`, telemetry, clears availability error |
-| 21 | Pro selected | `hasSelectedProEnoughWOC()` | No | Compares pro `remainingCapacity` vs sum of addon `rr_lucasbasenumber`. If over capacity → clears selection, shows "Update Pro List" error |
-| 22 | Date changed | `updateSuggestedDate()` | **Yes** — `arrangeProsByDates` or `orderedPros` (smart filters) | Re-fetches pros for new date + optional budget/pricing |
-| 23 | Addon toggled | `updateAddonList()` → `updateTurnAddonList()` | No (in-memory) | Recalculates prices via `TurnPricesUtils.reCalculateAddonPrice()`, then **re-checks WOC** via `hasSelectedProEnoughWOC()` |
-| 24 | Vendor change to RR | `updateSuggestedDate()` | **Yes** — same as #22 | Fetch pros for the newly RR-vendor service |
-| 25 | Pro favorite/restrict | `updateProStatus()` | No (deferred to save) | Stored in `proChangeStatus` map, applied at turn creation |
-| 26 | Pro details tap | `fetchQuantitativeDataForSelectedPro()` → `getProDetailedInformation()` | **Yes** — GET `/matching/1.5/pros/{proId}` | Pro detailed info for popup (BookableResource, last WO, quality) |
-| 27 | WOC exceeded → "Update Pro List" | `updateProListFromExtension()` → `getSuggestedPro()` | **Yes** — POST `/matching/1.5/.../suggestedPros` | Refreshes pros when scope changes invalidate current selection |
+**Hangi koşulda karar değişir** — Ekipte küçülme veya proje iptali sinyali çıkarsa, ya da piyasa taraması haftada 3'ten fazla gerçekten başvurulabilir iş gösterirse ana rota Rota 2'ye kayar. Recruitment deneyi 5+ konuşmaya açık isim getirirse Rota 3 ağırlığı artar.
 
-### Smart Filters UI Behavior (smartFiltersFlag = true)
+**Bilerek erteleniyor** — Upwork başvuru kampanyası, İmarSinyal'de yeni geliştirme, .NET/Azure'a doğrudan yatırım, yeni SEO içeriği, LiveKit/QC tarafı, geniş kullanıcı doğrulaması.
 
-When `smartFiltersFlag = true` and the service vendor is **Rent Ready**:
-- **`ProSmartFiltersController`** serves real ordered data (3 sorted lists) from `serviceOrderedPros`
-- Smart filter tabs (Suggested / Lowest Cost / Highest Quality) toggle the active sort
-- Max 5 pros displayed per filter tab
-- `PreLoader` shown while `serviceSkillsetLoaded` doesn't contain the current service config ID
-- If vendor is **NOT** Rent Ready → `TurnServicePros` is hidden entirely (no pro selection needed)
-
-### Navigation Between Services
-
-```
-activeTurnFormIndex: 0 = Unit Form, 1 = Service 1, 2 = Service 2, ...
-setTurnFormActiveIndex(index) → increments index → shows next service form
-Last service shows "Complete" button instead of "Next"
-```
+**AI'ın plandaki yeri (revize)** — AI kural/skill/kontrol listesi kurulumu için **toplam 2-3 saat** ayrılıyor ve bu tek seferliktir. Sistem, tek bir gerçek feature üzerinde işe yaradığını kanıtlamadan genişletilmez. Genişletme kapısı: aynı feature'da AI çıktısından düzeltilen önemli hata sayısı azaldı ya da görev süresi kısaldıysa devam; aksi halde sistem olduğu yerde kalır.
 
 ---
 
-## Phase 4: Complete Button → Total Price Popup
+# 4. Üç adet 30 günlük faz
 
-**Trigger:** User presses "Complete" on last service.
-**File:** `create_turn_utils.dart` → `showTotalPriceDetailsPopup()`
+## Faz 1 — 29 Temmuz – 27 Ağustos
 
-```mermaid
-flowchart TD
-    Complete["User presses Complete"] --> popup["showTotalPriceDetailsPopup()"]
-    popup --> TotalPriceWidget["TotalPrice Widget<br/>Shows all services, dates, prices, addons"]
-    TotalPriceWidget --> confirm["User presses Confirm"]
-    confirm --> process["processTurnRequest()"]
-```
+**Tek ana sonuç** — Üç mimari kararın yazılı teknik zemini ve kararı test eden küçük bir POC.
 
-**No API calls in popup display** — uses pre-computed:
-- `services` (with selected pros and dates)
-- `totalPrices`
-- `groupedProduct` / `repairProducts`
-- `addonPrices`
-- `proPricingProducts`
+**İş paketi 1: Migration teknik zemini.** Üç teslim: (a) Flutter upgrade dependency ve breaking-change envanteri, (b) mobil→web uyumluluk matrisi, (c) GetX→BLoC için gözlenmiş ağrı noktaları ve karar kriterleri. Karar kriterleri "geçmemek" seçeneğini de içermeli; yoksa doküman karar değil gerekçelendirme olur.
 
----
+**İş paketi 2: Test tabanı özeti ve riske dayalı test seçimi.** Mevcut test tabanının özetini çıkarın (kaç test, hangi tür, ne kapsıyor, boşluk nerede) ve her yüksek riskli alan için hangi test türünün karşılık geldiğini yazın. **Golden test zorunluluğu yok**; unit, widget veya integration testten riske uygun olanı seçilir, golden yalnızca görsel regresyon gerçek risk ise girer.
 
-## Phase 5: Save Turn (`processTurnRequest` → `createTurn`)
+**İş paketi 3: POC ve AI destekli doğrulama.** Kişisel veya paylaşılması izinli bir alanda küçük bir POC üretin (tek ekran, seçilen state-management yaklaşımıyla, web'de derlenip açılan). Paralelde 2-3 saatlik tek seferlik AI doğrulama kurulumu yapın ve **tek bir gerçek feature** üzerinde üç metrikle ölçün.
 
-**Trigger:** User confirms in Total Price popup.
-**File:** `turn_new_state.dart`
+**Üç metrik (basitleştirilmiş)** — Görevin toplam süresi; AI çıktısından düzeltilen önemli hata sayısı; üretilen çözümü AI yardımı olmadan açıklayabildim mi (evet/hayır).
 
-```mermaid
-flowchart TD
-    process["processTurnRequest()"] --> prepare["prepareWholeTurnDataForRequest()"]
-    prepare --> prepareUnit["prepareUnitForTurnRequest()"]
-    prepare --> prepareSkillsets["For each enabled service:<br/>prepareSingleSkillSet()"]
-    
-    prepareSkillsets --> validate["validateTurnRequest()"]
-    validate --> checkAvail{"Availability errors?"}
-    checkAvail -->|yes| showErrors["Focus first failed service"]
-    checkAvail -->|no| createTurn
-    
-    subgraph createTurn["createTurn(requestModel)"]
-        CT1["🌐 POST createTurnRequest<br/>(Job Profile Service)"]
-        CT1 --> CT2["🌐 POST createTurnAction<br/>(scheduleWorkOrders)"]
-        CT2 --> CT3["🌐 POST customerProPreference<br/>(saveProStatus — per changed pro)"]
-        CT3 --> CT4["saveAllProRates()"]
-    end
-    
-    createTurn --> done["Navigate to Property Board ✅"]
-```
+**Başarı metrikleri** — Üç doküman yazıldı; test tabanı özeti çıktı; POC çalışıyor; en az 5 görevde üç metrik kaydedildi; 3 hafta gerçek çalışma saati verisi var.
 
-### Request Preparation
+**Durdurma kriterleri** — Gerçek haftalık saat 3 hafta üst üste 8'in altına inerse Faz 2 tek iş paketine indirilir. AI doğrulama sistemi tek feature'da fark yaratmazsa genişletilmez.
 
-`prepareWholeTurnDataForRequest()` builds the full request model:
-1. `prepareUnitForTurnRequest()` → fills moveIn/moveOut/readyBy dates, floorPlanId, customerPO, unit name, notes
-2. For each RR-enabled service → `prepareSingleSkillSet()`:
-   - `prepareCoreAddonForTurnRequest()` — core service WO services
-   - `prepareAddonsForTurnRequest()` — selected addon WO services with product IDs, rooms, materials, colors, PO
-   - `createSkillSetModel()` — skillset name, vendorType, startDate, metadata (originalProMatchDate for new turns)
-   - Service photos → `uploadedAttachments`
+**Haftalık saat sınırı** — Taban 12 saat. Ağustos'taki geçici fazla süre yalnızca envanter/matris gibi **tek seferlik** işlere harcanır, kalıcı yük açılmaz.
 
-**Note:** The selected **pro ID** is NOT part of `TurnRequestModel`. It's sent separately via `createTurnAction` (booking action) after the turn is created.
+**Yapılmayacaklar** — Upwork başvurusu, İmarSinyal'de yeni geliştirme, yeni içerik, şirket repolarında toplu analiz, onaysız refactor, AI sistemini genişletmek.
 
-### Validation Request
+## Faz 2 — 28 Ağustos – 26 Eylül
 
-| # | Method | API Endpoint | HTTP | Details |
-|---|--------|-------------|------|---------|
-| 28 | `validateTurnRequest()` | POST `/matching/1.5/properties/{propId}/floorplans/{fpId}/proAvailability` | POST | Checks if each selected pro is available on the chosen date. If validation fails → `focusFirstFailedService()` and abort |
+**Tek ana sonuç** — Faz 1 zemininin iki karar dokümanına dönüşmesi ve takım içinde en az bir kez tartışılması.
 
-### Save Requests (Sequential)
+**İş paketi 1: İki karar dokümanı.** (a) Flutter upgrade için sıralı yükseltme planı ve risk sıralaması, (b) state-management kararı için ADR. Dayanağı Faz 1 envanteri; kaynak olarak sizin hazırladığınız anonim özet ve izinli küçük parçalar kullanılır.
 
-| # | Method | API Endpoint | HTTP | Request Body | Purpose |
-|---|--------|-------------|------|-------------|---------|
-| 29 | `createTurnRequest()` | POST `/turns/1.5/properties/{propId}/turns?return=full` | POST | Full `TurnRequestModel.toJson()` (unit info, skillsets with dates/addons/PO — **not** pro IDs) | Creates the turn + work orders in CRM |
-| 30 | `scheduleWorkOrders()` → `createTurnAction()` | POST `/turns/1.0/properties/{propId}/turns/{jobProfileId}/actions` | POST | Array of `{ workOrderId, date, proId, action: "booking", overBudgetReason? }` | Schedules each work order with selected pro on selected date |
-| 31 | `saveProStatus()` → `customerProPreference()` | PUT `/matching/1.5/properties/{propId}/pros/{proId}/preference` | PUT | `{ preference: "matched"/"restricted"/"neutral", reason? }` | Saves user's pro favorite/restrict choices |
-| 32 | `saveAllProRates()` | `propertiesService.postProFeedback()` | POST | Pro rate feedback data | Saves pro rating feedback |
-| — | Telemetry | `TelemetryService` → `TurnCreationSuccess` event | — | propertyId, turnId, services, booking alerts | Analytics tracking |
+**İş paketi 2: POC'yi kararı test edecek kadar derinleştirmek.** Aynı ekranı hem mevcut hem hedef yaklaşımla çalıştırıp somut karşılaştırma üretin: test edilebilirlik, kod hacmi, web davranışı, geliştirme süresi.
+
+**İş paketi 3: Küçük yan işler (tek seferlik).** NextMatchAI recruitment deneyi (kardeşinize tek yönlendirme sorusu, ~30 dakika) ve İmarSinyal'in bakım modunda kalabildiğinin doğrulanması.
+
+**Başarı metrikleri** — 2 doküman yazıldı; takım liderine en az 1 öneri sunuldu ve cevabı kayda geçti; POC karşılaştırması sayısal veri içeriyor; recruitment deneyinden gelen isim sayısı kaydedildi.
+
+**Durdurma kriterleri** — Öneri ilgisiz bulunursa ısrar edilmez, çıktı kişisel kanıt olarak saklanır. Recruitment deneyi 2 hafta içinde 0 isim getirirse NextMatchAI doğrulaması bu 90 günden çıkar.
+
+**Haftalık saat sınırı** — 12 saat.
+
+**Yapılmayacaklar** — Onaysız migration uygulaması, ikinci bir POC, Upwork kampanyası, yeni yan proje.
+
+## Faz 3 — 27 Eylül – 27 Ekim
+
+**Tek ana sonuç** — Kararın gerçek işe bağlanması (ya da eşdeğer kanıtın kendi alanında tamamlanması) ve dışa dönük kanıt paketi.
+
+**İş paketi 1: Gerçek uygulama veya eşdeğeri.** Migration işlerinden biri fiilen başladıysa orada sorumluluk alıp ADR'yi uygulamaya bağlayın. Başlamadıysa POC'yi uçtan uca tamamlayın; çıktı iki durumda da elde edilir.
+
+**İş paketi 2: Koşullu iş paketi.** NextMatchAI'da **halihazırda önemli bir LLM akışı varsa**, o akışa güvenilirlik katmanı ekleyin: yapılandırılmış çıktı ve şema doğrulama, hata/fallback yolu, maliyet ve gecikme ölçümü, 10-20 örneklik küçük eval seti. **Böyle bir akış yoksa** bu paket iptal edilir ve yerine ikinci bir migration POC'si (web uyumluluğu veya upgrade'in en riskli paketi) konur. Bu kontrolü Faz 1 içinde yapın, Faz 3'ü beklemeyin.
+
+**İş paketi 3: Kanıt paketi.** Üç artefakt: karar dokümanlarının anonim özeti, POC karşılaştırma raporu, ve üç metrikle ölçülmüş AI doğrulama deneyiminin kısa yazısı. Ayrıca CV/profil pozisyonlamasını güncelleyin — kampanya yok.
+
+**Başarı metrikleri** — En az 1 karar uygulamaya bağlandı ya da POC tamamlandı; koşullu paket için karar verildi ve gerekçesi yazıldı; 3 artefakt hazır.
+
+**Durdurma kriterleri** — Haftalık saat 8'in altına düşerse İş paketi 3 tek artefakta indirilir, 1 korunur.
+
+**Haftalık saat sınırı** — 12 saat.
+
+**Yapılmayacaklar** — Model eğitimi, fine-tuning, RAG, agent mimarisi, yeni ürün, ölçülmemiş performans işi, İmarSinyal'de yeni geliştirme.
 
 ---
 
-## Complete Request Map (Chronological — smartFiltersFlag = true)
+# 5. Öğrenme planı
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant UI as Turn UI
-    participant State as TurnNewState
-    participant FF as FeatureFlags
-    participant DV as Dataverse
-    participant Match as Matching API
-    participant JP as JobProfile API
-    
-    Note over User,JP: Phase 0: Page Load
-    User->>UI: Navigate to New Turn
-    State->>FF: getFeatureFlagValues() [~20 flags incl. smartFiltersFlag=true]
-    State->>DV: fetchProPreferences()
-    State->>DV: getEntities<RRTurnProfile> [service configs]
-    State->>DV: getEntities<Account> + getEntities<PriceLevel> [floor plans]
-    State->>DV: handleIntegrationReminder()
-    
-    Note over User,JP: Phase 1: Unit Form
-    User->>UI: Select Floor Plan
-    State->>DV: getProductPriceLevelList()
-    State->>DV: getAddonConfigurationList()
-    State->>DV: getProductList()
-    State->>DV: getRRProductRRColor() + getRRColor()
-    State->>DV: getFloorPlanDetail() + getRooms()
-    Note right of State: calculateTotalPrices() [in-memory]
-    
-    Note over User,JP: Phase 2: Press Next (HEAVIEST — progressive)
-    User->>UI: Press Next
-    
-    loop For EACH skillset (sequential)
-        State->>Match: POST orderedPros [single skillset]
-        Match-->>State: suggestedDate + resources[] (with sort orders)
-        
-        loop For each displayed pro (if NTE flag)
-            State->>Match: GET BudgetExceededCheck
-        end
-        
-        State->>Match: POST pros/pricing [this skillset]
-        Note right of State: UI updates: skillset loaded ✅
-    end
-    
-    loop For each unique pro
-        State->>Match: GET proDetailedInformation
-    end
-    State->>DV: getProRates (feedback)
-    
-    Note over User,JP: Phase 3: Service Forms (user interaction)
-    User->>UI: Select pro, toggle addons per service
-    User->>UI: Press Next → setTurnFormActiveIndex(i+1)
-    
-    Note over User,JP: Phase 4: Complete → Total Price Popup
-    User->>UI: Press Complete (last service)
-    User->>UI: Review prices → Confirm
-    
-    Note over User,JP: Phase 5: Save
-    State->>Match: POST proAvailability [validation]
-    State->>JP: POST createTurnRequest [turn + work orders]
-    State->>JP: POST createTurnAction [schedule with proId + date]
-    
-    loop For each changed pro preference
-        State->>Match: PUT customerProPreference
-    end
-    
-    State->>DV: saveAllProRates (feedback)
-    State-->>UI: ✅ Navigate to Property Board
-```
+**GERÇEK** — Güncel kurs araştırması yapmadım; bu yanıtta kurs adı yok. Ana rota onaylandıktan sonra yalnızca bu başlıklara hizmet eden modülleri araştırırız.
+
+**Ana eksen: Flutter mimarisi ve migration mühendisliği.** Neden şimdi: üç karar önümüzde ve karar verilmeden önceki dönem tek etkileme penceresi. Bağlanacağı çıktı: envanter, matris, karar kriterleri, ADR, POC. Başlıklar: sürüm yükseltme ve breaking-change yönetimi, bağımlılık risk analizi, mobil/web ortak kod ve platform farkları, state-management karşılaştırması ve test edilebilirlik, riske dayalı test stratejisi, ADR yazımı. Kapsam: seçili modüller; sertifika değeri düşük, artefakt değeri yüksek.
+
+**Destekleyici eksen: AI çıktısını doğrulama (araç düzeyinde, toplam 2-3 saat).** Neden şimdi: mimari kararı AI ile verecekseniz çıktıyı sorgulayabilmek ön koşul. Bağlanacağı çıktı: üç metrik kaydı ve tek feature denemesi. Genişletme, kanıt gelmeden yapılmaz.
+
+**Kapsam dışı** — Model eğitimi, ML araştırmacılığı, fine-tuning, RAG, agent mimarisi. Ölçülmüş ihtiyaç yok, hedefinizde de yok.
 
 ---
 
-## Data Source Summary
+# 6. Yan proje kararları
 
-| Source | Requests | Phase | Blocking? |
-|--------|----------|-------|-----------|
-| **Feature Flag Service** (LaunchDarkly) | 1 batch (~20 flags) | Phase 0 | Yes (init) |
-| **Dataverse** (via `dataRepositoryService`) | ~5 entity fetches | Phase 0 (init) | Yes |
-| **Dataverse** (via `PriceService` + `TurnPricesUtils`) | ~7 entity fetches | Phase 1 (floor plan) | Yes |
-| **Matching API** (`orderedPros`) — smart filters | S calls (1 per skillset, sequential) | Phase 2 | Progressive (non-blocking per skillset) |
-| **Matching API** (`arrangeProsByDates`) — legacy | 1 call (all skillsets) | Phase 2 | **Yes — blocks all at once** |
-| **Matching API** (`BudgetExceededCheck`) | N calls (per displayed pro per skillset) | Phase 2 | Sequential within each skillset |
-| **Matching API** (`pros/pricing`) | M calls (per skillset) | Phase 2 | 1 per skillset (sequential in smart filters) |
-| **Matching API** (`proDetailedInformation`) | K calls (per unique pro) | Phase 2 post | Sequential |
-| **Dataverse** (`RRProFeedback`) | 1 batch | Phase 2 post | Yes |
-| **Matching API** (`proAvailability`) | 1 call | Phase 5 | Yes |
-| **Job Profile API** (`createTurnRequest`) | 1 call | Phase 5 | Yes |
-| **Job Profile API** (`createTurnAction`) | 1 call | Phase 5 | Yes |
-| **Matching API** (`customerProPreference`) | P calls (per changed pro) | Phase 5 post | Sequential |
-| **Properties Service** (`postProFeedback`) | 1 call | Phase 5 post | Yes |
+**İmarSinyal: bakım modu.** Kanıt: gelir üretmediği `GERÇEK`; öğrenme çıktısı belgelenmiş ve doğrulanabilir değil, Codex ağırlıklı körleme geliştirme nedeniyle öğrenmenin kalıcılığı belirsiz; 5 saatin çoğu zorunlu onarım değil. Zaman bütçesi: haftada 1 saat. Devam kriteri: veri akışı bakım modunda bozulmadan sürerse 1 saatte kalır. Durdurma kriteri: akış bozulursa süre 3 saate çıkar ve Faz 2 bir iş paketi azaltılır; 90 gün sonunda hâlâ 0 görüşülmüş potansiyel müşteri varsa dondurma kararı açıkça masaya gelir.
+
+**NextMatchAI: sınırlı doğrulama, minimum yoğunlukta.** Kanıt: kökeni gerçek problem, 1 geçmiş ödeme, yapılandırılmış görüşme 0, doğrulanmış konuşmaya açık IMG 0, recruitment maliyeti bilinmiyor. Zaman bütçesi: haftada 0,5 saat + Faz 2'de tek seferlik 30 dakika recruitment deneyi. Devam kriteri: deneyden en az 3 isim. Durdurma kriteri: 0 isim veya 0 yeni bilgi.
+
+**Upwork: kampanya yok, haftada 30 dakika dış piyasa taraması.** Amaç başvuru değil; öğrenme rotasının piyasa talebiyle uyumunu kontrol etmek. Ölçüm: hangi beceriler ilanlarda tekrar ediyor, kaç ilan gerçekten başvurulabilir. Bu ölçüm aynı zamanda ana rotayı değiştirme sinyalini üretir.
 
 ---
 
-## Key State Fields Reference
+# 7. Haftalık düzen (steady state, toplam 12 saat)
 
-| Field | Type | Set By | Used By |
-|-------|------|--------|---------|
-| `services` | `RxList<TurnServiceModel>` | `getServiceConfigs()` | Everywhere — the service list |
-| `serviceSuggestedDateWithPros` | `Map<String, DateWithPros>` | `arrangeProsByDates` response | Date pickers, pro lists, scheduling |
-| `serviceOrderedPros` | `Map<String, OrderedProsData>` | `orderedPros` response (smart filters) | Smart filter tabs |
-| `groupedProduct` | `Map<RRSkillSet, List<WorkOrderServiceModel>>` | `preparePriceList()` | Addons UI, price calculation |
-| `addonPrices` | `Map<String, AddonPricing>` | `preparePriceList()` | Addon price display |
-| `totalPrices` | `RxMap<String, double>` | `calculateTotalPrices()` | Total price popup |
-| `proCorePrices` | `Map` | `getProsPricing()` | Core price display on pro cards |
-| `proExceededSkillsets` | `Map<String, List<String>>` | `getBudgetExceedCheck()` | NTE badges on pro cards |
-| `proPricingProducts` | `Map<String, Map<String, List<ProsPricingProduct>>>` | `getProsPricing()` | Dynamic addon prices |
-| `bookableResources` | `List<BookableResource>` | `getProDetailedInformation()` | Pro details popup |
-| `proChangeStatus` | `Map<String, CustomerProPreferenceEnum>` | User actions (fav/restrict) | Saved at end |
-| `proPreferences` | `RxList<MSDynRequirementResourcePreference>` | `fetchProPreferences()` | Pro card badges |
-| `requestModel` | `TurnRequestModel` | `prepareWholeTurnDataForRequest()` | Final save API body |
+**ÇIKARIM** — Hafta içi günlük 3 saat ve hafta sonu günlük 3-4 saat tavanlarının altında kalacak dağılım:
+
+- Mimari ve migration işi (envanter, matris, karar dokümanı, POC): 5,5 saat
+- Öğrenme (migration, test stratejisi, ADR): 2 saat
+- AI destekli doğrulama takibi (üç metrik, iş akışının içinde): 0,5 saat
+- İmarSinyal bakım: 1 saat
+- NextMatchAI: 0,5 saat
+- Dış piyasa taraması: 0,5 saat
+- Haftalık değerlendirme: 0,5 saat
+- Dinlenme tamponu (planlanmamış): 1,5 saat
+
+**VARSAYIM** — 12 saat planlama tabanıdır, ölçüm değil. Gerçek veri düşük çıkarsa kesinti sırası: önce dış piyasa taraması ve NextMatchAI, sonra öğrenme, en son mimari işi. Mimari işi en son kesilir çünkü kanıt üreten tek kalem odur.
 
 ---
 
-## Matching API Endpoints Reference
+# 8. Anti-hallüsinasyon tablosu
 
-All endpoints under base URL: `https://{env}api.rentready.com`
+| Öneri | Dayandığı gerçek | Varsayım | Nasıl test edilir |
+|---|---|---|---|
+| Ana odak migration derinliği | Üç karar verilmemiş; "mimari konularda zorlanıyorum"; sahiplik ihtimali var | Zeminin karara etki edeceği | Faz 2'de takım liderine sunulan öneriye gelen cevap |
+| Envanter ve matris önce gelir | Migration'lar en az 1,5 ay başlamıyor | Bu sürenin hazırlığa yeteceği | Faz 1 sonunda üç dokümanın tamamlanmış olması |
+| AI sistemi 2-3 saatle sınırlı | %80 bağımlılık bir gözlem, ölçüm değil | Küçük kurulumun yeterli olacağı | Tek feature'da üç metriğin değişimi |
+| Golden test zorunlu değil | Görsel regresyon riski ölçülmemiş | Riskin başka testlerle karşılanabileceği | Test tabanı özetinde boşluğun hangi risk olduğunun görülmesi |
+| İmarSinyal 1 saatte kalabilir | 5 saatin çoğu yeni geliştirme | Veri akışının bozulmayacağı | 2 haftalık bakım-modu deneyi, kayıt ve log karşılaştırması |
+| LLM işi koşullu | NextMatchAI'da mevcut LLM akışının önemi bilinmiyor | Akış varsa güvenilirlik katmanının değerli olacağı | Faz 1'de akış envanteri; yoksa paket iptal |
+| Upwork ertelenir ama izlenir | Ek gelir opsiyonel; başvurulabilir ilan bulunamadı | Piyasa taramasının yön göstereceği | Haftalık başvurulabilir ilan sayısı ve tekrar eden beceriler |
+| 12 saat gerçekçi | Hafta içi 3, hafta sonu 3-4 saat tavanı | Tavanın her gün kullanılamayacağı | İlk 30 günün gerçek saat kaydı |
 
-| Endpoint | HTTP | Used In | Purpose |
-|----------|------|---------|---------|
-| `/matching/1.5/properties/{propId}/floorplans/{fpId}/arrangeProsByDates` | POST | `getSuggestedDate()` (legacy) | Fetch suggested dates + pros for ALL skillsets at once |
-| `/matching/1.5/properties/{propId}/floorplans/{fpId}/orderedPros` | POST | `getSuggestedDateWithOrderedPros()` (smart filters) | Fetch ordered pros for SINGLE skillset with sort orders |
-| `/matching/1.5/properties/{propId}/floorplans/{fpId}/pros/pricing` | POST | `getProsPricing()` | Batch pricing for pros by skillset |
-| `/matching/1.5/properties/{propId}/pros/{proId}/pricing` | GET | `getFullProPricing()` (pro details page only) | Full pricing for a single pro |
-| `/matching/1.5/properties/{propId}/pros/{proId}/BudgetExceededCheck` | GET | `getBudgetExceedCheck()` | NTE budget threshold check per pro |
-| `/matching/1.5/properties/{propId}/floorplans/{fpId}/proAvailability` | POST | `validateTurnRequest()` | Pre-save availability validation |
-| `/matching/1.5/properties/{propId}/floorplans/{fpId}/suggestedPros` | POST | `getSuggestedPro()` | Refresh pros after WOC scope change |
-| `/matching/1.5/properties/{propId}/floorplans/{fpId}/pros/preferred/nearestAvailableDate` | POST | `getNearestAvailableDate()` | Find next available date for a preferred pro |
-| `/matching/1.5/pros/{proId}` | GET | `getProDetailedInformation()` | Pro BRB details for popup |
-| `/matching/1.5/properties/{propId}/pros/{proId}/preference` | PUT/DELETE | `customerProPreference()` | Save/remove pro favorite/restrict |
+**ÇIKARIM** — Ölçülmemiş performans problemleri (render/memory darboğazı, upgrade'in kırılma büyüklüğü, web'e taşımanın asıl maliyeti) plana iş olarak girmedi; yalnızca envanter ve matriste **risk olarak listelenecek** konular.
 
 ---
 
-## Potential Bottlenecks & Optimization Opportunities
+# 9. İlk 14 gün — uygulanabilir plan (29 Temmuz – 11 Ağustos)
 
-| Bottleneck | Phase | Impact | Current Mitigation | Further Optimization |
-|------------|-------|--------|-------------------|---------------------|
-| `arrangeProsByDates` blocks for ALL skillsets | Phase 2 (legacy) | User waits for slowest skillset | **Smart filters** (`orderedPros`) makes this sequential + progressive | Fully replace legacy path |
-| `orderedPros` sequential loop | Phase 2 (smart filters) | Total time = sum of all skillsets | Progressive UI loading per skillset | Parallelize independent skillsets |
-| `BudgetExceededCheck` per pro (sequential) | Phase 2 | N network calls per skillset | Runs within each skillset's block | Batch API endpoint |
-| `proDetailedInformation` per unique pro | Phase 2 post | K network calls | Runs after all skillsets done | Batch endpoint or lazy-load on tap |
-| `onFloorPlanChange` → ~7 Dataverse calls | Phase 1 | Floor plan selection feels slow | Some calls use cache | Combine into single aggregate query |
-| `proAvailability` validation at save time | Phase 5 | Extra round-trip before save | — | Validate during service form navigation |
-| `customerProPreference` per changed pro | Phase 5 post | P sequential calls | Only for changed preferences | Batch endpoint |
-| Phase 0 loads (~5 Dataverse + FF calls) | Phase 0 | Initial page load delay | FF service may cache | Parallelize init calls |
+**Toplam süre: yaklaşık 28 saat.** Bunun 24 saati normal tabandan (2 hafta × 12), kalan ~4 saati Ağustos'taki geçici kapasiteden karşılanıyor ve yalnızca tek seferlik kurulum işlerine gidiyor. Gün gün dağıtım yok; her kalem kendi süre bütçesi ve teslimiyle tanımlı.
+
+**1. Flutter upgrade dependency ve breaking-change envanteri — 6 saat.**
+Teslim: her satırı bir paket olan tablo. Kolonlar: paket adı, mevcut sürüm, hedef sürüm, breaking change var/yok, değişikliğin kaynağı (changelog/issue), etkilenen modül, risk seviyesi (yüksek/orta/düşük), alternatif veya geçiş notu. Bitiş kriteri: yüksek riskli paketlerin tamamı için not yazılmış olması.
+
+**2. Mobil → web uyumluluk matrisi — 5 saat.**
+Teslim: satırlar özellik/paket, kolonlar web'de durumu (çalışır / kısmi / çalışmaz / alternatifi var), etkilenen ekran veya akış, ve varsa geçici çözüm. Bitiş kriteri: "çalışmaz" işaretli her satır için ya alternatif ya da açık soru yazılmış olması.
+
+**3. GetX → BLoC ağrı noktaları ve karar kriterleri — 4 saat.**
+Teslim: iki sayfa. Birinci sayfa gözlenmiş ağrı noktaları (her biri somut, anonimleştirilmiş bir örnekle). İkinci sayfa 5-7 karar kriteri ve her kriterin nasıl ölçüleceği; "geçmemek" seçeneği de değerlendirilmiş olacak. Bitiş kriteri: kriterlerin en az yarısının ölçülebilir tanımı olması.
+
+**4. Mevcut test tabanının özeti — 2 saat.**
+Teslim: kaç test var, hangi türde, hangi akışları kapsıyor, en büyük üç boşluk hangi riske denk geliyor. Bitiş kriteri: üç boşluğun her biri için önerilen test türünün (unit/widget/integration, gerekiyorsa golden) yazılmış olması.
+
+**5. Küçük POC — 4 saat.**
+Kişisel veya paylaşılması izinli bir alanda tek ekran; seçilen state-management yaklaşımıyla yazılmış ve web'de derlenip açılıyor. Teslim: çalışan POC + yarım sayfa not (ne kolaylaştı, ne zorlaştı). Bitiş kriteri: ekranın hem mobilde hem web'de açılması.
+
+**6. AI destekli doğrulama kurulumu — 2,5 saat (tek seferlik).**
+Teslim: bir kural dosyası ve kısa doğrulama listesi; ardından **tek bir gerçek feature** üzerinde üç metriğin kaydı (görev süresi, AI çıktısından düzeltilen önemli hata sayısı, çözümü AI olmadan açıklayabildim mi). Bitiş kriteri: en az 5 görev kaydı. Kural: fark görülmezse sistem genişletilmez.
+
+**7. İmarSinyal bakım modu deneyi — 2 saat (2 × 1 saat).**
+Teslim: iki haftalık kayıt sayısı ve hata logu karşılaştırması, tek satır sonuç. Bitiş kriteri: "akış sürdü / sürmedi" kararı.
+
+**8. NextMatchAI ölçüm tanımları ve LLM akış kontrolü — 1,5 saat.**
+Teslim: "ilk temel işlem" event adının yazılı tanımı, 191 ziyaretin kaynak dağılımı ve metrik türü (user/session/click), ve projede halihazırda önemli bir LLM akışı olup olmadığının tek satırlık cevabı. Bu son cevap Faz 3'teki koşullu iş paketinin kaderini belirler.
+
+**9. Dış piyasa taraması — 1 saat (2 × 30 dakika).**
+Teslim: 10 iş tanımından çıkarılmış tekrar eden beceri listesi ve kaç ilanın gerçekten başvurulabilir olduğu. Başvuru yapılmaz.
+
+**10. Haftalık değerlendirme — 1 saat (2 × 30 dakika).**
+Teslim: gerçek çalışılan saat, tamamlanan teslimler, sonraki haftanın kesinti kararı.
+
+**Kapasite düşerse kesinti sırası** — Önce dış piyasa taraması ve NextMatchAI kalemi, sonra POC 4 saatten 2 saate indirilir, sonra web uyumluluk matrisi yalnızca yüksek riskli satırlarla sınırlanır. Envanter (1) ve karar kriterleri (3) korunur; 14 günün asıl teslimi bunlardır.
+
+**14. günün sonunda elinizde olması gerekenler** — Bir dependency/breaking-change envanteri, bir web uyumluluk matrisi, bir karar kriterleri dokümanı, bir test tabanı özeti, çalışan bir POC, 5 görevlik üç metrik kaydı, İmarSinyal bakım modu kararı, ve NextMatchAI'daki LLM akışı sorusunun cevabı.
