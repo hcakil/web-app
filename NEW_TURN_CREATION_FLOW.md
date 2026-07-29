@@ -1,254 +1,238 @@
-Ekseni düzelttim: ana çıktı artık mimari ve migration derinliği; AI doğrulama sistemi yalnızca bunu destekleyen bir araç. Puanlamadan ondalıklı skorları kaldırdım.
-
-Bir sınır hatırlatması: aşağıdaki envanter, matris ve test özeti **sizin üreteceğiniz** teslimlerdir. Şirket repolarını topluca incelemiyorum; benim katkım bu teslimlerin yapısını ve karar kriterlerini vermek. İhtiyaç duyduğunuzda anonim özet veya izinli küçük parça üzerinden birlikte çalışırız.
+`OPUS5_AGUSTOS_PLAN_UPDATE_PROMPT.md`'yi okudum. Dataset hazır olduğu için önceki planın en büyük kalemi (erişim başvuruları ve gecikme riski) tamamen kalktı; o saatler doğrudan baseline ve öğrenmeye kayıyor.
 
 ---
 
-# 1. Üç alternatif rota (revize)
+# 1. Yeni bilgilerin kararı nasıl değiştirdiği
 
-## Rota 1 — Flutter mimarisi, migration ve ürün mühendisliği derinliği; AI destekli doğrulama sistemiyle
-
-**Ana amaç** — Yaklaşan üç mimari kararda (Flutter upgrade, mobil→web, GetX→BLoC) teknik zemini kuran ve kararı yazabilen kişi olmak. AI, bu kararların doğrulanmasında kullanılan bir araç; hedefin kendisi değil.
-
-**Neden mantıklı** — Hedefiniz AI ile daha güçlü mimari karar verebilen kıdemli Flutter/ürün mühendisi olmak ve bu üç karar henüz verilmemiş durumda. Zorlandığınızı söylediğiniz alan tam olarak burası. Ek bütçe, yeni erişim veya sahiplik ataması gerektirmiyor: envanter, matris ve karar kriterleri sahiplik verilmese bile üretilebilir ve dışa taşınabilir kanıt olur.
-
-**Neden riskli** — Sahiplik atanmış değil, şirket zamanı garanti değil, normal feature/bug yükü sürüyor. Envanter ve matris üretimi kendi zamanınıza binerse haftalık 12 saat hızla dolar. Ayrıca kararlar sizin katkınız olmadan alınabilir; bu durumda çıktı kişisel kanıt olarak kalır.
-
-**90 gün sonundaki somut çıktı** — Flutter upgrade dependency ve breaking-change envanteri, mobil→web uyumluluk matrisi, GetX→BLoC ağrı noktaları ve karar kriterleri, mevcut test tabanının özeti, kararı test eden çalışan bir POC, ve bunlardan türetilmiş 2 karar dokümanı.
-
-**Haftalık zaman** — 8 saat (12 saatlik tabanın içinde).
-
-**Tahmini maliyet** — 0 USD.
-
-**Kariyer getirisi** — Yüksek; hem mevcut işte hem dışarıda anlatılabilir.
-
-**Gelir ihtimali** — 90 günde düşük ve dolaylı.
-
-**Transfer edilebilirlik** — Yüksek; migration ve karar yazımı becerisi şirket ve teknoloji değişse de taşınır.
-
-**Tükenmişlik riski** — Düşük-orta.
-
-**Vazgeçilen işler** — Upwork kampanyası, İmarSinyal'de yeni geliştirme, yeni SEO içeriği, geniş kullanıcı doğrulaması, LiveKit/QC tarafı.
-
-## Rota 2 — Tekrarlanabilir ikinci gelir kanalı
-
-**Ana amaç** — Niş pozisyonlama ve Upwork maruziyetiyle ilk ücretli tekrarlanabilir iş sinyalini üretmek.
-
-**Neden mantıklı** — 12 aylık yön hedefiniz aylık 1.000 USD recurring ve freelance/retainer da sayılıyor; kanal sonuçsuz değil, maruziyeti yetersiz.
-
-**Neden riskli** — Kanıt düzeyi en zayıf rota; başvuru sayısı bile ölçülmemiş. Ek gelir zorunlu değil, dolayısıyla riskin karşılığı düşük. Ne satacağınız netleşmeden maruziyet artırmak düşük getirili. Satış işi 12 saatlik bütçede en çok yer kaplayan ve moral açısından en yorucu kalemdir.
-
-**90 gün sonundaki somut çıktı** — Pozisyonlanmış profil, ölçülmüş başvuru ve görüşme sayısı, en iyi senaryoda 1 ücretli iş.
-
-**Haftalık zaman** — 8-10 saat. **Maliyet** — 0-30 USD. **Kariyer getirisi** — Orta. **Gelir ihtimali** — En yüksek ama belirsiz. **Transfer edilebilirlik** — Orta. **Tükenmişlik riski** — Yüksek.
-
-**Vazgeçilen işler** — Migration kararlarını etkileme penceresi, mimari derinlik, test disiplini.
-
-## Rota 3 — NextMatchAI'da sınırlı doğrulama
-
-**Ana amaç** — Tekrarlanabilir talep sinyali ya da net bir "hayır" üretmek.
-
-**Neden mantıklı** — Ürünün kökeni gerçek bir yaşanmış problem; yapılandırılmış görüşme sayısı 0, yani en ucuz deney hiç yapılmamış; metrik tanımları eksik olduğu için 14 ve 191 sayıları yorumlanamıyor.
-
-**Neden riskli** — Doğrulanmış konuşmaya açık IMG sayısı 0 ve kardeşinizden bunu istemek şu an uygun değil; recruitment maliyeti **bilinmiyor**. Yazılı not alışkanlığı olmadığı için çıkan bilgi kalıcı olmayabilir.
-
-**90 gün sonundaki somut çıktı** — Tanımı netleşmiş 3 metrik, recruitment deneyinin sonucu, yazılı görüşme notları (eğer isim gelirse).
-
-**Haftalık zaman** — 6-8 saat tam rota olarak. **Maliyet** — 0 USD. **Kariyer getirisi** — Düşük-orta. **Gelir ihtimali** — Düşük. **Transfer edilebilirlik** — Orta. **Tükenmişlik riski** — Orta.
-
-**Vazgeçilen işler** — Migration derinliği, AI doğrulama disiplini.
+1. `GERÇEK` — Dataset danışman tarafından verildi. Önceki planın Hafta 1'indeki 4 saatlik "erişim başvurusu" kalemi ve "erişim gelmezse yedek plan" maddesi **iptal**. Ağustos artık risk azaltma ayı değil, üretim ayı.
+2. `ÇIKARIM` — Bu, ana kararı değiştirmiyor ama **karakterini** değiştiriyor: tez hâlâ sıklet merkezi, fakat artık "Eylül'de sıfırdan başlamayı önlemek" için değil, ay sonunda çalışan bir baseline ve ilk sonuçlar için.
+3. `ÇIKARIM` — Erişim beklemesi olmadığı için tez, "sadece teslim işi" olmaktan çıkıp gerçek bir teknik öğrenme laboratuvarı olabilir. Bu yüzden seçenek A değil **B**'yi seçiyorum: aynı zaman bütçesi, farklı yürütme.
+4. `GERÇEK` — Şirket araştırması (QC App V2 ↔ Pro App, Andrey onaylı) iş saatinin içinde. Kişisel bütçeden **tek saat** ayrılmıyor; ayrı bir work-hours planı §9'da.
+5. `ÇIKARIM` — Seçenek C (tezden ayrı AI mühendisliği hattı) elendi: iş saatinde mimari araştırma, kişisel zamanda tez varken üçüncü bir teknik hat açmak doğrudan tükenmişlik üretir. AI disiplini ayrı hat değil, tezin **içinde** ölçülen bir pratik olacak.
+6. `GERÇEK` — Upwork artık opsiyonel değil, korumalı blok. Bu yüzden plana sabit 1,5 saat/hafta olarak girdi ve iş gelirse hangi bloğun kesileceği önceden yazıldı.
+7. `GERÇEK` — Yan projeler motivasyon kaynağı ve kapatılmıyor. İkisine **toplam** 1,5 saat/hafta, dönüşümlü. Bu bir büyütme bütçesi değil, keyif/bakım bütçesi.
+8. `ÇIKARIM` — Coursera artık gereksiz değil: dataset hazır olduğu için öğrenilecek konu somutlaştı (tek kanallı görüntü önişleme, transfer learning, yüz doğrulama metrikleri). Ana hedef değil, tezin destekleyici öğrenme hattı olarak 2 saat/hafta.
 
 ---
 
-# 2. Karar matrisi (tahmini, sayısal skor yok)
+# 2. Tek ana karar
 
-**ÇIKARIM** — Aşağıdaki değerlendirmeler **tahmindir**, ölçüm değildir. Bilinçli olarak ondalıklı toplam puan üretmiyorum; 7,95 gibi bir sayı, elimizde olmayan bir kesinliği ima eder. Rotalar kriter kriter karşılaştırılıyor, sonuç sıralama olarak veriliyor.
+> Ağustos 2026 kişisel zamanının ana sıklet merkezi: **tez — thermal face recognition** üzerinde çalışan bir baseline hattı, ölçülebilir ilk sonuçlar ve tez iskeleti üretmek; bunu aynı zamanda Python/CV/deney disiplini öğrenme laboratuvarı olarak yürütmek.
 
-| Kriter | Ağırlık | Rota 1 | Rota 2 | Rota 3 |
-|---|---|---|---|---|
-| 12 aylık kariyer getirisi | Yüksek | Yüksek | Orta | Düşük-orta |
-| 3 aylık ölçülebilir çıktı | Orta | Yüksek | Orta-yüksek | Orta |
-| Mevcut işte kullanılabilirlik | Yüksek | Yüksek | Düşük | Düşük |
-| Piyasadaki ücretli değer | Orta | Orta-yüksek | Yüksek | Düşük |
-| Yan gelir potansiyeli | Düşük | Düşük | Yüksek | Düşük-orta |
-| Kanıt düzeyi | Orta | Yüksek | Düşük | Düşük |
-| Uygulama kolaylığı | Düşük-orta | Orta-yüksek | Orta | Düşük-orta |
-| Zaman sınırına uygunluk | Yüksek | Yüksek | Orta | Orta |
-| Tükenmişlik riski (düşük risk iyidir) | Orta | Düşük risk | Yüksek risk | Orta risk |
-| Geri döndürülebilirlik | Düşük | Yüksek | Yüksek | Yüksek |
+**Neden A değil B** — İkisi aynı saatleri harcıyor; fark yürütme biçiminde. B, her koşuyu tekrarlanabilir kılmak, metrikleri elle doğrulamak ve deney günlüğü tutmak için yaklaşık %15-20 ek yük getiriyor. Bu yükü kabul ediyorum çünkü tez deneyinde yanlış bir metrik hesabını yakalayacak bir code review yok; yanlış sonuç doğrudan teze gider. Aynı ek yük, sizin en zayıf olduğunuz alanı (AI çıktısını doğrulama) tam olarak en riskli bağlamda çalıştırıyor.
 
-**ÇIKARIM** — Ağırlıklar cevaplarınızdan çıktı: hedef bilgi ve istihdam edilebilirlik olduğu için kariyer getirisi ve mevcut işte kullanılabilirlik en ağır; gelir bağlayıcı olmadığı için yan gelir en hafif; haftalık 12 saat gerçek kısıt olduğu için zaman uygunluğu ağır.
+**Neden D ve E değil** — D: NextMatchAI'da 100 gündür ödeme yok, İmarSinyal'de 0 kullanıcı ve 0 görüşme; ölçülmüş talep sinyali olmayan bir kaleme tek aylık pencerede ağırlık vermek en kötü risk/getiri oranı. E: Upwork'e kesin zaman ayrılacak ama ana sıklet merkezi olması, tezin son dönem teslim zorunluluğunun önüne geçmesi anlamına gelir; bu takas mantıklı değil çünkü ek gelir 6 ay için zorunlu değil.
 
-**ÇIKARIM (tahmini sıralama)** — Rota 1 açık ara önde; Rota 2 ikinci; Rota 3 üçüncü. Fark tek kriterden gelmiyor: Rota 1 dört ağır kriterde birden önde (kariyer getirisi, mevcut işte kullanılabilirlik, kanıt düzeyi, zaman uygunluğu). Rota 2'yi geride bırakan şey kalitesi değil, sıralaması: ne satılacağı netleşmeden maruziyet artırmanın getirisi düşük. Rota 3'ün geride kalma nedeni recruitment maliyetinin bilinmemesi.
+**Neden F değil** — Coursera'yı ana hedef yapmak somut çıktı üretmez; kurs tamamlamak bir teslim değil. Destekleyici konumu doğru konumu.
 
 ---
 
-# 3. Ana rota
+# 3. Kendini geliştirme tanımı
 
-> Önümüzdeki 90 günün ana odağı: Flutter mimarisi, migration ve ürün mühendisliği derinliği; AI destekli doğrulama sistemiyle.
+**Bu planda "kendini geliştirme" nedir** — Bilmediğiniz bir alanda (tek kanallı görüntü, PyTorch, yüz doğrulama metrikleri) çalışan bir hat kurmak ve o hattın sonuçlarının doğru olduğunu **kendiniz kanıtlayabilmek**. Kurs izlemek veya makale okumak değil; koşan kod ve doğrulanmış sayı.
 
-**Neden bu rota** — Şirketteki üç karar henüz verilmemiş ve bunlar sizin zorlandığınızı söylediğiniz alanın tam merkezinde. Bu rota hem işten çıkarılma senaryosuna karşı gerçek kanıt üretir hem de sahiplik atanmasa bile tamamlanabilir.
+**Ay sonunda kanıtlanabilecek yeni beceriler** — Her biri bir dosyayla kanıtlanır, hissiyatla değil:
 
-**Neden diğerleri değil** — Rota 2 en yüksek tükenmişlik riskini taşıyor ve satılacak uzmanlık netleşmeden erken; yine de tamamen kapatılmıyor, haftada 30 dakikalık piyasa taramasıyla canlı tutuluyor. Rota 3'ün recruitment maliyeti bilinmiyor; tek bir sınırlı deneye indirildi.
+1. Veri kartı çıkarma: sınıf başına görüntü sayısı, çözünürlük, hizalama durumu, etiket formatı ve **train/val/test bölme kuralının gerekçesi** (`dataset_karti.md`).
+2. PyTorch'ta uçtan uca çalışan bir eğitim/değerlendirme hattı yazıp tek komutla koşturma (`run_baseline.py`).
+3. Yüz doğrulama ve tanıma metriklerini doğru hesaplama ve yorumlama: rank-1, ROC, EER, TAR@FAR (`deney_protokolu.md`).
+4. Deneyi tekrarlanabilir kılma: sabit tohum, konfigürasyon dosyası, koşu günlüğü, sonuç dosyası (`deney_gunlugu.md`).
+5. 3 kanallı pretrained bir backbone'u tek kanallı termal girdiye uyarlama (koddaki somut adım).
+6. AI ile yazılmış önişleme/metrik kodunu bağımsız doğrulama: elle örnek hesap ve sanity testi (`dogrulama_notu.md`).
+7. Yöntem bölümünü deney protokolüne bağlı yazma (tez iskeletinin yöntem bölümü).
 
-**Hangi koşulda karar değişir** — Ekipte küçülme veya proje iptali sinyali çıkarsa, ya da piyasa taraması haftada 3'ten fazla gerçekten başvurulabilir iş gösterirse ana rota Rota 2'ye kayar. Recruitment deneyi 5+ konuşmaya açık isim getirirse Rota 3 ağırlığı artar.
+**Tez, eğitim ve pratik nasıl birleşiyor** — Zincir tek yönlü: Coursera modülü o haftanın tez teslimini besliyor, tez teslimi de o modülün gerçekten öğrenilip öğrenilmediğinin testi oluyor. Hafta 1'de önişleme modülü veri kartını besler, Hafta 2'de transfer learning modülü baseline'ı, Hafta 3'te metrik modülü sonuç tablosunu, Hafta 4'te tekrarlanabilirlik modülü yöntem bölümünü. Tez teslimine bağlanamayan hiçbir modül izlenmiyor.
 
-**Bilerek erteleniyor** — Upwork başvuru kampanyası, İmarSinyal'de yeni geliştirme, .NET/Azure'a doğrudan yatırım, yeni SEO içeriği, LiveKit/QC tarafı, geniş kullanıcı doğrulaması.
-
-**AI'ın plandaki yeri (revize)** — AI kural/skill/kontrol listesi kurulumu için **toplam 2-3 saat** ayrılıyor ve bu tek seferliktir. Sistem, tek bir gerçek feature üzerinde işe yaradığını kanıtlamadan genişletilmez. Genişletme kapısı: aynı feature'da AI çıktısından düzeltilen önemli hata sayısı azaldı ya da görev süresi kısaldıysa devam; aksi halde sistem olduğu yerde kalır.
-
----
-
-# 4. Üç adet 30 günlük faz
-
-## Faz 1 — 29 Temmuz – 27 Ağustos
-
-**Tek ana sonuç** — Üç mimari kararın yazılı teknik zemini ve kararı test eden küçük bir POC.
-
-**İş paketi 1: Migration teknik zemini.** Üç teslim: (a) Flutter upgrade dependency ve breaking-change envanteri, (b) mobil→web uyumluluk matrisi, (c) GetX→BLoC için gözlenmiş ağrı noktaları ve karar kriterleri. Karar kriterleri "geçmemek" seçeneğini de içermeli; yoksa doküman karar değil gerekçelendirme olur.
-
-**İş paketi 2: Test tabanı özeti ve riske dayalı test seçimi.** Mevcut test tabanının özetini çıkarın (kaç test, hangi tür, ne kapsıyor, boşluk nerede) ve her yüksek riskli alan için hangi test türünün karşılık geldiğini yazın. **Golden test zorunluluğu yok**; unit, widget veya integration testten riske uygun olanı seçilir, golden yalnızca görsel regresyon gerçek risk ise girer.
-
-**İş paketi 3: POC ve AI destekli doğrulama.** Kişisel veya paylaşılması izinli bir alanda küçük bir POC üretin (tek ekran, seçilen state-management yaklaşımıyla, web'de derlenip açılan). Paralelde 2-3 saatlik tek seferlik AI doğrulama kurulumu yapın ve **tek bir gerçek feature** üzerinde üç metrikle ölçün.
-
-**Üç metrik (basitleştirilmiş)** — Görevin toplam süresi; AI çıktısından düzeltilen önemli hata sayısı; üretilen çözümü AI yardımı olmadan açıklayabildim mi (evet/hayır).
-
-**Başarı metrikleri** — Üç doküman yazıldı; test tabanı özeti çıktı; POC çalışıyor; en az 5 görevde üç metrik kaydedildi; 3 hafta gerçek çalışma saati verisi var.
-
-**Durdurma kriterleri** — Gerçek haftalık saat 3 hafta üst üste 8'in altına inerse Faz 2 tek iş paketine indirilir. AI doğrulama sistemi tek feature'da fark yaratmazsa genişletilmez.
-
-**Haftalık saat sınırı** — Taban 12 saat. Ağustos'taki geçici fazla süre yalnızca envanter/matris gibi **tek seferlik** işlere harcanır, kalıcı yük açılmaz.
-
-**Yapılmayacaklar** — Upwork başvurusu, İmarSinyal'de yeni geliştirme, yeni içerik, şirket repolarında toplu analiz, onaysız refactor, AI sistemini genişletmek.
-
-## Faz 2 — 28 Ağustos – 26 Eylül
-
-**Tek ana sonuç** — Faz 1 zemininin iki karar dokümanına dönüşmesi ve takım içinde en az bir kez tartışılması.
-
-**İş paketi 1: İki karar dokümanı.** (a) Flutter upgrade için sıralı yükseltme planı ve risk sıralaması, (b) state-management kararı için ADR. Dayanağı Faz 1 envanteri; kaynak olarak sizin hazırladığınız anonim özet ve izinli küçük parçalar kullanılır.
-
-**İş paketi 2: POC'yi kararı test edecek kadar derinleştirmek.** Aynı ekranı hem mevcut hem hedef yaklaşımla çalıştırıp somut karşılaştırma üretin: test edilebilirlik, kod hacmi, web davranışı, geliştirme süresi.
-
-**İş paketi 3: Küçük yan işler (tek seferlik).** NextMatchAI recruitment deneyi (kardeşinize tek yönlendirme sorusu, ~30 dakika) ve İmarSinyal'in bakım modunda kalabildiğinin doğrulanması.
-
-**Başarı metrikleri** — 2 doküman yazıldı; takım liderine en az 1 öneri sunuldu ve cevabı kayda geçti; POC karşılaştırması sayısal veri içeriyor; recruitment deneyinden gelen isim sayısı kaydedildi.
-
-**Durdurma kriterleri** — Öneri ilgisiz bulunursa ısrar edilmez, çıktı kişisel kanıt olarak saklanır. Recruitment deneyi 2 hafta içinde 0 isim getirirse NextMatchAI doğrulaması bu 90 günden çıkar.
-
-**Haftalık saat sınırı** — 12 saat.
-
-**Yapılmayacaklar** — Onaysız migration uygulaması, ikinci bir POC, Upwork kampanyası, yeni yan proje.
-
-## Faz 3 — 27 Eylül – 27 Ekim
-
-**Tek ana sonuç** — Kararın gerçek işe bağlanması (ya da eşdeğer kanıtın kendi alanında tamamlanması) ve dışa dönük kanıt paketi.
-
-**İş paketi 1: Gerçek uygulama veya eşdeğeri.** Migration işlerinden biri fiilen başladıysa orada sorumluluk alıp ADR'yi uygulamaya bağlayın. Başlamadıysa POC'yi uçtan uca tamamlayın; çıktı iki durumda da elde edilir.
-
-**İş paketi 2: Koşullu iş paketi.** NextMatchAI'da **halihazırda önemli bir LLM akışı varsa**, o akışa güvenilirlik katmanı ekleyin: yapılandırılmış çıktı ve şema doğrulama, hata/fallback yolu, maliyet ve gecikme ölçümü, 10-20 örneklik küçük eval seti. **Böyle bir akış yoksa** bu paket iptal edilir ve yerine ikinci bir migration POC'si (web uyumluluğu veya upgrade'in en riskli paketi) konur. Bu kontrolü Faz 1 içinde yapın, Faz 3'ü beklemeyin.
-
-**İş paketi 3: Kanıt paketi.** Üç artefakt: karar dokümanlarının anonim özeti, POC karşılaştırma raporu, ve üç metrikle ölçülmüş AI doğrulama deneyiminin kısa yazısı. Ayrıca CV/profil pozisyonlamasını güncelleyin — kampanya yok.
-
-**Başarı metrikleri** — En az 1 karar uygulamaya bağlandı ya da POC tamamlandı; koşullu paket için karar verildi ve gerekçesi yazıldı; 3 artefakt hazır.
-
-**Durdurma kriterleri** — Haftalık saat 8'in altına düşerse İş paketi 3 tek artefakta indirilir, 1 korunur.
-
-**Haftalık saat sınırı** — 12 saat.
-
-**Yapılmayacaklar** — Model eğitimi, fine-tuning, RAG, agent mimarisi, yeni ürün, ölçülmemiş performans işi, İmarSinyal'de yeni geliştirme.
+**AI bağımlılığı için ne ölçülecek** — Her tez görevi için üç kayıt, fazlası yok: (a) görevin toplam süresi, (b) AI çıktısından düzeltilen önemli hata sayısı, (c) üretilen çözümü AI yardımı olmadan açıklayabildim mi (evet/hayır). Ay sonu hedefi **en az 20 kayıt** ve (c)'nin ölçülmüş oranı. `VARSAYIM` — Bu oran için hedef koymuyorum, çünkü bu ilk ölçüm; taban çizgisi Ağustos'ta kuruluyor.
 
 ---
 
-# 5. Öğrenme planı
+# 4. Coursera kararı
 
-**GERÇEK** — Güncel kurs araştırması yapmadım; bu yanıtta kurs adı yok. Ana rota onaylandıktan sonra yalnızca bu başlıklara hizmet eden modülleri araştırırız.
+**Kullanılacak mı** — Evet, ama yalnızca destekleyici öğrenme hattı olarak. **Haftada 2 saat**, sabit tavan.
 
-**Ana eksen: Flutter mimarisi ve migration mühendisliği.** Neden şimdi: üç karar önümüzde ve karar verilmeden önceki dönem tek etkileme penceresi. Bağlanacağı çıktı: envanter, matris, karar kriterleri, ADR, POC. Başlıklar: sürüm yükseltme ve breaking-change yönetimi, bağımlılık risk analizi, mobil/web ortak kod ve platform farkları, state-management karşılaştırması ve test edilebilirlik, riske dayalı test stratejisi, ADR yazımı. Kapsam: seçili modüller; sertifika değeri düşük, artefakt değeri yüksek.
+**Tek eksen** — PyTorch ile uygulamalı computer vision. Derin öğrenme teorisi, NLP, MLOps, genel AI mühendisliği bu ayın dışında.
 
-**Destekleyici eksen: AI çıktısını doğrulama (araç düzeyinde, toplam 2-3 saat).** Neden şimdi: mimari kararı AI ile verecekseniz çıktıyı sorgulayabilmek ön koşul. Bağlanacağı çıktı: üç metrik kaydı ve tek feature denemesi. Genişletme, kanıt gelmeden yapılmaz.
+**Modül başlıkları** — `VARSAYIM` — Güncel kurs adlarını doğrulayamıyorum, bu yüzden kurs ismi vermiyorum; Coursera içinde aranacak **modül başlıkları** şunlar:
 
-**Kapsam dışı** — Model eğitimi, ML araştırmacılığı, fine-tuning, RAG, agent mimarisi. Ölçülmüş ihtiyaç yok, hedefinizde de yok.
+| Hafta | Aranacak modül başlığı | Beslediği somut teslim |
+|---|---|---|
+| H1 | *image preprocessing / normalization / data augmentation* (tek kanal ve grayscale işleyen bölümler) | `dataset_karti.md` ve önişleme kararları |
+| H2 | *convolutional neural networks* + *transfer learning with pretrained models* | `run_baseline.py` |
+| H3 | *face verification / face recognition* ve *embeddings, metric learning*; ayrıca *ROC, threshold, evaluation metrics* | `deney_protokolu.md` ve sonuç tablosu |
+| H4 | *reproducible experiments / experiment tracking / reporting results* | Tez yöntem bölümü |
 
----
-
-# 6. Yan proje kararları
-
-**İmarSinyal: bakım modu.** Kanıt: gelir üretmediği `GERÇEK`; öğrenme çıktısı belgelenmiş ve doğrulanabilir değil, Codex ağırlıklı körleme geliştirme nedeniyle öğrenmenin kalıcılığı belirsiz; 5 saatin çoğu zorunlu onarım değil. Zaman bütçesi: haftada 1 saat. Devam kriteri: veri akışı bakım modunda bozulmadan sürerse 1 saatte kalır. Durdurma kriteri: akış bozulursa süre 3 saate çıkar ve Faz 2 bir iş paketi azaltılır; 90 gün sonunda hâlâ 0 görüşülmüş potansiyel müşteri varsa dondurma kararı açıkça masaya gelir.
-
-**NextMatchAI: sınırlı doğrulama, minimum yoğunlukta.** Kanıt: kökeni gerçek problem, 1 geçmiş ödeme, yapılandırılmış görüşme 0, doğrulanmış konuşmaya açık IMG 0, recruitment maliyeti bilinmiyor. Zaman bütçesi: haftada 0,5 saat + Faz 2'de tek seferlik 30 dakika recruitment deneyi. Devam kriteri: deneyden en az 3 isim. Durdurma kriteri: 0 isim veya 0 yeni bilgi.
-
-**Upwork: kampanya yok, haftada 30 dakika dış piyasa taraması.** Amaç başvuru değil; öğrenme rotasının piyasa talebiyle uyumunu kontrol etmek. Ölçüm: hangi beceriler ilanlarda tekrar ediyor, kaç ilan gerçekten başvurulabilir. Bu ölçüm aynı zamanda ana rotayı değiştirme sinyalini üretir.
+**Coursera 0'a indirilme koşulları** — Şu üçünden biri olursa o haftanın 2 saati kesilir: (a) Upwork'ten iş kabul edildi, (b) gerçek haftalık saat iki hafta üst üste 9'un altına indi, (c) Hafta 2 sonunda baseline tek komutla koşmuyor — bu durumda 2 saat doğrudan baseline'a aktarılır. Kurs tamamlama, sertifika veya ilerleme yüzdesi hiçbir koşulda hedef değil.
 
 ---
 
-# 7. Haftalık düzen (steady state, toplam 12 saat)
+# 5. Upwork kararı
 
-**ÇIKARIM** — Hafta içi günlük 3 saat ve hafta sonu günlük 3-4 saat tavanlarının altında kalacak dağılım:
+**Haftalık süre** — 1,5 saat, korumalı blok. **Tarama sıklığı** — 3 × 30 dakika (Pazartesi, Çarşamba, Cumartesi).
 
-- Mimari ve migration işi (envanter, matris, karar dokümanı, POC): 5,5 saat
-- Öğrenme (migration, test stratejisi, ADR): 2 saat
-- AI destekli doğrulama takibi (üç metrik, iş akışının içinde): 0,5 saat
-- İmarSinyal bakım: 1 saat
-- NextMatchAI: 0,5 saat
-- Dış piyasa taraması: 0,5 saat
-- Haftalık değerlendirme: 0,5 saat
-- Dinlenme tamponu (planlanmamış): 1,5 saat
+**En fazla başvuru** — Ağustos toplamı 5. Dağılım: Hafta 1'de 1, Hafta 2'de 2, Hafta 3'te 2, Hafta 4'te 0 (son hafta tez yazımına ayrıldı).
 
-**VARSAYIM** — 12 saat planlama tabanıdır, ölçüm değil. Gerçek veri düşük çıkarsa kesinti sırası: önce dış piyasa taraması ve NextMatchAI, sonra öğrenme, en son mimari işi. Mimari işi en son kesilir çünkü kanıt üreten tek kalem odur.
+**Kabul kriterleri** — Dördü birlikte sağlanmalı: kapsam tek cümlede tanımlanabiliyor; tahmini süre 6 saatin altında; teslim tarihi esnek; iş mevcut becerinizin tam içinde (Flutter bug fix, test ekleme, Firebase/API entegrasyonu, küçük UI, package/build sorunu, küçük refactor veya upgrade). Aynı anda **tek iş**.
+
+**İş gelirse zaman nasıl yeniden dağıtılır** — Sıra sabit ve önceden karar verildi: (1) Coursera 2 → 0. (2) Maker bloğu 1,5 → 0,5. (3) Hâlâ yetmiyorsa tez 9 → 7, **en fazla 2 hafta üst üste**. Tez 7'nin altına hiçbir koşulda inmiyor. Kabul edilen işe haftalık üst sınır 6 saat; aşarsa iş teslim edilir ve Ağustos'ta ikinci iş alınmaz.
+
+**Kesin reddedilecekler** — Sıfırdan uygulama geliştirme; kapsamı açık uçlu veya "sonra netleştiririz" işleri; belirsiz kapsamlı sabit fiyat; native iOS/Android ağırlıklı işler; .NET/backend işleri; tasarım/Figma işleri; "bugün acil" teslimler; uzun NDA ve onboarding gerektiren büyük entegrasyonlar; devam eden bir işin üstüne ikinci iş.
 
 ---
 
-# 8. Anti-hallüsinasyon tablosu
+# 6. NextMatchAI + İmarSinyal keyif/maker bloğu
 
-| Öneri | Dayandığı gerçek | Varsayım | Nasıl test edilir |
+**Toplam haftalık tavan** — 1,5 saat, iki proje **toplamı**.
+
+**Aynı hafta ikisi birden mi** — Hayır, dönüşümlü: Hafta 1 İmarSinyal, Hafta 2 NextMatchAI, Hafta 3 İmarSinyal, Hafta 4 NextMatchAI. Aynı hafta iki projede iş açılmaz.
+
+**"Küçük düzeltme" tanımı** — Tek oturumda (≤90 dakika) başlayıp bitebilen, yeni bağımlılık eklemeyen, veri modelini veya deploy akışını değiştirmeyen, geri alınabilir değişiklik. Gelen kullanıcı e-postasına cevap da bu bloğun içinde ve en fazla 20 dakika.
+
+**Stop kuralı** — 90 dakikada bitmiyorsa değişiklik geri alınır veya bir not olarak `backlog.md`'ye yazılır ve **Ağustos içinde tekrar açılmaz**.
+
+**Büyük işe dönüşmesini engelleyen sınırlar** — Yeni feature yok, yeni otomasyon yok, Codex ile yeni geliştirme akışı yok, kapsam genişletmesi yok, SEO içeriği yok, satış veya outreach sprinti yok, funnel ölçümü kurulumu yok (Eylül sonrasına). Bu blok kanıt üretmek için değil, motivasyonu korumak için var; ölçülen tek şey tavanın aşılmamış olması.
+
+---
+
+# 7. Haftalık kişisel zaman bütçesi
+
+`ÇIKARIM` — Teorik maksimum 23-28 saat. Bunu doldurmuyorum. Üç gerekçe: iş saatinizde artık bilişsel yükü yüksek bir araştırma işi var (Tech Story); Eylül'de tez yükü artacak, dolayısıyla Ağustos yorgunluk borcu bırakmamalı; ve aile düzeni gerçek bir kısıt.
+
+| Kalem | Saat/hafta |
+|---|---|
+| Tez (ana sıklet merkezi) | 9 |
+| Coursera (destekleyici öğrenme hattı) | 2 |
+| Upwork (açık kapı 1) | 1,5 |
+| Maker / bakım (açık kapı 2) | 1,5 |
+| Haftalık değerlendirme | 0,5 |
+| **Taahhüt edilen toplam** | **14,5** |
+| **Hard cap** | **17** |
+| **Tampon / dinlenme** | **2,5** |
+
+**Hafta içi dağılım** — 4 gün × 2 saat = 8 saat. Bir hafta içi günü tamamen boş bırakılıyor; bu bir tampon değil, kural. Hard cap içinde hafta içi üst sınır 10 saat.
+
+**Hafta sonu dağılım** — 6,5 saat taahhüt: Cumartesi 4, Pazar 2,5. Hard cap içinde hafta sonu üst sınır 7 saat.
+
+Tampon kullanılmazsa dinlenmeye kalır; başka işle doldurulmaz. **Şirketin 40 saati bu tabloda yok.**
+
+---
+
+# 8. Dört haftalık Ağustos planı
+
+Takvim: 29 Temmuz-2 Ağustos açılış (ilk 72 saat + hafta sonu), Hafta 1: 3-9 Ağustos, Hafta 2: 10-16, Hafta 3: 17-23, Hafta 4: 24-30, **31 Ağustos Pazartesi: karar kapısı**.
+
+## Hafta 1 — 3-9 Ağustos
+
+| Kalem | Saat | Somut teslim | Tamamlanma kriteri |
 |---|---|---|---|
-| Ana odak migration derinliği | Üç karar verilmemiş; "mimari konularda zorlanıyorum"; sahiplik ihtimali var | Zeminin karara etki edeceği | Faz 2'de takım liderine sunulan öneriye gelen cevap |
-| Envanter ve matris önce gelir | Migration'lar en az 1,5 ay başlamıyor | Bu sürenin hazırlığa yeteceği | Faz 1 sonunda üç dokümanın tamamlanmış olması |
-| AI sistemi 2-3 saatle sınırlı | %80 bağımlılık bir gözlem, ölçüm değil | Küçük kurulumun yeterli olacağı | Tek feature'da üç metriğin değişimi |
-| Golden test zorunlu değil | Görsel regresyon riski ölçülmemiş | Riskin başka testlerle karşılanabileceği | Test tabanı özetinde boşluğun hangi risk olduğunun görülmesi |
-| İmarSinyal 1 saatte kalabilir | 5 saatin çoğu yeni geliştirme | Veri akışının bozulmayacağı | 2 haftalık bakım-modu deneyi, kayıt ve log karşılaştırması |
-| LLM işi koşullu | NextMatchAI'da mevcut LLM akışının önemi bilinmiyor | Akış varsa güvenilirlik katmanının değerli olacağı | Faz 1'de akış envanteri; yoksa paket iptal |
-| Upwork ertelenir ama izlenir | Ek gelir opsiyonel; başvurulabilir ilan bulunamadı | Piyasa taramasının yön göstereceği | Haftalık başvurulabilir ilan sayısı ve tekrar eden beceriler |
-| 12 saat gerçekçi | Hafta içi 3, hafta sonu 3-4 saat tavanı | Tavanın her gün kullanılamayacağı | İlk 30 günün gerçek saat kaydı |
+| Ana çalışma: dataset keşfi + literatür | 9 (5 + 4) | `dataset_karti.md`, keşif notebook'u, `literatur.md` | Sınıf başına görüntü dağılımı ve bölme kuralı gerekçeli yazılı; kaynak tablosunda 12+ satır, 5'i derin okunmuş |
+| Coursera: görüntü önişleme | 2 | Önişleme kararları notu (normalizasyon, tek kanal, hizalama) | Her karar dataset kartındaki bir gözleme bağlanmış |
+| Upwork | 1,5 | 3 tarama notu + 1 başvuru | Tekrar eden beceri listesi yazılı; başvuru gönderilmiş |
+| Maker: İmarSinyal | 1,5 | Akış kontrolü + en fazla 1 küçük düzeltme | Tavan aşılmamış |
 
-**ÇIKARIM** — Ölçülmemiş performans problemleri (render/memory darboğazı, upgrade'in kırılma büyüklüğü, web'e taşımanın asıl maliyeti) plana iş olarak girmedi; yalnızca envanter ve matriste **risk olarak listelenecek** konular.
+## Hafta 2 — 10-16 Ağustos
+
+| Kalem | Saat | Somut teslim | Tamamlanma kriteri |
+|---|---|---|---|
+| Ana çalışma: baseline hattı + değerlendirme protokolü | 9 (6 + 3) | `run_baseline.py`, `deney_protokolu.md` | `python run_baseline.py` tek komutla koşuyor, bir metrik üretiyor ve sonucu dosyaya yazıyor; protokolde her karşılaştırma için tek ölçülebilir metrik tanımlı |
+| Coursera: CNN + transfer learning | 2 | Backbone seçim notu (tek kanala uyarlama dahil) | Seçim baseline kodunda uygulanmış |
+| Upwork | 1,5 | 3 tarama + 2 başvuru | Başvurular kabul kriterlerine uygun |
+| Maker: NextMatchAI | 1,5 | Küçük düzeltme veya inbound cevap | Tavan aşılmamış, yeni feature açılmamış |
+
+## Hafta 3 — 17-23 Ağustos
+
+| Kalem | Saat | Somut teslim | Tamamlanma kriteri |
+|---|---|---|---|
+| Ana çalışma: ilk sonuçlar + AI doğrulama ölçümü | 9 (6 + 3) | Sonuç tablosu (3-4 koşu), `deney_gunlugu.md`, `dogrulama_notu.md` | Her koşu günlükten birebir tekrar üretilebiliyor; metrik hesabı elle bir örnek üzerinde doğrulanmış; 3 metriğin en az 12 kaydı var |
+| Coursera: yüz doğrulama metrikleri | 2 | Metrik notu (rank-1, ROC, EER, TAR@FAR) | Metrikler baseline çıktısında hesaplanıyor |
+| Upwork | 1,5 | 3 tarama + 2 başvuru | Ağustos başvuru toplamı 5'e ulaştı |
+| Maker: İmarSinyal | 1,5 | Akış kontrolü | Tavan aşılmamış |
+
+## Hafta 4 — 24-30 Ağustos
+
+| Kalem | Saat | Somut teslim | Tamamlanma kriteri |
+|---|---|---|---|
+| Ana çalışma: tez iskeleti + danışman paketi | 9 (6 + 3) | 6-10 sayfalık iskelet (giriş + yöntem taslağı), 2-3 sayfa danışman paketi | Yöntem bölümü Hafta 2 protokolüyle tutarlı; paket gönderilmiş ve toplantı talebi iletilmiş |
+| Coursera: tekrarlanabilirlik ve raporlama | 2 | Tekrarlanabilirlik kontrol listesi | Liste `run_baseline.py` üzerinde uygulanmış |
+| Upwork | 1,5 | 3 tarama + Ağustos kanal özeti | Yeni başvuru yok; özet yazılı |
+| Maker: NextMatchAI | 1,5 | Küçük düzeltme veya inbound cevap | Tavan aşılmamış |
 
 ---
 
-# 9. İlk 14 gün — uygulanabilir plan (29 Temmuz – 11 Ağustos)
+# 9. Ayrı work-hours mini planı (kişisel bütçeye dahil değil)
 
-**Toplam süre: yaklaşık 28 saat.** Bunun 24 saati normal tabandan (2 hafta × 12), kalan ~4 saati Ağustos'taki geçici kapasiteden karşılanıyor ve yalnızca tek seferlik kurulum işlerine gidiyor. Gün gün dağıtım yok; her kalem kendi süre bütçesi ve teslimiyle tanımlı.
+Andrey'in onayladığı QC App V2 ↔ Pro App entegrasyonu Tech Story araştırması. Bu plan 40 saatin içinde yürür ve yukarıdaki hiçbir bloktan saat düşmez.
 
-**1. Flutter upgrade dependency ve breaking-change envanteri — 6 saat.**
-Teslim: her satırı bir paket olan tablo. Kolonlar: paket adı, mevcut sürüm, hedef sürüm, breaking change var/yok, değişikliğin kaynağı (changelog/issue), etkilenen modül, risk seviyesi (yüksek/orta/düşük), alternatif veya geçiş notu. Bitiş kriteri: yüksek riskli paketlerin tamamı için not yazılmış olması.
+**Araştırma başlıkları** — Entegrasyon yüzeyi (kimlik/oturum paylaşımı, ortak veri modeli, iki uygulama arasında navigasyon ve durum devri); Zoom yerine LiveKit'e geçişin entegrasyona etkisi; feature flag ve mock screen stratejisi; paylaşılan kodun sınırı (`rr_ui_kit`, `rr_utils`, `rr_telemetry` hangi parçalar ortaklaşabilir); telemetri ve oturum korelasyonu (`app-session-id` iki uygulama arasında nasıl izlenir).
 
-**2. Mobil → web uyumluluk matrisi — 5 saat.**
-Teslim: satırlar özellik/paket, kolonlar web'de durumu (çalışır / kısmi / çalışmaz / alternatifi var), etkilenen ekran veya akış, ve varsa geçici çözüm. Bitiş kriteri: "çalışmaz" işaretli her satır için ya alternatif ya da açık soru yazılmış olması.
+**Teslimler** — (1) Entegrasyon yüzeyi haritası, (2) 2-3 entegrasyon seçeneği ve trade-off tablosu, (3) feature flag / mock screen yaklaşımı, (4) ADR taslağı, (5) POC kapsam önerisi.
 
-**3. GetX → BLoC ağrı noktaları ve karar kriterleri — 4 saat.**
-Teslim: iki sayfa. Birinci sayfa gözlenmiş ağrı noktaları (her biri somut, anonimleştirilmiş bir örnekle). İkinci sayfa 5-7 karar kriteri ve her kriterin nasıl ölçüleceği; "geçmemek" seçeneği de değerlendirilmiş olacak. Bitiş kriteri: kriterlerin en az yarısının ölçülebilir tanımı olması.
+**İlk hafta çıktısı** — Entegrasyon yüzeyi haritası, açık soru listesi ve Andrey ile 30 dakikalık hizalama görüşmesi. Bu görüşmeden çıkan tek şey netleşmeli: hangi entegrasyon sorusunun cevaplanması bekleniyor.
 
-**4. Mevcut test tabanının özeti — 2 saat.**
-Teslim: kaç test var, hangi türde, hangi akışları kapsıyor, en büyük üç boşluk hangi riske denk geliyor. Bitiş kriteri: üç boşluğun her biri için önerilen test türünün (unit/widget/integration, gerekiyorsa golden) yazılmış olması.
+**POC'ye geçiş kriteri** — Dördü birlikte sağlanmadan POC yazılmıyor: entegrasyon seçeneği yazılı olarak seçilmiş; feature flag adı ve kapsamı belirlenmiş; POC'nin cevaplayacağı **tek** soru tanımlanmış; POC tahmini 3 iş gününün altında.
 
-**5. Küçük POC — 4 saat.**
-Kişisel veya paylaşılması izinli bir alanda tek ekran; seçilen state-management yaklaşımıyla yazılmış ve web'de derlenip açılıyor. Teslim: çalışan POC + yarım sayfa not (ne kolaylaştı, ne zorlaştı). Bitiş kriteri: ekranın hem mobilde hem web'de açılması.
+**Repo audit bulgularının ticket'lara dönüşümü** — Üç ayrı ticket, üç ayrı PR, sırayla:
+- **Ticket 1 (öncelikli, güvenlik):** `REPO_AUDIT.md` Candidate 1 — `lib/services/api/api_service.dart:41-45` TLS bypass'ını ortam bazlı hale getirme. Kabul kriteri: production konfigürasyonunda callback'in kurulmadığını kanıtlayan test + mock server E2E'nin geçmesi.
+- **Ticket 2:** Candidate 2 — `request_addon_form.dart` controller lifecycle ve tekrarlanan `didUpdateWidget` mantığı. Kabul kriteri: addon değişiminde eski controller'ların dispose edildiğini doğrulayan widget testi.
+- **Ticket 3 (önce karar, sonra iş):** Candidate 3 — `request_addon_bundled` akışının canlı olup olmadığını feature flag ve telemetriyle doğrula; sonucuna göre ya sil ya da ortak dosyaları tekilleştir. Bu ticket **araştırma** olarak açılır, implementasyon olarak değil.
+- Küçük bulgular (R8 kayıtsız route sabiti, R9 tekrarlanan `AppConfig().load()` ve no-op `FutureBuilder`, R10 her 4xx'in fatal işaretlenmesi) için ayrı ticket açılmıyor; ilgili dosyaya başka bir iş için dokunulduğunda fırsatçı olarak düzeltilir.
 
-**6. AI destekli doğrulama kurulumu — 2,5 saat (tek seferlik).**
-Teslim: bir kural dosyası ve kısa doğrulama listesi; ardından **tek bir gerçek feature** üzerinde üç metriğin kaydı (görev süresi, AI çıktısından düzeltilen önemli hata sayısı, çözümü AI olmadan açıklayabildim mi). Bitiş kriteri: en az 5 görev kaydı. Kural: fark görülmezse sistem genişletilmez.
+---
 
-**7. İmarSinyal bakım modu deneyi — 2 saat (2 × 1 saat).**
-Teslim: iki haftalık kayıt sayısı ve hata logu karşılaştırması, tek satır sonuç. Bitiş kriteri: "akış sürdü / sürmedi" kararı.
+# 10. 31 Ağustos çıktıları
 
-**8. NextMatchAI ölçüm tanımları ve LLM akış kontrolü — 1,5 saat.**
-Teslim: "ilk temel işlem" event adının yazılı tanımı, 191 ziyaretin kaynak dağılımı ve metrik türü (user/session/click), ve projede halihazırda önemli bir LLM akışı olup olmadığının tek satırlık cevabı. Bu son cevap Faz 3'teki koşullu iş paketinin kaderini belirler.
+Ölçülebilir liste; her satır bir dosya veya sayı:
 
-**9. Dış piyasa taraması — 1 saat (2 × 30 dakika).**
-Teslim: 10 iş tanımından çıkarılmış tekrar eden beceri listesi ve kaç ilanın gerçekten başvurulabilir olduğu. Başvuru yapılmaz.
+1. `dataset_karti.md` — sınıf başına görüntü dağılımı, çözünürlük, hizalama durumu, gerekçeli train/val/test bölme kuralı.
+2. `literatur.md` — en az 12 satır, 5'i derin okunmuş, her satırda "bizim işimize etkisi" kolonu dolu.
+3. `run_baseline.py` — tek komutla koşan, sonucu dosyaya yazan çalışan hat.
+4. `deney_protokolu.md` — metrikler (rank-1, ROC, EER, TAR@FAR), split, tohum, karşılaştırma tanımları.
+5. Sonuç tablosu — en az 3 koşu ve aralarındaki farkın tek cümlelik açıklaması.
+6. `deney_gunlugu.md` — en az 5 koşu kaydı, hepsi tekrar üretilebilir.
+7. AI kullanım ölçümü — en az 20 kayıt (süre / düzeltilen önemli hata sayısı / AI olmadan açıklayabildim mi) ve üçüncü metriğin ölçülmüş oranı.
+8. `dogrulama_notu.md` — metrik hesabının elle doğrulandığı en az 1 örnek.
+9. Tez iskeleti — 6-10 sayfa, giriş ve yöntem taslağı dahil, yöntem protokolle tutarlı.
+10. Danışman paketi — gönderilmiş, 2-3 sayfa, açık sorular listesiyle.
+11. Upwork — 5 başvuru gönderilmiş, 12 tarama yapılmış, tekrar eden beceri listesi yazılı, gelen görüşme/iş sayısı kayıtlı.
+12. Coursera — 4 modül notu, her biri o haftanın teslimine bağlanmış.
+13. Maker — 4 hafta boyunca haftalık 1,5 saat tavanının aşılmadığının kaydı.
+14. Gerçek haftalık saat kaydı — 4 hafta.
 
-**10. Haftalık değerlendirme — 1 saat (2 × 30 dakika).**
-Teslim: gerçek çalışılan saat, tamamlanan teslimler, sonraki haftanın kesinti kararı.
+---
 
-**Kapasite düşerse kesinti sırası** — Önce dış piyasa taraması ve NextMatchAI kalemi, sonra POC 4 saatten 2 saate indirilir, sonra web uyumluluk matrisi yalnızca yüksek riskli satırlarla sınırlanır. Envanter (1) ve karar kriterleri (3) korunur; 14 günün asıl teslimi bunlardır.
+# 11. Zaman kesme sırası
 
-**14. günün sonunda elinizde olması gerekenler** — Bir dependency/breaking-change envanteri, bir web uyumluluk matrisi, bir karar kriterleri dokümanı, bir test tabanı özeti, çalışan bir POC, 5 görevlik üç metrik kaydı, İmarSinyal bakım modu kararı, ve NextMatchAI'daki LLM akışı sorusunun cevabı.
+Kapasite düşerse kesme sırası önceden sabit; hafta ortasında yeniden pazarlık yok:
+
+1. **Coursera** (2 → 0). İlk kesilen, çünkü tek başına teslim üretmiyor.
+2. **Maker bloğu** (1,5 → 0,5). Yalnızca arıza kontrolü kalır.
+3. **Upwork** (1,5 → 0,5). Tek tarama kalır; **sıfıra indirilmez**, kanal kapanmaz.
+4. **Tezin ikinci görevi** (haftalık 3 saatlik ikinci kalem) ertelenir.
+5. **En son korunan: tezin birinci görevi** — dataset keşfi, baseline, sonuçlar, iskelet. Bu kalem hiçbir koşulda sıfırlanmaz ve haftalık 6 saatin altına inmez.
+
+Tek istisna: Upwork'ten iş kabul edilirse §5'teki yeniden dağıtım sırası geçerlidir ve tez 7 saatin altına inmez.
+
+---
+
+# 12. Yapılmayacaklar
+
+1. Şirket işlerini (Tech Story araştırması, POC, TLS/lifecycle/duplication ticket'ları) kişisel zamanda yapmak.
+2. Kişisel haftalık 17 saat hard cap'ini aşmak veya tampon saatleri işe doldurmak.
+3. NextMatchAI veya İmarSinyal'de yeni feature, yeni otomasyon, SEO içeriği, kampanya veya satış sprinti açmak.
+4. Aynı hafta iki yan projede birden iş açmak.
+5. Ağustos'ta 5'ten fazla Upwork başvurusu, kapsamı belirsiz iş veya aynı anda ikinci iş kabul etmek.
+6. Coursera'da sertifika, kurs tamamlama yüzdesi veya tez teslimine bağlanmayan modül peşine düşmek.
+7. Tezde model mimarisi optimizasyonuna veya son doğruluk kovalamacasına girmek — Ağustos'un işi çalışan ve doğrulanmış bir baseline.
+8. Tezden ayrı üçüncü bir teknik öğrenme hattı (LLM reliability, prompt/skill sistemleri, structured output) açmak.
+9. Yeni proje, yeni SaaS, yeni araç ekseni başlatmak.
+10. Eylül'e yarım kalmış deney, çalışmayan kod veya belgelenmemiş sonuç bırakmak.
+
+---
+
+# 13. İlk 72 saat (29-31 Temmuz)
+
+1. **Kişisel plan** — Bu bütçeyi takvime yaz: 4 hafta içi günü × 2 saat, Cumartesi 4, Pazar 2,5; bir hafta içi gününü boş olarak işaretle. Gerçek saat kaydı için tek bir dosya aç. Süre: 30 dakika.
+2. **Tez** — Danışmandan gelen dataset'i indir, aç ve tek oturumda ilk envanteri çıkar: kaç kişi, kaç görüntü, format, çözünürlük, etiket yapısı. `dataset_karti.md`, `literatur.md`, `deney_protokolu.md`, `deney_gunlugu.md`, `dogrulama_notu.md` iskeletlerini oluştur. Süre: 2 saat.
+3. **Coursera** — Yalnızca Hafta 1 için "image preprocessing / normalization / data augmentation" modülünü seç ve kaydet. Başka kurs açma, ders izlemeye başlama. Süre: 20 dakika.
+4. **Upwork** — İlk 30 dakikalık taramayı yap ve kabul/ret kriterlerini profilinin yanına yazılı olarak koy; böylece ilk cazip ama kapsamsız iş geldiğinde karar hazır olur. Süre: 30 dakika.
+5. **Maker** — İmarSinyal'de Codex ile yeni geliştirme akışını durdur ve haftalık taahhüdü 1,5 saatlik dönüşümlü bloğa indir; kapanan işleri `backlog.md`'ye not et. Süre: 1 saat.
