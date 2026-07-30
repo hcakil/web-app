@@ -3,142 +3,374 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Turn Creation Flow — Documentation</title>
+    <title>Docs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
     <style>
         :root {
-            --bg: #f6f8fa;
-            --card: #fff;
-            --text: #24292f;
-            --border: #d0d7de;
-            --link: #0969da;
-            --code-bg: #f6f8fa;
+            --bg: #eceae6;
+            --paper: #faf9f7;
+            --ink: #1c1b19;
+            --ink-muted: #5c5954;
+            --border: #d9d5ce;
+            --accent: #1f4e46;
+            --accent-soft: #e4efec;
+            --link: #1a5f8a;
+            --code-bg: #f0eeea;
+            --shadow: 0 1px 2px rgba(28, 27, 25, 0.06), 0 8px 24px rgba(28, 27, 25, 0.06);
+            --measure: 42rem;
+            --ui: "IBM Plex Sans", system-ui, sans-serif;
+            --serif: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+            --mono: "IBM Plex Mono", ui-monospace, monospace;
         }
+
         * { box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
         body {
             margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.55;
+            min-height: 100vh;
+            font-family: var(--serif);
+            font-size: 1.125rem;
+            line-height: 1.75;
+            color: var(--ink);
+            background:
+                radial-gradient(1200px 600px at 10% -10%, #e7ebe8 0%, transparent 55%),
+                radial-gradient(900px 500px at 100% 0%, #e9e4dc 0%, transparent 50%),
+                var(--bg);
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
         }
-        .toolbar {
+
+        .topbar {
             position: sticky;
             top: 0;
-            z-index: 10;
+            z-index: 20;
+            backdrop-filter: saturate(1.2) blur(10px);
+            background: rgba(250, 249, 247, 0.92);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .topbar-inner {
+            max-width: 56rem;
+            margin: 0 auto;
+            padding: 0.85rem 1.25rem;
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 1rem;
             flex-wrap: wrap;
-            padding: 12px 20px;
-            background: var(--card);
-            border-bottom: 1px solid var(--border);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
         }
-        .toolbar a {
-            color: var(--link);
-            text-decoration: none;
-            font-size: 0.9rem;
-        }
-        .toolbar a:hover { text-decoration: underline; }
-        .toolbar h1 {
-            margin: 0;
-            font-size: 1rem;
+
+        .brand {
+            font-family: var(--ui);
+            font-size: 0.8rem;
             font-weight: 600;
-            flex: 1;
-            min-width: 200px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--ink-muted);
+            margin-right: auto;
         }
-        #doc {
-            max-width: 980px;
+
+        .segments {
+            display: inline-flex;
+            padding: 4px;
+            gap: 4px;
+            background: #ebe8e2;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        .segment {
+            appearance: none;
+            border: 0;
+            background: transparent;
+            color: var(--ink-muted);
+            font-family: var(--ui);
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1.2;
+            padding: 0.55rem 0.95rem;
+            border-radius: 7px;
+            cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .segment:hover {
+            color: var(--ink);
+            background: rgba(255, 255, 255, 0.55);
+        }
+
+        .segment[aria-selected="true"] {
+            background: var(--paper);
+            color: var(--accent);
+            box-shadow: 0 1px 2px rgba(28, 27, 25, 0.08);
+        }
+
+        .segment:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .actions a {
+            font-family: var(--ui);
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--ink-muted);
+            text-decoration: none;
+        }
+
+        .actions a:hover { color: var(--accent); text-decoration: underline; }
+
+        main {
+            max-width: 56rem;
             margin: 0 auto;
-            padding: 28px 20px 64px;
-            background: var(--card);
-            min-height: 60vh;
-            border-radius: 0;
+            padding: 1.5rem 1.25rem 4rem;
         }
-        @media (min-width: 1040px) {
-            #doc {
-                margin: 24px auto;
-                padding: 40px 48px 80px;
-                border: 1px solid var(--border);
-                border-radius: 8px;
-            }
+
+        .sheet {
+            background: var(--paper);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+            padding: clamp(1.5rem, 4vw, 3rem) clamp(1.25rem, 4vw, 3.25rem);
+            min-height: 70vh;
         }
-        #doc :is(h1, h2, h3, h4) { margin-top: 1.4em; margin-bottom: 0.5em; line-height: 1.25; }
-        #doc h1 { font-size: 1.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3em; }
-        #doc h2 { font-size: 1.35rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25em; }
-        #doc h3 { font-size: 1.15rem; }
-        #doc p { margin: 0.75em 0; }
-        #doc a { color: var(--link); }
+
+        .doc-meta {
+            font-family: var(--ui);
+            font-size: 0.8rem;
+            color: var(--ink-muted);
+            margin: 0 0 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        #doc {
+            max-width: var(--measure);
+            margin: 0 auto;
+        }
+
+        #doc :is(h1, h2, h3, h4) {
+            font-family: var(--serif);
+            font-weight: 700;
+            line-height: 1.25;
+            letter-spacing: -0.01em;
+            color: var(--ink);
+            scroll-margin-top: 5rem;
+        }
+
+        #doc h1 {
+            font-size: clamp(1.7rem, 3vw, 2.15rem);
+            margin: 0 0 0.85em;
+            padding-bottom: 0.35em;
+            border-bottom: 1px solid var(--border);
+        }
+
+        #doc h2 {
+            font-size: 1.4rem;
+            margin: 1.8em 0 0.55em;
+        }
+
+        #doc h3 {
+            font-size: 1.18rem;
+            margin: 1.45em 0 0.4em;
+        }
+
+        #doc h4 {
+            font-size: 1.05rem;
+            margin: 1.25em 0 0.35em;
+        }
+
+        #doc p { margin: 0.85em 0; }
+
+        #doc a {
+            color: var(--link);
+            text-underline-offset: 2px;
+        }
+
+        #doc strong { font-weight: 700; }
+
         #doc blockquote {
-            margin: 0.75em 0;
-            padding: 0 1em;
-            color: #57606a;
-            border-left: 4px solid var(--border);
+            margin: 1.1em 0;
+            padding: 0.15em 0 0.15em 1em;
+            color: var(--ink-muted);
+            border-left: 3px solid var(--accent);
+            background: transparent;
         }
+
+        #doc ul, #doc ol {
+            margin: 0.85em 0;
+            padding-left: 1.35em;
+        }
+
+        #doc li { margin: 0.35em 0; }
+
+        #doc li::marker { color: var(--ink-muted); }
+
+        #doc hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 2.2em 0;
+        }
+
         #doc table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.88rem;
-            margin: 1em 0;
+            font-family: var(--ui);
+            font-size: 0.92rem;
+            line-height: 1.45;
+            margin: 1.2em 0;
             display: block;
             overflow-x: auto;
         }
+
         #doc th, #doc td {
             border: 1px solid var(--border);
-            padding: 8px 12px;
+            padding: 0.55rem 0.75rem;
             text-align: left;
+            vertical-align: top;
         }
-        #doc th { background: var(--code-bg); font-weight: 600; }
+
+        #doc th {
+            background: var(--code-bg);
+            font-weight: 600;
+        }
+
         #doc pre:not(.mermaid) {
+            font-family: var(--mono);
+            font-size: 0.82rem;
+            line-height: 1.55;
             background: var(--code-bg);
             border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 14px 16px;
+            border-radius: 8px;
+            padding: 0.95rem 1.05rem;
             overflow-x: auto;
-            font-size: 0.82rem;
+            margin: 1.1em 0;
         }
+
         #doc code {
-            font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-            font-size: 0.88em;
+            font-family: var(--mono);
+            font-size: 0.86em;
         }
+
         #doc :not(pre) > code {
-            background: rgba(175,184,193,0.25);
-            padding: 0.15em 0.4em;
+            background: var(--accent-soft);
+            color: var(--accent);
+            padding: 0.12em 0.38em;
             border-radius: 4px;
         }
-        #doc hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
+
         #doc .mermaid {
-            margin: 1.25em 0;
+            margin: 1.4em 0;
             text-align: center;
             overflow-x: auto;
-        }
-        #err {
-            max-width: 720px;
-            margin: 40px auto;
-            padding: 20px;
-            background: #fff8f8;
-            border: 1px solid #f0b4b4;
+            background: #fff;
+            border: 1px solid var(--border);
             border-radius: 8px;
-            color: #9a1c1c;
+            padding: 1rem;
         }
+
+        #err {
+            margin: 0 0 1rem;
+            padding: 0.9rem 1rem;
+            background: #f8ecec;
+            border: 1px solid #e2b6b6;
+            border-radius: 8px;
+            color: #7a1f1f;
+            font-family: var(--ui);
+            font-size: 0.95rem;
+        }
+
         #err[hidden] { display: none; }
+
+        .loading {
+            font-family: var(--ui);
+            color: var(--ink-muted);
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 640px) {
+            body { font-size: 1.05rem; line-height: 1.7; }
+            .topbar-inner { padding: 0.75rem 0.9rem; }
+            .brand { width: 100%; margin: 0 0 0.15rem; }
+            .segments { width: 100%; }
+            .segment { flex: 1; text-align: center; padding: 0.6rem 0.5rem; font-size: 0.82rem; }
+            .actions { width: 100%; justify-content: flex-end; }
+            main { padding: 1rem 0.75rem 3rem; }
+            .sheet { border-radius: 10px; }
+        }
     </style>
 </head>
 <body>
-    <nav class="toolbar">
-        <h1>New Turn Creation Flow</h1>
-        <a href="NEW_TURN_CREATION_FLOW.md" download>Download .md</a>
-        <a href="feasibility.html">Feasibility tool</a>
-    </nav>
-    <div id="err" hidden></div>
-    <article id="doc">Loading…</article>
+    <header class="topbar">
+        <div class="topbar-inner">
+            <div class="brand">Docs</div>
+            <div class="segments" role="tablist" aria-label="Documents">
+                <button class="segment" role="tab" id="tab-plan" data-doc="plan" aria-selected="true" aria-controls="doc">August Plan</button>
+                <button class="segment" role="tab" id="tab-audit" data-doc="audit" aria-selected="false" aria-controls="doc">Pro App Audit</button>
+            </div>
+            <div class="actions">
+                <a id="downloadLink" href="NEW_TURN_CREATION_FLOW.md" download>Download .md</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="sheet">
+            <p class="doc-meta">
+                <span id="docTitle">August Plan</span>
+                <span id="docFile">NEW_TURN_CREATION_FLOW.md</span>
+            </p>
+            <div id="err" hidden></div>
+            <article id="doc" class="loading" role="tabpanel" aria-labelledby="tab-plan">Loading…</article>
+        </div>
+    </main>
+
     <script>
         (function () {
+            const DOCS = {
+                plan: {
+                    id: 'plan',
+                    title: 'August Plan',
+                    file: 'NEW_TURN_CREATION_FLOW.md',
+                    tabId: 'tab-plan'
+                },
+                audit: {
+                    id: 'audit',
+                    title: 'Pro App Audit',
+                    file: 'ProApp_Audit.md',
+                    tabId: 'tab-audit'
+                }
+            };
+
+            const cache = {};
+            let activeId = 'plan';
+            let mermaidReady = false;
+
+            const errEl = document.getElementById('err');
+            const docEl = document.getElementById('doc');
+            const titleEl = document.getElementById('docTitle');
+            const fileEl = document.getElementById('docFile');
+            const downloadLink = document.getElementById('downloadLink');
+            const tabs = Array.from(document.querySelectorAll('.segment'));
+
             function extractMermaidBlocks(src) {
                 const bodies = [];
-                const marker = function (i) { return '\n`MERMAIDINLINE' + i + '`\n'; };
                 let out = '';
                 let rest = src;
                 while (true) {
@@ -154,44 +386,96 @@
                         out += rest.slice(start);
                         break;
                     }
-                    const body = rest.slice(after, fence);
-                    const id = bodies.length;
-                    bodies.push(body);
-                    out += marker(id);
+                    bodies.push(rest.slice(after, fence));
+                    out += '\n`MERMAIDINLINE' + (bodies.length - 1) + '`\n';
                     rest = rest.slice(fence + 4);
                 }
                 return { md: out, bodies: bodies };
             }
 
             function injectMermaid(html, bodies) {
-                var result = html;
-                for (var i = 0; i < bodies.length; i++) {
-                    var token = '<code>MERMAIDINLINE' + i + '</code>';
-                    var div = '<div class="mermaid">' + bodies[i] + '</div>';
-                    result = result.split(token).join(div);
+                let result = html;
+                for (let i = 0; i < bodies.length; i++) {
+                    result = result.split('<code>MERMAIDINLINE' + i + '</code>')
+                        .join('<div class="mermaid">' + bodies[i] + '</div>');
                 }
                 return result;
             }
 
-            async function main() {
-                var errEl = document.getElementById('err');
-                var docEl = document.getElementById('doc');
+            function setTabState(id) {
+                tabs.forEach((btn) => {
+                    const selected = btn.dataset.doc === id;
+                    btn.setAttribute('aria-selected', selected ? 'true' : 'false');
+                });
+                const doc = DOCS[id];
+                titleEl.textContent = doc.title;
+                fileEl.textContent = doc.file;
+                downloadLink.href = doc.file;
+                downloadLink.setAttribute('download', doc.file);
+                docEl.setAttribute('aria-labelledby', doc.tabId);
+                document.title = doc.title + ' — Docs';
+            }
+
+            async function renderDoc(id) {
+                const doc = DOCS[id];
+                if (!doc) return;
+
+                activeId = id;
+                setTabState(id);
+                errEl.hidden = true;
+                docEl.className = 'loading';
+                docEl.textContent = 'Loading…';
+                window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+
                 try {
-                    var res = await fetch('NEW_TURN_CREATION_FLOW.md', { cache: 'no-cache' });
-                    if (!res.ok) throw new Error('Could not load NEW_TURN_CREATION_FLOW.md (' + res.status + ').');
-                    var raw = await res.text();
-                    var extracted = extractMermaidBlocks(raw);
-                    var html = marked.parse(extracted.md);
+                    let raw = cache[doc.file];
+                    if (!raw) {
+                        const res = await fetch(doc.file, { cache: 'no-cache' });
+                        if (!res.ok) throw new Error('Could not load ' + doc.file + ' (' + res.status + ').');
+                        raw = await res.text();
+                        cache[doc.file] = raw;
+                    }
+
+                    const extracted = extractMermaidBlocks(raw);
+                    const html = marked.parse(extracted.md);
+                    docEl.className = '';
                     docEl.innerHTML = injectMermaid(html, extracted.bodies);
-                    mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose' });
-                    await mermaid.run({ querySelector: '#doc .mermaid' });
+
+                    if (!mermaidReady) {
+                        mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose' });
+                        mermaidReady = true;
+                    }
+                    const nodes = docEl.querySelectorAll('.mermaid');
+                    if (nodes.length) await mermaid.run({ nodes: Array.from(nodes) });
                 } catch (e) {
                     docEl.textContent = '';
                     errEl.hidden = false;
                     errEl.textContent = e.message || String(e);
                 }
             }
-            main();
+
+            function resolveIdFromHash() {
+                const hash = (location.hash || '').replace(/^#/, '');
+                if (hash === 'audit' || hash === 'pro-app-audit') return 'audit';
+                if (hash === 'plan' || hash === 'august-plan' || hash === 'turn') return 'plan';
+                return 'plan';
+            }
+
+            tabs.forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const id = btn.dataset.doc;
+                    if (id === activeId) return;
+                    history.replaceState(null, '', '#' + id);
+                    renderDoc(id);
+                });
+            });
+
+            window.addEventListener('hashchange', () => {
+                const id = resolveIdFromHash();
+                if (id !== activeId) renderDoc(id);
+            });
+
+            renderDoc(resolveIdFromHash());
         })();
     </script>
 </body>
