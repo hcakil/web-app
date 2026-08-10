@@ -369,3 +369,39 @@ Takvim: 30-31 Temmuz + 1-2 Ağustos açılış penceresi; Hafta 1: 3-9 Ağustos;
 10. NextMatchAI veya İmarSinyal'de yeni feature, otomasyon veya kampanya açmak.
 11. Tez saatini tamamen sıfırlamak.
 12. Toplantıda söylenenleri yazılı teyit almadan finansal plana gelir olarak yazmak.
+
+---
+
+# 21. İlerleme güncellemesi — 10 Ağustos 2026
+
+Bu bölüm önceki planı silmez; 30 Temmuz–10 Ağustos arasında gerçekleşenleri ve yeni bilgilerin gerektirdiği rota düzeltmesini kaydeder.
+
+## Tamamlananlar
+
+- Cloud CV'deki kritik PDF hatası düzeltildi; CV, portfolio ve kariyer teslim paketi kullanılabilir durumda.
+- Portfolio'da davranışsal mülakat için 11 STAR hikâyesi hazırlandı.
+- `nextmatchai-case-study` GitHub profilinde pinlendi.
+- Başvuru motoru çalıştı; iki Gmail hesabındaki onaylar başvuru tablosuyla karşılaştırıldı.
+- Kforce ve Digitech açık listeden çıkarıldı; kesinleşen retler Rejected sayfasına taşındı.
+- Micro1 AI mülakatı tamamlandı ve ayrıntılı geri bildirim alındı.
+- Proxify Flutter/Codility aşamasına geçildi. Test 16 Ağustos 2026'da açılacak; kişisel kartta 3 görev ve 90 dakika görünüyor.
+- Upwork'te en az bir başvuru ilan sahibi tarafından açıldı; kanal henüz doğrulanmış bir gelir kanalı değil.
+
+## Yeni bulgular
+
+1. **Başvuru sayısı değil, hedef kaçağı sorun.** Flutter/mobile dışı veya ülke–çalışma izni uyumsuz ilanlar görüşme oranını düşürüyor.
+2. **Networking geride.** Eski çalışma arkadaşlarıyla ilişkinin sıcak olmaması engel değil; ilk adım yardım istemek değil, yeniden temas ve pazar bilgisi istemek.
+3. **Micro1 reddi Flutter forms ezberine bağlanmamalı.** Geri bildirim; iOS push, Swift struct/class, Android Services–WorkManager, Notification Channels ve typed error mapping başlıklarını işaret ediyor. Güçlü taraflar API entegrasyonu, caching/error handling, mobil UI/UX ve uzaktan çalışma iletişimi.
+4. **Proxify kişisel kartı genel yardım metninden daha özeldir.** Hazırlık 3 görev/90 dakika simülasyonuna göre yapılacak; 180 dakika yalnızca genel platform üst sınırı olarak görülecek.
+5. **Şirket içi AI/OpenCode çalışması kariyer saatinden ayrı tutulacak.** Şirket zamanı içinde küçük bir agent deneyi yapılacak; kişisel sprintin ana kalemi olmayacak.
+
+## Rota düzeltmesi
+
+- 10–16 Ağustos haftasının ana hedefi Proxify hazırlığıdır.
+- `flutter-reliable-workflow` bırakılmadı. Cubit UI + offline queue + 5 test + GIF işi assessment sonrasındaki 17–23 Ağustos sprintine taşındı; bitince pinlenecek.
+- `flutter-fundamentals-2` bir mülakat laboratuvarıdır; portföy reposu değildir.
+- `atama-enrichment-mvp` yalnızca gerçek müşteri/pilot konuşması varsa ayrı konuşmada ilerler; bu haftanın odağına girmez.
+- Tez sıfırlanmaz: bu hafta 60 dakikalık koruma bloğu, assessment sonrasında haftada en az 2 saat.
+- Başvuru iki şeritli yapılır: yüksek uyumlu başvurular için özenli A şeridi; Easy Apply için günlük süre ve uygunluk kapısı olan B şeridi.
+
+Ayrıntılı günlük plan için **10–16 Aug** sekmesine bakın.

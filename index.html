@@ -322,6 +322,7 @@
             <div class="brand">Docs</div>
             <div class="segments" role="tablist" aria-label="Documents">
                 <button class="segment" role="tab" id="tab-plan" data-doc="plan" aria-selected="true" aria-controls="doc">August Plan</button>
+                <button class="segment" role="tab" id="tab-sprint" data-doc="sprint" aria-selected="false" aria-controls="doc">10–16 Aug</button>
                 <button class="segment" role="tab" id="tab-audit" data-doc="audit" aria-selected="false" aria-controls="doc">Pro App Audit</button>
                 <button class="segment" role="tab" id="tab-red-alert" data-doc="red-alert" aria-selected="false" aria-controls="doc">Red Alert Plan</button>
             </div>
@@ -350,6 +351,12 @@
                     title: 'August Plan',
                     file: 'NEW_TURN_CREATION_FLOW.md',
                     tabId: 'tab-plan'
+                },
+                sprint: {
+                    id: 'sprint',
+                    title: '10–16 August Sprint',
+                    file: 'august_10_16_sprint.md',
+                    tabId: 'tab-sprint'
                 },
                 audit: {
                     id: 'audit',
@@ -463,6 +470,7 @@
 
             function resolveIdFromHash() {
                 const hash = (location.hash || '').replace(/^#/, '');
+                if (hash === 'sprint' || hash === 'august-10-16' || hash === '10-16-august') return 'sprint';
                 if (hash === 'audit' || hash === 'pro-app-audit') return 'audit';
                 if (hash === 'red-alert' || hash === 'redalert' || hash === 'red') return 'red-alert';
                 if (hash === 'plan' || hash === 'august-plan' || hash === 'turn') return 'plan';
