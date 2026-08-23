@@ -1,6 +1,6 @@
 # Plugin Promotions — Interview Cheat Sheet
 
-**Interview:** Sumesh Ramasamy — 45 min  
+**Interview:** S. — 45 min  
 **Goal:** Maaşı ilk 5 dakikada tartışmak değil. Görüşmenin sonunda:
 
 > **“I can give this engineer an outcome and trust him to take it to production.”**
@@ -364,9 +364,9 @@ Sonra:
 
 ---
 
-# 9. Sumesh — What Might He Push On?
+# 9. S. — What Might He Push On?
 
-Kamuya açık profiline göre Sumesh yalnızca recruiter değil; ciddi mobil/Flutter geçmişi var ve kendi Flutter uygulamalarını production'a çıkarmış. Bir uygulamasının milyonlarca indirmeye ulaştığını da paylaşmış.
+Kamuya açık profiline göre S. yalnızca recruiter değil; ciddi mobil/Flutter geçmişi var ve kendi Flutter uygulamalarını production'a çıkarmış. Bir uygulamasının milyonlarca indirmeye ulaştığını da paylaşmış.
 
 Bu yüzden:
 
@@ -608,7 +608,7 @@ VenueFlow'daki cache/realtime hikâyesi bu dünya ile doğrudan bağlanıyor.
 
 ---
 
-# 14. The Four Questions We Ask Sumesh
+# 14. The Four Questions We Ask S.
 
 Dört.
 
@@ -636,7 +636,7 @@ Bize gerçek job description'ı verir.
 
 > You describe the team as AI-native. Where are coding agents giving you the most leverage today, and where have you learned not to trust them?
 
-Sumesh'in teknik/AI ilgisine çok uygun. Kamuya açık son paylaşımlarında da AI framework'lerinin gerçek package API'si ile dokümantasyon arasındaki farkları bizzat inceleyen içerikler paylaşmış.
+S.'nin teknik/AI ilgisine çok uygun. Kamuya açık son paylaşımlarında da AI framework'lerinin gerçek package API'si ile dokümantasyon arasındaki farkları bizzat inceleyen içerikler paylaşmış.
 
 ---
 
@@ -778,7 +778,7 @@ Anahtar kelimeye dön.
 
 Interview başarılı demek:
 
-Sumesh şunları düşünmeli:
+S. şunları düşünmeli:
 
 ```text
 Flutter                         ✓

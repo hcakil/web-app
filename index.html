@@ -308,8 +308,8 @@
             body { font-size: 1.05rem; line-height: 1.7; }
             .topbar-inner { padding: 0.75rem 0.9rem; }
             .brand { width: 100%; margin: 0 0 0.15rem; }
-            .segments { width: 100%; display: flex; }
-            .segment { flex: 1; text-align: center; padding: 0.55rem 0.35rem; font-size: 0.75rem; }
+            .segments { width: 100%; display: flex; flex-wrap: wrap; }
+            .segment { flex: 1 1 30%; text-align: center; padding: 0.55rem 0.35rem; font-size: 0.75rem; }
             .actions { width: 100%; justify-content: flex-end; }
             main { padding: 1rem 0.75rem 3rem; }
             .sheet { border-radius: 10px; }
@@ -323,6 +323,8 @@
             <div class="segments" role="tablist" aria-label="Documents">
                 <button class="segment" role="tab" id="tab-plan" data-doc="plan" aria-selected="true" aria-controls="doc">August Plan</button>
                 <button class="segment" role="tab" id="tab-sprint" data-doc="sprint" aria-selected="false" aria-controls="doc">10–16 Aug</button>
+                <button class="segment" role="tab" id="tab-week" data-doc="week" aria-selected="false" aria-controls="doc">24–30 Plan</button>
+                <button class="segment" role="tab" id="tab-eval" data-doc="eval" aria-selected="false" aria-controls="doc">Eval</button>
                 <button class="segment" role="tab" id="tab-audit" data-doc="audit" aria-selected="false" aria-controls="doc">Pro App Audit</button>
                 <button class="segment" role="tab" id="tab-red-alert" data-doc="red-alert" aria-selected="false" aria-controls="doc">Red Alert Plan</button>
             </div>
@@ -357,6 +359,18 @@
                     title: '10–16 August Sprint',
                     file: 'august_10_16_sprint.md',
                     tabId: 'tab-sprint'
+                },
+                week: {
+                    id: 'week',
+                    title: '24–30 August Plan',
+                    file: 'week_24_30_plan.md',
+                    tabId: 'tab-week'
+                },
+                eval: {
+                    id: 'eval',
+                    title: '24–30 Evaluation',
+                    file: 'week_24_30_eval.md',
+                    tabId: 'tab-eval'
                 },
                 audit: {
                     id: 'audit',
@@ -471,6 +485,8 @@
             function resolveIdFromHash() {
                 const hash = (location.hash || '').replace(/^#/, '');
                 if (hash === 'sprint' || hash === 'august-10-16' || hash === '10-16-august') return 'sprint';
+                if (hash === 'week' || hash === '24-30' || hash === '24-30-plan') return 'week';
+                if (hash === 'eval' || hash === 'analysis' || hash === '24-30-eval') return 'eval';
                 if (hash === 'audit' || hash === 'pro-app-audit') return 'audit';
                 if (hash === 'red-alert' || hash === 'redalert' || hash === 'red') return 'red-alert';
                 if (hash === 'plan' || hash === 'august-plan' || hash === 'turn') return 'plan';
