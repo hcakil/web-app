@@ -237,32 +237,23 @@ Bu bizim **hero story**.
 >
 > I tried it from a normal Chrome profile and Safari on my phone and it bounced straight back to login.
 
-### Root cause
+### Bug 1 — Google login “worked” for the agent, not for a real user
 
-Firebase Auth domain ile Manager'ın gerçek hosting origin'i uyuşmuyordu.
+Firebase Auth, login’in dönebileceği domain’leri whitelist’ler. Codex’in test ettiği origin listedeydi; telefonda/normal Chrome’da açtığım **gerçek Manager URL’si değildi**. Google’dan geri gelince Firebase session’ı kabul etmedi, login ekranına sekti.
 
-Gerçek browser storage protection redirect session'ı kaybettiriyordu.
+Safari / locked-down Chrome ayrıca redirect sırasında storage’ı keser; OAuth’un “ben buradan geldim” state’i kaybolunca yine aynı semptom: bounce back to login.
 
-### Sonra ikinci bug
+Tek cümle:
 
-`main.dart.js`:
+> The agent signed in on an origin Firebase allowed. Real users hit a different origin, so the redirect came back with no session.
 
-```text
-Cache-Control:
-max-age=31536000, immutable
-```
+### Bug 2 — deploy oldu, kullanıcı eski JS’i çalıştırmaya devam etti
 
-Ama Flutter:
+Hosting `main.dart.js` için `Cache-Control: max-age=31536000, immutable` vermişti: tarayıcıya “bunu bir yıl sakla, asla yenileme” demek. Flutter web ise dosya adını hash’lemez — her release aynı `main.dart.js`. Dönen kullanıcı yeni build’i indirmez; düzeltme sunucuda vardır, telefonda yoktur.
 
-```text
-main.dart.js
-```
+Tek cümle:
 
-dosya adını content-hash etmiyor.
-
-Sonuç:
-
-> A fix could successfully build and deploy but still never reach a returning user.
+> We told the browser the JS file never changes, but Flutter keeps the same filename, so a successful deploy never reached returning users.
 
 Repository bu iki olayı ayrıntılı olarak belgeliyor. Ayrıca build boyunca 11 analyze, 11 test run, Rules emulator çalışmaları, 11 release build ve 5 deploy kaydedilmiş.
 
@@ -285,6 +276,10 @@ Alternatif:
 ### SPECIFY
 
 Önce behaviour.
+
+**BDD** (Behavior-Driven Development): önce *ne olacağını* yazarsın — Given / When / Then — kod değil, gözlemlenebilir sözleşme.
+
+**AI-DD** (AI-Driven Development): o sözleşmeyi agente verirsin; o implementasyonu üretir, sen spec + proof’u bırakmazsın. BDD “ne”, AI-DD “kim yazar / kim kabul eder”.
 
 ```text
 Requirement
