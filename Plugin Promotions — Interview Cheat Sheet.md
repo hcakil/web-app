@@ -37,34 +37,34 @@ Sadece bunları hatırla:
 
 ## Hafıza yolu
 
-**Flutter → Production → Ownership → Why Plugin**
+**Who → Current → Production problem → Why Plugin**
 
-### Söylenecek ana fikirler
+Dört blok. 60–75 saniye. Flutter trivia yok.
 
-- Flutter benim en güçlü alanım.
-- Production application tecrübem var.
-- Sadece screen/ticket değil:
-  - architecture
-  - integrations
-  - testing
-  - release
-  - production debugging
-- En sevdiğim çalışma biçimi: outcome alıp uçtan uca sahiplenmek.
-- Plugin'i ilginç yapan şey de bu.
+| # | Block | Content |
+|---|-------|---------|
+| 1 | Who | 9+ yrs · 6+ Flutter |
+| 2 | Current | Remote US product · Flutter / Firebase / CI / reliability |
+| 3 | Strength | Real production problems, not only UI → connectivity/upload → telemetry → retry |
+| 4 | Ask | Ownership on a live product — that's why Plugin |
 
 ### Natural answer
 
-> I'm primarily a product-focused software engineer, with Flutter being my strongest area.
+> I'm a software engineer with more than nine years of professional experience, with over six years focused primarily on Flutter and Dart.
 >
-> Most of my experience has been around production applications, so my work has gone beyond implementing screens — architecture, integrations, testing, releases and production issues have all been part of the job.
+> For nearly four years I've been working remotely with a US-based product company, building and maintaining production mobile and web applications used in operational workflows. That work has gone beyond screens — architecture, API integrations, Firebase, testing, CI/CD, and production reliability.
 >
-> What interested me about this role was the ownership. You're not describing someone working through a ticket queue; you're looking for someone who can take a product problem and carry it through to production.
+> One area I particularly enjoy is investigating real production problems rather than just implementing UI. For example, I worked on connectivity-related upload failures by analyzing production telemetry, reproducing the issue, and helping implement a more resilient persistence and retry flow.
 >
-> That's also how I approached the build task.
+> What interested me about this role was the ownership. You're not describing someone working through a ticket queue; you're looking for someone who can take a product problem and carry it through to production. That's also how I approached the build task.
+
+Kısa yedek (zaten VenueFlow konuşulduysa):
+
+> Flutter is my strongest area. Most of my work has been production applications — architecture, integrations, testing, release, and production debugging. I like taking an outcome end to end. That's what drew me to Plugin.
 
 **STOP.**
 
-İlk cevapta bütün CV'yi anlatma.
+İlk cevapta bütün CV'yi anlatma. Native Android/Swift'i intro'ya sıkıştırma — sorarsa §23.
 
 ---
 
@@ -455,6 +455,28 @@ Doğrusu:
 
 ---
 
+## 9.6 Cubit vs Bloc
+
+S. Cubit seçimini dürtüyorsa §5'teki dürüstlük duruyor. Ek bir cümle:
+
+> Cubit is methods. Bloc is events when the flow gets complex — explicit events, concurrency control, or a traceable transition log. I start with Cubit and move when the flow needs it. Team consistency beats fashion.
+
+`context.read` = callback, rebuild yok. `watch` / `BlocBuilder` = pixel. `BlocListener` = navigation, dialog, snackbar. Bloc içinde `BuildContext` yok.
+
+---
+
+## 9.7 Keys
+
+> Keys let the element diff match the right child when list order or type changes. Reordering StatefulWidgets without keys keeps the old state on the wrong row.
+
+---
+
+## 9.8 FutureBuilder trap
+
+> Don't create the Future inside `build` — every rebuild starts new work. Hoist it to `initState` / a Cubit, and handle waiting / error / data.
+
+---
+
 # 10. Firebase — Likely Pressure Area
 
 İlanın en güçlü requirement'larından biri.
@@ -750,7 +772,7 @@ Anahtar kelimeye dön.
 
 ## Kendimi anlatırken kayboldum
 
-**Flutter → Production → Ownership → Plugin**
+**Who → Current → Production problem → Why Plugin**
 
 ## VenueFlow'da kayboldum
 
@@ -767,6 +789,10 @@ Anahtar kelimeye dön.
 ## PluginOS konuşurken kayboldum
 
 **Devices → Realtime → Reliability → Scale**
+
+## Native / cihaz / token sorusunda kayboldum
+
+**§23 — Flutter first, then Keychain/Keystore or MethodChannel**
 
 ## Salary'de kayboldum
 
@@ -841,3 +867,78 @@ ve
 # Problem → Shape → Decisions → Proof → Next
 
 Başka hiçbir şey ezberlemeye çalışma.
+
+---
+
+# 23. Pocket cards — if he goes deeper on Flutter / devices
+
+Daily/micro1'dan **sadece** Plugin görüşmesine taşınanlar. Codility, form kası, 25 dakikalık list snippet yok.
+
+Takılınca:
+
+> I haven't implemented that in production. My understanding is…
+> My production specialization is Flutter; the way I would approach the native side is…
+> I'd measure first rather than optimize from assumptions.
+
+---
+
+## 23.1 Production story — connectivity (yedek hero)
+
+VenueFlow AI hikâyesinden **sonra** “zor production bug” derse. PluginOS cihaz WiFi'sine de bağlanır.
+
+| Step | Speak |
+|------|--------|
+| Situation | Production Flutter app; users upload on flaky mobile networks |
+| Problem | Uploads failed when connectivity dropped mid-request, and took too long |
+| What I did | Telemetry → reproduced offline/flaky path → local persistence + retry/outbox → tests → monitors |
+| Why | Network is not reliable; user must not lose work; retry must be idempotent |
+| Result | Fewer lost uploads; clearer failed vs pending UX |
+| Lesson | Measure from production first; offline-first + retry beats “just call the API again” |
+
+Başka bug cepleri (tek cümle, detaya girme):
+
+- Backward-compat: 10 dakikada görüldü, revert uzun sürdü
+- Demo-mode: bir kullanıcı, bir null parametre
+- PagerDuty noise
+- Firewall: bir müşteri için yalnızca bazı network'ler
+
+---
+
+## 23.2 Native — dürüst çerçeve + Plugin cihazları
+
+> My primary production expertise is Flutter. I have earlier commercial native Android (Java) experience. I used Swift/iOS earlier but haven't owned production iOS for about four years, so I don't claim current Swift expertise. When Flutter needs platform APIs, I bridge via plugins and platform channels.
+
+| Channel | Use |
+|---------|-----|
+| **MethodChannel** | request/response — native SDK once |
+| **EventChannel** | native → Flutter stream (progress, sensors) |
+| **FFI** | C/C++ — Kotlin/Swift SDK için ilk tercih değil |
+
+Native-only SDK (kamera / vendor / cihaz):
+
+1. Dart interface  
+2. MethodChannel / federated plugin  
+3. Android + iOS adapters  
+4. Typed args  
+5. Native errors → domain failures  
+6. Tests (Dart fake)  
+7. Main thread UI, block etme  
+
+Tek nefeste:
+
+- Tokens: iOS **Keychain**, Android **Keystore**-backed secure storage. Never SharedPreferences / UserDefaults.
+- Push: **FCM**; iOS genellikle arkada **APNs**.
+- Offline-first: local source of truth → sync/outbox when online → conflict policy.
+
+---
+
+## 23.3 Scenario openings (≤20s, sonra bir detay)
+
+| Scenario | Opening |
+|----------|---------|
+| Why Flutter | One codebase, strong UI toolkit, DevTools, mature plugins — still respect platform differences and bridge when native APIs matter |
+| State | Complexity decides: local widget → Cubit → Bloc when events/concurrency need it |
+| Jank | Reproduce → DevTools (UI vs Raster) → one fix → re-measure |
+| Tokens | Keychain / Keystore; short-lived access + refresh; clear on logout |
+| A11y | Semantics, contrast, ≥48dp, not colour alone, TalkBack/VoiceOver |
+| Architecture | Simplest layers that stay testable; no forced Clean Architecture |
