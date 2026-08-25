@@ -9,6 +9,36 @@ dedirtebilmek.
 
 ---
 
+
+<a id="top"></a>
+
+## 🧭 Clickable Interview Index
+
+> **Use this during the call.** Click a topic and jump directly to it.
+
+| Area | Jump |
+|---|---|
+| 🧠 15-second mental map | [Mental Map](#mental-map) |
+| 👤 Tell me about yourself | [Intro](#intro) |
+| 🎯 Why Plugin Promotions? | [Why Plugin](#why-plugin) |
+| 🏗️ VenueFlow walkthrough | [VenueFlow](#venueflow) |
+| ⚙️ Architecture decisions | [Architecture Decisions](#architecture-decisions) |
+| 🤖 AI / production proof | [AI Ownership](#ai-ownership) |
+| 📱 Flutter internals | [Flutter Internals](#flutter-internals) |
+| 🎨 CustomPaint | [CustomPaint](#custompaint) |
+| 🌊 Dart async / Stream / Zone | [Async / Stream / Zone](#dart-async) |
+| 🔥 Firebase / offline / security | [Firebase](#firebase) |
+| 🔔 Listener vs FCM vs Functions | [Realtime Tools](#realtime-tools) |
+| 🧱 Multi-tenant / next step | [Scaling / Next](#scaling-next) |
+| 🧩 PluginOS system design | [PluginOS](#pluginos) |
+| 💬 Questions for Sumesh | [Questions](#questions) |
+| 💰 Compensation / equity | [Compensation](#compensation) |
+| 🛟 Rescue routes | [Rescue](#rescue) |
+| ⏱️ 10 minutes before call | [Pre-call](#precall) |
+
+---
+
+<a id="mental-map"></a>
 # 🚨 15-Second Mental Map
 
 Paragraf ezberleme.
@@ -33,6 +63,7 @@ Sadece bunları hatırla:
 
 ---
 
+<a id="intro"></a>
 # 1. Tell Me About Yourself
 
 ## Hafıza yolu
@@ -68,6 +99,7 @@ Kısa yedek (zaten VenueFlow konuşulduysa):
 
 ---
 
+<a id="why-plugin"></a>
 # 2. Why Plugin Promotions?
 
 ## Hafıza yolu
@@ -86,6 +118,7 @@ Public PluginOS ürünü gerçekten fiziksel display'leri telefondan eşleştirm
 
 ---
 
+<a id="venueflow"></a>
 # 3. Walk Me Through VenueFlow
 
 ## EN ÖNEMLİ HAFIZA YOLU
@@ -137,6 +170,7 @@ Bu mimari repo'da özellikle “small feature-first architecture, not a ceremoni
 
 ---
 
+<a id="architecture-decisions"></a>
 # 4. VenueFlow — The 3 Decisions
 
 ## DECISION 1 — Firestore = realtime source of truth
@@ -221,6 +255,7 @@ BLUFF YOK.
 
 ---
 
+<a id="ai-ownership"></a>
 # 6. THE STRONGEST STORY — AI Was Wrong
 
 Bu bizim **hero story**.
@@ -322,10 +357,34 @@ Son kontrol:
 
 > The part I never delegate is the claim that something actually works.
 
+
+## If he challenges: “Did AI basically build this?”
+
+Do **not** become defensive.
+
+> Yes, I used coding agents heavily. That was intentional. The distinction I care about is delegation versus ownership.
+
+Then:
+
+> I delegated implementation volume, tests and documentation against a specification. I owned architecture, acceptance criteria, review and production verification.
+
+Then the proof:
+
+> In this project that distinction mattered because the agent reported authentication as working when it wasn't working in a normal user environment.
+
+Finish with:
+
+> The part I never delegate is the claim that something actually works.
+
+This is stronger than pretending AI was only autocomplete.
+
+---
+
 Bu yaklaşım repo'daki AI workflow ile birebir uyumlu.
 
 ---
 
+<a id="scaling-next"></a>
 # 8. What Would You Build Next?
 
 İlk cevap:
@@ -359,6 +418,7 @@ Sonra:
 
 ---
 
+<a id="flutter-internals"></a>
 # 9. S. — What Might He Push On?
 
 Kamuya açık profiline göre S. yalnızca recruiter değil; ciddi mobil/Flutter geçmişi var ve kendi Flutter uygulamalarını production'a çıkarmış. Bir uygulamasının milyonlarca indirmeye ulaştığını da paylaşmış.
@@ -375,20 +435,70 @@ Sadece şu **5 Flutter anchor** yeter.
 
 ## 9.1 Widget → Element → RenderObject
 
+### Widget
+
+> A Widget is an immutable configuration object. It is cheap and disposable; Flutter may recreate widgets frequently.
+
+### Element
+
+> The Element preserves the widget's position and identity in the tree. For a StatefulWidget, it also owns the association with the State object.
+
+Mental model:
+
 ```text
-Widget
-immutable configuration
-
-Element
-persistent instance / position in tree
-
-RenderObject
-layout + paint
+Old Widget
+    ↓
+ Element  ← can stay alive
+    ↑
+New Widget
 ```
 
-Biri `build()` sorduğunda:
+Kabaca reconciliation:
 
-> Widgets are immutable descriptions. Elements preserve identity in the tree, while RenderObjects handle layout and painting.
+```text
+oldWidget.runtimeType == newWidget.runtimeType
+&&
+oldWidget.key == newWidget.key
+```
+
+uyuyorsa mevcut Element korunabilir ve yeni Widget configuration ile update edilir.
+
+### BuildContext
+
+> BuildContext is effectively the interface Flutter exposes for an Element's location in the tree.
+
+Yani:
+
+```dart
+Widget build(BuildContext context)
+```
+
+`context`, widget'ın tree içindeki konumunu temsil eder.
+
+### RenderObject
+
+RenderObject fiziksel UI işlerini yapar:
+
+- constraints
+- size
+- positioning
+- layout
+- hit testing
+- painting
+
+Hatırla:
+
+```text
+Widget       → sık sık yeniden oluşturulabilir
+Element      → mümkünse korunur
+RenderObject → mümkünse korunur
+```
+
+`build()` fiziksel pixel çizmez; **yeni widget configuration'ları üretir**.
+
+Tek nefeste:
+
+> Widgets are immutable descriptions. Elements preserve identity and location in the tree, while RenderObjects handle layout, hit testing and painting. BuildContext is effectively my handle to the Element's position in that tree.
 
 ---
 
@@ -470,8 +580,163 @@ S. Cubit seçimini dürtüyorsa §5'teki dürüstlük duruyor. Ek bir cümle:
 
 > Don't create the Future inside `build` — every rebuild starts new work. Hoist it to `initState` / a Cubit, and handle waiting / error / data.
 
+
+<a id="custompaint"></a>
+
+## 9.9 CustomPaint / CustomPainter
+
+> CustomPaint lets me participate directly in Flutter's paint phase. I provide a CustomPainter, implement `paint(Canvas, Size)` to draw, and `shouldRepaint` tells Flutter whether a new painter configuration requires repainting.
+
+Mental model:
+
+```text
+CustomPaint        → Widget
+      ↓
+RenderCustomPaint  → RenderObject
+      ↓
+Canvas / Paint
+```
+
+Important distinction:
+
+```text
+build   → widget configuration
+layout  → size / position
+paint   → pixels
+```
+
+> `CustomPaint` does not perform layout logic for the rest of the tree. It gives me a canvas during the paint phase.
+
+### `shouldRepaint`
+
+> It answers whether a new painter configuration requires the render object to repaint.
+
+Do not say:
+
+> “Returning true makes Flutter rebuild the widget.”
+
+It is about **repaint**, not widget rebuilding.
+
+### Rebuild vs repaint
+
+- rebuild = new widget configuration
+- layout = geometry may change
+- repaint = pixels redrawn
+- they are related, but not the same operation
+
+### RepaintBoundary
+
+> I use `RepaintBoundary` when profiling shows an expensive subtree is repainting unnecessarily and can be isolated into its own repaint boundary.
+
+**Do not optimize blindly. Profile first.**
+
+[↑ Back to index](#top)
+
 ---
 
+---
+
+
+<a id="dart-async"></a>
+
+# 9A. Dart Async / Stream / Zone — Surprise Round
+
+## Event loop: first answer
+
+> Dart runs asynchronous callbacks through an event loop. Microtasks are drained before the next event-queue item, so abusing the microtask queue can starve normal events.
+
+Mental model:
+
+```text
+sync code
+   ↓
+microtask queue
+   ↓
+event queue
+```
+
+Don't over-explain unless he asks.
+
+---
+
+## Future
+
+> A Future represents one eventual result or error.
+
+`async/await` is syntax over that asynchronous completion model; it does **not** automatically create a new thread.
+
+---
+
+## Stream
+
+> A Stream represents a sequence of asynchronous events over time.
+
+For Firestore:
+
+> Firestore listeners expose backend changes as a stream, but the stream is only the transport. My domain logic still decides what a change means — for example, whether a sold-out item must be removed from a cart.
+
+### Single-subscription vs broadcast
+
+- single-subscription → one listener; ordered stream consumption
+- broadcast → multiple listeners; events are distributed to current subscribers
+
+### Cancellation
+
+> If I own a long-lived subscription, I also own its lifecycle and cancellation.
+
+In Flutter that commonly means cancelling in `dispose()` or letting a framework abstraction own the subscription.
+
+---
+
+## Zone
+
+> A Zone is an execution context that follows asynchronous work. If I start asynchronous work inside a Zone, later callbacks continue to run in that Zone.
+
+```dart
+runZoned(() {
+  // asynchronous work started here stays associated with this Zone
+});
+```
+
+Useful mental model:
+
+> O Zone içinde başlattığın async işler, daha sonra çalışsalar bile hangi Zone'dan geldiklerini hatırlar.
+
+Common use:
+
+```dart
+runZonedGuarded(
+  () => runApp(const App()),
+  (error, stack) {
+    // report uncaught async error
+  },
+);
+```
+
+Interview line:
+
+> A common use is centralized handling of uncaught asynchronous errors, for example forwarding them to Crashlytics.
+
+### Zone != Isolate
+
+```text
+Zone
+→ execution context inside an isolate
+→ async interception / context
+
+Isolate
+→ separate memory
+→ separate event loop
+→ concurrency boundary
+```
+
+> I would use an isolate for CPU-bound work that would otherwise block the main isolate. I would not use a Zone as a concurrency primitive.
+
+[↑ Back to index](#top)
+
+---
+
+<a id="firebase"></a>
 # 10. Firebase — Likely Pressure Area
 
 İlanın en güçlü requirement'larından biri.
@@ -509,6 +774,78 @@ Firestore cache yararlı olabilir ama:
 
 > Offline-first UX and conflict semantics are still product decisions. Turning persistence on is not an offline strategy.
 
+
+<a id="realtime-tools"></a>
+
+## 10.1 Firestore Listener vs FCM vs Cloud Functions
+
+### Firestore listener
+
+> Use it for live domain state while the client is running and observing backend data.
+
+```text
+Manager changes menu item
+→ Firestore state changes
+→ POS snapshot stream receives it
+→ business rules interpret it
+→ UI updates
+```
+
+### FCM
+
+> Use FCM when I need to notify a user/device or deliver a background message when the platform permits, rather than keep an application-level data listener alive. It is not a guarantee that the OS will wake the app immediately.
+
+Examples: background notification, device attention, new content available, operational alert.
+
+### Cloud Functions
+
+> Use a server-side function when the operation requires a trusted boundary or side effect.
+
+Examples: payment verification, webhook handling, privileged writes, cross-document workflow, notification fan-out, trusted backend integration.
+
+Best line:
+
+> I wouldn't add a Cloud Function simply to prove I know Cloud Functions. I'd add one when the operation needs a trusted server boundary or side effect.
+
+---
+
+## 10.2 POS offline answer — layered version
+
+Short answer:
+
+> Firestore gives me useful offline primitives, but I wouldn't confuse that with having designed an offline-first POS.
+
+Then:
+
+> Cached data can remain available, local writes can be queued, and snapshot metadata can help the UI distinguish cached or pending state. For simple order entry, that may already be useful. On web, I would also be explicit about the persistence mode rather than assuming disk persistence across browser restarts.
+
+But production POS:
+
+> I would classify operations by offline safety. Drafting an order or adding items could continue locally with a visible pending-sync state, while payment, final inventory validation or closing an order may require server confirmation.
+
+If requirements get stronger:
+
+> I would introduce an explicit local store or outbox, idempotent operations and domain-specific conflict resolution rather than relying on generic last-write-wins behavior.
+
+### Interview distinction
+
+```text
+Firestore offline primitives ≠ offline-first product design
+```
+
+Offline-first still needs:
+
+- stale-data UX
+- pending-write UX
+- reconnect behavior
+- idempotency
+- conflict semantics
+- what MUST receive server confirmation
+
+[↑ Back to index](#top)
+
+---
+
 ---
 
 # 11. React / Vue — DO NOT FAKE IT
@@ -538,6 +875,7 @@ Savunmaya geçme.
 
 ---
 
+<a id="pluginos"></a>
 # 12. PluginOS — Public Product Teardown
 
 ## KNOW THESE, DON'T RECITE THEM
@@ -625,6 +963,7 @@ VenueFlow'daki cache/realtime hikâyesi bu dünya ile doğrudan bağlanıyor.
 
 ---
 
+<a id="questions"></a>
 # 14. The Four Questions We Ask S.
 
 Dört.
@@ -660,6 +999,31 @@ S.'nin teknik/AI ilgisine çok uygun. Kamuya açık son paylaşımlarında da AI
 ## Q4 — TEAM
 
 > How is engineering structured today, and what would I be working with you on directly versus owning independently?
+
+
+## Optional commercial questions — ask only if the conversation naturally reaches package/offer
+
+These are **not** better than Q1–Q4 above for the technical discussion. Use them later.
+
+### Equity
+
+> I noticed the posting mentions equity participation for early team members. How is that structured for someone joining internationally?
+
+### Health-plan stipend
+
+> For candidates outside the US, how does the local health-plan stipend work?
+
+### Flexible time off
+
+> Is flexible time off fully paid, and how does the team typically use it in practice?
+
+### AI tooling
+
+> Which AI tooling plans does the company currently provide — for example Cursor, Claude Code, API credits, or something else?
+
+**Rule:** If time is short, ask **Q1 Field Problems + Q2 Ownership** first. Package questions can wait until mutual fit is clearer.
+
+---
 
 ---
 
@@ -721,6 +1085,7 @@ Drama yok.
 
 ---
 
+<a id="compensation"></a>
 # 18. Compensation
 
 İlk açan SEN OLMA.
@@ -736,6 +1101,30 @@ Ama sorarsa:
 > Is $21,000 a hard ceiling, or is there flexibility for a candidate you really want?
 
 ## THEN STOP TALKING.
+
+
+### Stronger direct version
+
+> I'm definitely interested in the role. As I mentioned in my email, $21K wouldn't work for me for this full-time scope. Is that a hard cash ceiling, or is there flexibility in the overall cash and equity structure?
+
+Then:
+
+# **STOP TALKING.**
+
+If he says equity exists, do not value it on the spot. Later clarify:
+
+- what exactly is granted: options / shares / another instrument?
+- percentage or number of shares/options?
+- vesting schedule?
+- cliff?
+- exercise price, if options?
+- what happens if the contractor relationship ends?
+- how is an international contractor eligible?
+- what fully diluted ownership does the grant represent?
+
+Equity can be meaningful. It is **not automatically equivalent to cash compensation**.
+
+---
 
 ```text
 NO:
@@ -759,6 +1148,7 @@ Full-time $21K'ya “okay” deme.
 
 ---
 
+<a id="rescue"></a>
 # 20. Interview Rescue Routes
 
 Konuşurken kayboldun.
@@ -828,6 +1218,7 @@ Diğer alanlardaki fit'in bunu aşmasına çalışıyoruz.
 
 ---
 
+<a id="precall"></a>
 # 22. Ten Minutes Before the Call
 
 Açık tablar:
@@ -937,3 +1328,22 @@ Tek nefeste:
 | Tokens | Keychain / Keystore; short-lived access + refresh; clear on logout |
 | A11y | Semantics, contrast, ≥48dp, not colour alone, TalkBack/VoiceOver |
 | Architecture | Simplest layers that stay testable; no forced Clean Architecture |
+
+---
+
+# Navigation / GitHub usage
+
+This file does **not** need to be deployed as a website.
+
+GitHub renders Markdown headings and internal links directly. The index at the top uses explicit HTML anchors so the links stay stable even if a visible heading later changes.
+
+Useful during interview:
+
+- `Cmd/Ctrl + F` → search exact keyword
+- click the index at the top → jump to a topic
+- browser Back → return to previous location
+- use GitHub's outline/table-of-contents control as a second navigation method
+
+If you later want a cleaner phone-first interview interface, this same Markdown can be rendered into your existing web-app — but that is optional, not required for tomorrow's call.
+
+[↑ Back to index](#top)
