@@ -24,6 +24,7 @@
             --ui: "IBM Plex Sans", system-ui, sans-serif;
             --serif: "Source Serif 4", "Iowan Old Style", Georgia, serif;
             --mono: "IBM Plex Mono", ui-monospace, monospace;
+            --jump-h: 7.5rem;
         }
         * { box-sizing: border-box; }
         html { scroll-behavior: smooth; }
@@ -46,40 +47,96 @@
             top: 0;
             z-index: 20;
             backdrop-filter: saturate(1.2) blur(10px);
-            background: rgba(250, 249, 247, 0.92);
+            background: rgba(250, 249, 247, 0.94);
             border-bottom: 1px solid var(--border);
         }
         .topbar-inner {
-            max-width: 56rem;
+            max-width: 72rem;
             margin: 0 auto;
-            padding: 0.85rem 1.25rem;
+            padding: 0.55rem 1rem 0.35rem;
             display: flex;
             align-items: center;
             gap: 1rem;
-            flex-wrap: wrap;
         }
         .brand {
             font-family: var(--ui);
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 600;
             letter-spacing: 0.04em;
             text-transform: uppercase;
             color: var(--ink-muted);
             margin-right: auto;
         }
-        .actions {
-            display: flex;
-            align-items: center;
-            gap: 0.9rem;
-        }
         .actions a {
             font-family: var(--ui);
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 500;
             color: var(--ink-muted);
             text-decoration: none;
         }
         .actions a:hover { color: var(--accent); text-decoration: underline; }
+        .jumpbar {
+            max-width: 72rem;
+            margin: 0 auto;
+            padding: 0 1rem 0.55rem;
+            display: flex;
+            gap: 0.35rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+        }
+        .jump {
+            appearance: none;
+            flex: 0 0 auto;
+            border: 1px solid var(--border);
+            background: #ebe8e2;
+            color: var(--ink-muted);
+            font-family: var(--ui);
+            font-size: 0.72rem;
+            font-weight: 600;
+            line-height: 1;
+            padding: 0.45rem 0.7rem;
+            border-radius: 999px;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .jump:hover {
+            color: var(--ink);
+            background: var(--paper);
+        }
+        .jump[aria-current="true"] {
+            background: var(--paper);
+            color: var(--accent);
+            box-shadow: 0 1px 2px rgba(28, 27, 25, 0.08);
+        }
+        .jump-top {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+        .jump-top:hover,
+        .jump-top[aria-current="true"] {
+            background: #163832;
+            color: #fff;
+        }
+        .fab-top {
+            position: fixed;
+            right: 1.1rem;
+            bottom: 1.1rem;
+            z-index: 30;
+            appearance: none;
+            border: 0;
+            background: var(--accent);
+            color: #fff;
+            font-family: var(--ui);
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.7rem 0.95rem;
+            border-radius: 999px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(28, 27, 25, 0.18);
+        }
+        .fab-top[hidden] { display: none; }
         main {
             max-width: 56rem;
             margin: 0 auto;
@@ -108,7 +165,7 @@
         #doc { max-width: var(--measure); margin: 0 auto; }
         #doc :is(h1, h2, h3, h4),
         #doc a[id] {
-            scroll-margin-top: 5rem;
+            scroll-margin-top: var(--jump-h);
         }
         #doc a[id] { display: block; }
         #doc :is(h1, h2, h3, h4) {
@@ -193,7 +250,9 @@
         }
         @media (max-width: 640px) {
             body { font-size: 1.05rem; line-height: 1.7; }
-            .topbar-inner { padding: 0.75rem 0.9rem; }
+            :root { --jump-h: 8.25rem; }
+            .topbar-inner { padding: 0.5rem 0.75rem 0.25rem; }
+            .jumpbar { padding: 0 0.75rem 0.5rem; }
             main { padding: 1rem 0.75rem 3rem; }
             .sheet { border-radius: 10px; }
         }
@@ -202,11 +261,12 @@
 <body>
     <header class="topbar">
         <div class="topbar-inner">
-            <div class="brand">Plugin Promotions</div>
+            <div class="brand">Jump legend — always on screen</div>
             <div class="actions">
                 <a id="downloadLink" href="" download>Download .md</a>
             </div>
         </div>
+        <nav class="jumpbar" id="jumpbar" aria-label="Jump to section"></nav>
     </header>
 
     <main>
@@ -220,15 +280,94 @@
         </div>
     </main>
 
+    <button type="button" class="fab-top" id="fabTop" hidden>Top</button>
+
     <script>
         (function () {
             const FILE = 'Plugin Promotions \u2014 Interview Cheat Sheet.md';
+            const JUMPS = [
+                { id: 'top', label: 'Top' },
+                { id: 'mental-map', label: 'Map' },
+                { id: 'intro', label: 'Intro' },
+                { id: 'why-plugin', label: 'Why' },
+                { id: 'venueflow', label: 'VenueFlow' },
+                { id: 'architecture-decisions', label: 'Arch' },
+                { id: 'ai-ownership', label: 'AI' },
+                { id: 'flutter-internals', label: 'Flutter' },
+                { id: 'custompaint', label: 'Paint' },
+                { id: 'dart-async', label: 'Async' },
+                { id: 'firebase', label: 'Firebase' },
+                { id: 'realtime-tools', label: 'Realtime' },
+                { id: 'scaling-next', label: 'Next' },
+                { id: 'pluginos', label: 'PluginOS' },
+                { id: 'questions', label: 'Ask' },
+                { id: 'compensation', label: 'Pay' },
+                { id: 'rescue', label: 'Rescue' },
+                { id: 'precall', label: 'Pre-call' }
+            ];
+
             const encoded = encodeURI(FILE);
             const errEl = document.getElementById('err');
             const docEl = document.getElementById('doc');
+            const jumpbar = document.getElementById('jumpbar');
+            const fabTop = document.getElementById('fabTop');
             const downloadLink = document.getElementById('downloadLink');
             downloadLink.href = encoded;
             downloadLink.setAttribute('download', FILE);
+
+            function jumpTo(id) {
+                const el = document.getElementById(id) || document.getElementById('top');
+                if (!el) {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    return;
+                }
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                history.replaceState(null, '', '#' + id);
+            }
+
+            function setCurrent(id) {
+                jumpbar.querySelectorAll('.jump').forEach((btn) => {
+                    btn.setAttribute('aria-current', btn.dataset.id === id ? 'true' : 'false');
+                });
+            }
+
+            JUMPS.forEach((item) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'jump' + (item.id === 'top' ? ' jump-top' : '');
+                btn.dataset.id = item.id;
+                btn.textContent = item.label;
+                btn.addEventListener('click', () => jumpTo(item.id));
+                jumpbar.appendChild(btn);
+            });
+
+            fabTop.addEventListener('click', () => jumpTo('top'));
+            window.addEventListener('scroll', () => {
+                fabTop.hidden = window.scrollY < 500;
+            }, { passive: true });
+
+            function watchSections() {
+                const nodes = JUMPS
+                    .map((item) => document.getElementById(item.id))
+                    .filter(Boolean);
+                if (!nodes.length) return;
+                const observer = new IntersectionObserver((entries) => {
+                    const visible = entries
+                        .filter((e) => e.isIntersecting)
+                        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+                    if (visible[0] && visible[0].target.id) setCurrent(visible[0].target.id);
+                }, { rootMargin: '-20% 0px -70% 0px', threshold: 0 });
+                nodes.forEach((n) => observer.observe(n));
+            }
+
+            docEl.addEventListener('click', (e) => {
+                const a = e.target.closest('a[href^="#"]');
+                if (!a) return;
+                const id = a.getAttribute('href').slice(1);
+                if (!id) return;
+                e.preventDefault();
+                jumpTo(id);
+            });
 
             async function main() {
                 try {
@@ -237,6 +376,9 @@
                     const raw = await res.text();
                     docEl.className = '';
                     docEl.innerHTML = marked.parse(raw);
+                    watchSections();
+                    const hash = (location.hash || '').replace(/^#/, '');
+                    if (hash) jumpTo(hash);
                 } catch (e) {
                     docEl.textContent = '';
                     errEl.hidden = false;
