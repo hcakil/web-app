@@ -116,6 +116,12 @@
             outline-offset: 2px;
         }
 
+        a.segment {
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+
         .actions {
             display: flex;
             align-items: center;
@@ -327,6 +333,7 @@
                 <button class="segment" role="tab" id="tab-eval" data-doc="eval" aria-selected="false" aria-controls="doc">Eval</button>
                 <button class="segment" role="tab" id="tab-audit" data-doc="audit" aria-selected="false" aria-controls="doc">Pro App Audit</button>
                 <button class="segment" role="tab" id="tab-red-alert" data-doc="red-alert" aria-selected="false" aria-controls="doc">Red Alert Plan</button>
+                <a class="segment" href="proxify-hr.html">Proxify HR</a>
             </div>
             <div class="actions">
                 <a id="downloadLink" href="NEW_TURN_CREATION_FLOW.md" download>Download .md</a>
@@ -395,7 +402,7 @@
             const titleEl = document.getElementById('docTitle');
             const fileEl = document.getElementById('docFile');
             const downloadLink = document.getElementById('downloadLink');
-            const tabs = Array.from(document.querySelectorAll('.segment'));
+            const tabs = Array.from(document.querySelectorAll('.segment[data-doc]'));
 
             function extractMermaidBlocks(src) {
                 const bodies = [];
