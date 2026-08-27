@@ -20,7 +20,7 @@
             --link: #1a5f8a;
             --code-bg: #f0eeea;
             --shadow: 0 1px 2px rgba(28, 27, 25, 0.06), 0 8px 24px rgba(28, 27, 25, 0.06);
-            --measure: 78rem;
+            --measure: 52.5rem;
             --ui: "IBM Plex Sans", system-ui, sans-serif;
             --serif: "Source Serif 4", "Iowan Old Style", Georgia, serif;
             --mono: "IBM Plex Mono", ui-monospace, monospace;
@@ -113,16 +113,16 @@
         }
         .fab-top[hidden] { display: none; }
         main {
-            max-width: none;
-            margin: 0;
-            padding: 0.75rem 0.4rem 3rem;
+            max-width: 70rem;
+            margin: 0 auto;
+            padding: 1.5rem 1.25rem 4rem;
         }
         .sheet {
             background: var(--paper);
             border: 1px solid var(--border);
-            border-radius: 10px;
+            border-radius: 14px;
             box-shadow: var(--shadow);
-            padding: 1.15rem 0.85rem 2.25rem;
+            padding: clamp(1.5rem, 4vw, 3rem) clamp(1.25rem, 4vw, 3.25rem);
             min-height: 70vh;
         }
         .doc-meta {
@@ -228,8 +228,8 @@
             :root { --jump-h: 6.5rem; }
             .jumpbar { padding: 0.25rem 0.3rem 0.3rem; }
             .jump { font-size: 0.82rem; padding: 0.24rem 0.5rem; }
-            main { padding: 0.55rem 0.25rem 2.5rem; }
-            .sheet { border-radius: 8px; padding: 0.9rem 0.55rem 1.75rem; }
+            main { padding: 1rem 0.75rem 3rem; }
+            .sheet { border-radius: 10px; }
         }
     </style>
 </head>
