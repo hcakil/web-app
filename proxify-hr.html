@@ -20,7 +20,7 @@
             --link: #1a5f8a;
             --code-bg: #f0eeea;
             --shadow: 0 1px 2px rgba(28, 27, 25, 0.06), 0 8px 24px rgba(28, 27, 25, 0.06);
-            --measure: 52.5rem;
+            --measure: 78rem;
             --ui: "IBM Plex Sans", system-ui, sans-serif;
             --serif: "Source Serif 4", "Iowan Old Style", Georgia, serif;
             --mono: "IBM Plex Mono", ui-monospace, monospace;
@@ -51,12 +51,12 @@
             border-bottom: 1px solid var(--border);
         }
         .jumpbar {
-            max-width: 70rem;
-            margin: 0 auto;
-            padding: 0.35rem 0.85rem 0.4rem;
+            max-width: none;
+            margin: 0;
+            padding: 0.3rem 0.4rem 0.35rem;
             display: flex;
             flex-wrap: wrap;
-            gap: 0.22rem;
+            gap: 0.2rem;
             justify-content: flex-start;
             align-items: center;
         }
@@ -113,16 +113,16 @@
         }
         .fab-top[hidden] { display: none; }
         main {
-            max-width: 70rem;
-            margin: 0 auto;
-            padding: 1.5rem 1.25rem 4rem;
+            max-width: none;
+            margin: 0;
+            padding: 0.75rem 0.4rem 3rem;
         }
         .sheet {
             background: var(--paper);
             border: 1px solid var(--border);
-            border-radius: 14px;
+            border-radius: 10px;
             box-shadow: var(--shadow);
-            padding: clamp(1.5rem, 4vw, 3rem) clamp(1.25rem, 4vw, 3.25rem);
+            padding: 1.15rem 0.85rem 2.25rem;
             min-height: 70vh;
         }
         .doc-meta {
@@ -226,10 +226,10 @@
         @media (max-width: 640px) {
             body { font-size: 1.05rem; line-height: 1.7; }
             :root { --jump-h: 6.5rem; }
-            .jumpbar { padding: 0.3rem 0.65rem 0.35rem; }
+            .jumpbar { padding: 0.25rem 0.3rem 0.3rem; }
             .jump { font-size: 0.82rem; padding: 0.24rem 0.5rem; }
-            main { padding: 1rem 0.75rem 3rem; }
-            .sheet { border-radius: 10px; }
+            main { padding: 0.55rem 0.25rem 2.5rem; }
+            .sheet { border-radius: 8px; padding: 0.9rem 0.55rem 1.75rem; }
         }
     </style>
 </head>
@@ -256,25 +256,57 @@
             const FILE = 'Proxify HR \u2014 Interview Cheat Sheet.md';
             const JUMPS = [
                 { id: 'top', label: 'Top' },
-                { id: 'mental-map', label: '15-second mental map' },
-                { id: 'remember', label: 'What she should remember' },
+                { id: 'mental-map', label: 'Map' },
+                { id: 'remember', label: 'Remember' },
                 { id: 'language', label: 'Language' },
-                { id: 'intro', label: 'Tell me about yourself' },
-                { id: 'why-now', label: 'Why now' },
-                { id: 'why-proxify', label: 'Why Proxify?' },
-                { id: 'skills', label: 'Skills / opportunity' },
-                { id: 'remote', label: 'Remote / contractor' },
-                { id: 'availability', label: 'Availability' },
-                { id: 'rate', label: 'Rate' },
-                { id: 'production', label: 'Production story' },
-                { id: 'ownership', label: 'Ownership / disagreement' },
-                { id: 'ai', label: 'AI' },
-                { id: 'star', label: 'STAR bank' },
-                { id: 'questions', label: 'Questions to ask' },
-                { id: 'hard', label: 'Hard follow-ups' },
-                { id: 'rescue', label: 'Rescue phrases' },
-                { id: 'onescreen', label: 'One-screen cheat sheet' },
-                { id: 'tonight', label: 'Tonight / morning' }
+                { id: 'hr-depth', label: 'HR depth' },
+                { id: 'intro', label: '1 Intro' },
+                { id: 'why-now', label: '2 Why now' },
+                { id: 'why-proxify', label: '3 Why Proxify' },
+                { id: 'opportunity', label: '4 Opportunity' },
+                { id: 'skills', label: '5 Skills' },
+                { id: 'recent-project', label: '5A Project' },
+                { id: 'agile', label: '5B Agile' },
+                { id: 'perf-opt', label: '5C Perf' },
+                { id: 'remote', label: '6 Remote' },
+                { id: 'contractor', label: '7 Contractor' },
+                { id: 'availability', label: '8 Avail' },
+                { id: 'rate', label: '9 Rate' },
+                { id: 'motivation', label: '10 Motive' },
+                { id: 'production', label: '11 Production' },
+                { id: 'ownership', label: '12 Ownership' },
+                { id: 'disagreement', label: '13 Disagree' },
+                { id: 'user-vs-pref', label: '14 User vs pref' },
+                { id: 'ambiguity', label: '15 Ambiguity' },
+                { id: 'pressure', label: '16 Pressure' },
+                { id: 'mistake', label: '17 Mistake' },
+                { id: 'ai', label: '18 AI' },
+                { id: 'ai-wrong', label: '19 AI wrong' },
+                { id: 'quality', label: '20 Quality' },
+                { id: 'beyond-ticket', label: '21 Beyond ticket' },
+                { id: 'performance', label: '22 API' },
+                { id: 'work-style', label: '23 Style' },
+                { id: 'bad-fit', label: '24 Bad fit' },
+                { id: 'why-you', label: '25 Why you' },
+                { id: 'strengths', label: '26 Strengths' },
+                { id: 'weakness', label: '27 Weakness' },
+                { id: 'growth', label: '28 Grow' },
+                { id: 'client', label: '29 Client' },
+                { id: 'stuck', label: '30 Stuck' },
+                { id: 'think', label: '31 Think' },
+                { id: 'rambling', label: '32 Ramble' },
+                { id: 'star', label: 'STAR' },
+                { id: 'formula', label: 'Formula' },
+                { id: 'signals', label: 'Signals' },
+                { id: 'do-not', label: "Don't" },
+                { id: 'questions', label: 'Ask' },
+                { id: 'rapid', label: 'Rapid' },
+                { id: 'hard', label: 'Hard' },
+                { id: 'rescue', label: 'Rescue' },
+                { id: 'tonight', label: 'Tonight' },
+                { id: 'morning', label: 'Morning' },
+                { id: 'day-of', label: 'Day-of' },
+                { id: 'onescreen', label: 'One-screen' }
             ];
 
             const encoded = encodeURI(FILE);

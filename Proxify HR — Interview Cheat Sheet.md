@@ -1,7 +1,7 @@
 # Proxify HR Interview — Study + Cheat Sheet
 
 **Interview:** 27 Aug 2026 — 12:30–13:00 (Europe/Istanbul)  
-**Interviewer:** Derin  
+**Interviewer:** Derin Yurtoren  
 **Stage:** HR / Intro Interview  
 **Technical assessment:** 85%  
 **Primary positioning:** Strong Senior Flutter / Mobile Product Engineer  
@@ -11,34 +11,31 @@
 
 <a id="top"></a>
 
-## 🧭 Clickable Interview Index
+## Clickable index
 
-> **Use this during the call.** Click a topic and jump directly to it.
+Use the sticky pills, or jump here:
 
 | Area | Jump |
 |---|---|
-| 🧠 15-second mental map | [Mental Map](#mental-map) |
-| 🎯 What she should remember | [Remember](#remember) |
-| 🌍 Language | [Language](#language) |
-| 👤 Tell me about yourself | [Intro](#intro) |
-| 🔄 Why now | [Why Now](#why-now) |
-| 🎯 Why Proxify? | [Why Proxify](#why-proxify) |
-| 🛠 Skills / opportunity | [Skills](#skills) |
-| 🌐 Remote / contractor | [Remote](#remote) |
-| 📅 Availability | [Availability](#availability) |
-| 💵 Rate | [Rate](#rate) |
-| 🔥 Production story | [Production](#production) |
-| 🧭 Ownership / disagreement | [Ownership](#ownership) |
-| 🤖 AI | [AI](#ai) |
-| ⭐ STAR bank | [STAR](#star) |
-| 💬 Questions to ask | [Questions](#questions) |
-| 🥊 Hard follow-ups | [Hard](#hard) |
-| 🛟 Rescue phrases | [Rescue](#rescue) |
-| 🔥 One-screen cheat sheet | [One-screen](#onescreen) |
-| ⏱️ Tonight / morning | [Tonight](#tonight) |
+| 15-second mental map | [Map](#mental-map) |
+| What she should remember | [Remember](#remember) |
+| Language / HR depth | [Language](#language) · [HR depth](#hr-depth) |
+| 1 Intro | [Intro](#intro) |
+| 2–4 Why now / Proxify / opportunity | [Why now](#why-now) · [Why Proxify](#why-proxify) · [Opportunity](#opportunity) |
+| 5 Skills / project / Agile / perf | [Skills](#skills) · [Project](#recent-project) · [Agile](#agile) · [Perf](#perf-opt) |
+| 6–10 Remote / contractor / avail / rate / motive | [Remote](#remote) · [Contractor](#contractor) · [Avail](#availability) · [Rate](#rate) · [Motive](#motivation) |
+| 11–13 Production / ownership / disagreement | [Production](#production) · [Ownership](#ownership) · [Disagree](#disagreement) |
+| 14–17 User vs pref / ambiguity / pressure / mistake | [User vs pref](#user-vs-pref) · [Ambiguity](#ambiguity) · [Pressure](#pressure) · [Mistake](#mistake) |
+| 18–19 AI | [AI](#ai) · [AI wrong](#ai-wrong) |
+| 20–22 Quality / beyond ticket / API | [Quality](#quality) · [Beyond ticket](#beyond-ticket) · [API](#performance) |
+| 23–26 Style / bad fit / why you / strengths | [Style](#work-style) · [Bad fit](#bad-fit) · [Why you](#why-you) · [Strengths](#strengths) |
+| 27–29 Weakness / growth / client | [Weakness](#weakness) · [Growth](#growth) · [Client](#client) |
+| 30–32 Stuck / think / ramble | [Stuck](#stuck) · [Think](#think) · [Ramble](#rambling) |
+| STAR / formula / signals | [STAR](#star) · [Formula](#formula) · [Signals](#signals) |
+| Questions / rapid / hard / rescue | [Ask](#questions) · [Rapid](#rapid) · [Hard](#hard) · [Rescue](#rescue) |
+| Tonight / morning / day-of / one-screen | [Tonight](#tonight) · [Morning](#morning) · [Day-of](#day-of) · [One-screen](#onescreen) |
 
 ---
-
 
 <a id="mental-map"></a>
 # 🚨 15-Second Mental Map
@@ -57,10 +54,13 @@ Remember these routes:
 **Long-term remote → Vetted network → Integrated client team → Good fit**
 
 ## PRODUCTION STORY
-**Problem → Evidence → Root cause → Durable fix → Prevention**
+**Unknown failure → Can't reproduce → 3,000+ events → Weak-signal reproduce → Persistence/retry**
+
+## OWNERSHIP
+**Gen1 + Gen2 coexist → CI/deploy → Feature-flag transition → Legacy removal**
 
 ## DISAGREEMENT
-**User outcome → Evidence → Options → Smallest safe solution**
+**API contract/schema → Backend + mobile constraints → Trade-offs → Compatible contract**
 
 ## AMBIGUITY
 **Outcome → Unknowns → Assumptions → Reversible step**
@@ -120,34 +120,79 @@ Just follow her lead.
 
 ---
 
+<a id="hr-depth"></a>
+# 🗣️ HR DEPTH STRATEGY — IMPORTANT UPDATE
+
+Do **not** confuse “concise” with “too brief.”
+
+Proxify's current HR guidance says to prepare a **concise 3–5 minute experience pitch**. A recent 2026 candidate report also warns that giving very short answers without expanding on real past experience can work against you. Older Proxify interview guidance similarly encourages candidates to go deeper and use past examples.
+
+The practical rule for this call:
+
+> **Answer directly → add real context → give one concrete example → explain your action/decision → give the outcome/lesson → stop.**
+
+You are not trying to give one-line answers.
+
+You are also not trying to lecture for five minutes on every question.
+
+### Good target lengths
+
+- **Tell me about yourself / experience pitch:** have **3–5 minutes of material ready**; normally land the first answer around **2–3 minutes** unless Derin clearly wants more.
+- **Normal HR question:** roughly **45–90 seconds**.
+- **Behavioral / STAR question:** roughly **90–150 seconds** when the story deserves detail.
+- **Simple factual question (availability/rate):** **20–45 seconds**, then stop.
+- If Derin asks follow-ups, **go deeper**. That is a good sign.
+
+### “Detailed” does NOT mean
+- repeating yourself;
+- giving every technical implementation detail;
+- telling your entire career chronologically;
+- using five examples for one question.
+
+### “Detailed” DOES mean
+- enough context to understand the problem;
+- what **you** were responsible for;
+- what decision **you** made;
+- one or two concrete technical/product constraints;
+- a defendable result or lesson.
+
+---
+
 <a id="intro"></a>
 # 1. Tell Me About Yourself
 
 ## Memory route
-**Who → Current → Production ownership → Why now / Proxify**
+**Who → Recent environment → 3 ownership themes → Why now → Why Proxify**
 
-## Main answer — 75–100 sec
+## Detailed answer — aim for ~2–3 min, expand only if invited
 
 > I'm a software engineer with around nine years of commercial experience, with the last six-plus years focused mainly on Flutter and mobile product development.
 >
-> For nearly four years I've been working remotely with a US-based product company. My work has gone beyond building screens — I've worked across Flutter, Firebase, APIs, testing, CI/CD, production debugging and reliability.
+> For nearly four years I've been working remotely with a US-based product company on production Flutter web and mobile applications. My role has gone well beyond building UI. I've worked across Firebase and Firestore, TypeScript Cloud Functions, API contracts, automated testing, CI/CD, feature-flag rollouts, monitoring and production reliability.
 >
-> A big part of how I work is owning features end to end. I like understanding the actual product problem, making the technical trade-offs clear, getting the feature into production, and then staying responsible for what happens after release.
+> A few examples describe how I like to work. I helped modernize a core workflow while preserving backward compatibility, and after stabilization that workflow ran for roughly eighteen months without a production incident. I also owned part of a Cloud Functions Gen1-to-Gen2 migration where both generations had to coexist safely during the transition, including the deployment pipeline, gradual frontend rollout and eventual legacy cleanup. And on a mobile upload problem that we initially couldn't even reproduce, I analyzed more than 3,000 production events, isolated a weak-connectivity pattern, reproduced it under controlled conditions and then helped make the flow resilient with local persistence and retry behaviour.
 >
-> My current company is going through an organizational transition, so I'm proactively looking for the right long-term next step. Proxify is interesting to me because it focuses on longer-term international client engagements where engineers become integrated members of the team.
+> So the common theme for me is production ownership. I like understanding the actual problem, working across boundaries when necessary, making trade-offs visible, shipping safely, and staying responsible after release.
+>
+> My current company is going through an organizational transition, so I'm proactively looking for the right long-term next step. Proxify is interesting to me because the model is built around vetted engineers becoming integrated members of international client teams rather than doing short one-off freelance gigs.
 
-## Short backup — 35 sec
+## Compressed backup — ~60–90 sec
 
-> I'm a software engineer with around nine years of experience and more than six years focused on Flutter. Most of my recent work has been production product development across Flutter, Firebase, APIs, testing and reliability in a distributed US-based team. I enjoy owning problems end to end rather than only implementing UI, and I'm now looking for a strong long-term international product environment.
+> I'm a software engineer with around nine years of commercial experience and more than six years focused on Flutter. For nearly four years I've worked remotely with a US-based product company across production Flutter web/mobile, Firebase, APIs, testing, CI/CD and reliability.
+>
+> The kind of work I enjoy most is end-to-end ownership — for example, cloud migration with backward compatibility, production reliability investigations using telemetry, and API decisions that cross mobile/backend boundaries.
+>
+> My current company is going through an organizational transition, so I'm now looking proactively for a strong long-term international product environment. Proxify's integrated client-team model fits how I prefer to work.
 
 ## Do not
 - Tell the whole CV chronologically
 - Start with university
-- List every technology
+- List every technology without context
 - Spend half the answer on AI
-- Speak for 4–5 minutes
+- Force a 5-minute monologue if Derin wants to move on
 
 ---
+
 
 <a id="why-now"></a>
 # 2. Why Are You Looking for a New Opportunity?
@@ -228,6 +273,44 @@ Bluff = NO.
 > I wouldn't claim years of Bloc experience. Most of my earlier production Flutter work used different state-management approaches. I've been deliberately moving toward more explicit state management, and I've been using Cubit to strengthen that area.
 
 This answer is better than pretending.
+
+---
+
+<a id="recent-project"></a>
+# 5A. Can You Describe a Recent Project and Your Responsibilities?
+
+## Case — Core Workflow Modernization
+
+> One long-running area I worked on was modernizing a core operational workflow. The older flow was desktop-oriented and parts of the surrounding system were built around GraphQL and TypeScript, while we were moving the user experience toward responsive Flutter applications backed by Firebase and enterprise-data synchronization.
+>
+> My responsibility wasn't just implementing individual screens. I worked across the Flutter application, integrations, testing and rollout concerns, with backward compatibility being especially important because we couldn't assume every dependent part of the system would move at the same time.
+>
+> What I like about this example is that the work continued after the initial implementation. We stabilized the workflow, monitored it in production and kept ownership through the lifecycle. After stabilization, that core workflow went for roughly eighteen months without a production incident.
+
+### Memory
+**Modernize → Backward compatibility → Integrations/tests → Stabilize → ~18 months incident-free**
+
+---
+
+<a id="agile"></a>
+# 5B. Have You Worked in an Agile Environment?
+
+> Yes. Most of my recent work has been in a distributed product team with iterative delivery, planning, code review, QA and regular coordination with product and engineering.
+>
+> What matters more to me than a specific Agile label is keeping work visible, reducing ambiguity early, breaking risky changes into releasable steps and getting feedback before a large change becomes expensive to reverse.
+
+Keep this practical. Do not recite Scrum definitions unless asked.
+
+---
+
+<a id="perf-opt"></a>
+# 5C. Have You Done Performance Optimization?
+
+> Yes. One example involved a paginated search/API flow where performance wasn't only a Flutter concern. We had to think about backend evaluation, payload size, bounded ranked results, mobile-version compatibility and fallback behaviour together.
+>
+> I try not to start performance work by guessing. I first identify where the cost actually is, then decide whether the right fix belongs in the client, API contract or backend implementation.
+
+If she asks for more, use the **Performance-aware API contracts** story in the disagreement section below.
 
 ---
 
@@ -330,73 +413,129 @@ Avoid:
 <a id="production"></a>
 # 11. Tell Me About a Difficult Production Problem You Solved
 
-## HERO STORY — Connectivity / Upload Reliability
+## HERO STORY — Photo Upload Reliability Under Weak Connectivity
+
+### The important correction
+
+We **did not know it was a network problem at the beginning**.
+
+The strength of this story is:
+
+> **We had a real production symptom → normal environments would not reproduce it → telemetry narrowed the search → controlled field testing finally exposed weak connectivity as the cause.**
 
 ### Memory route
-**Failure → Telemetry → Reproduce → Persistence/retry → Tests/monitoring**
+**Unknown production failure → Can't reproduce → 3,000+ events → Isolate outliers → Weak-signal field test → Local persistence/retry → Prevention**
 
-> One example was an upload flow in a production Flutter application. Users sometimes had unreliable mobile connectivity, and if the connection dropped during the request, an upload could fail or leave the user unsure about what happened.
+### Main answer — detailed STAR version
+
+> One of the more difficult production problems I worked on involved photo uploads in our Flutter mobile application.
 >
-> Instead of assuming it was just an API problem, I started with production telemetry and tried to reproduce the unreliable-network path.
+> The difficult part was that at the beginning we didn't know it was a connectivity problem at all. We had intermittent production failures, but in our normal development and test environments the flow looked healthy and we couldn't reproduce the issue consistently. So there were several possible causes — the application, request handling, backend behaviour, device conditions or the network.
 >
-> We then made the flow more resilient by using local state and connectivity-aware retry behaviour rather than depending on one perfect request. We also added coverage around the failure scenarios.
+> Instead of choosing one theory, I started from production telemetry. I analyzed more than 3,000 upload events and compared the normal cases with the unusual outliers. Most uploads were behaving normally, but the outliers showed a pattern that pushed us toward the connectivity hypothesis.
 >
-> The important lesson for me was that connectivity is never something a mobile product should treat as guaranteed. Pending, failed and completed states need to be explicit, and the system should recover safely.
+> Then we deliberately tested under poor-signal conditions rather than normal Wi-Fi. That was when we were finally able to reproduce a multi-minute weak-connectivity failure and understand what the user could experience in the field.
+>
+> Once we had evidence, we changed the design so a request didn't depend on one perfect network call. We introduced connectivity-aware local persistence and retry behaviour for pending mobile requests, and added coverage and monitoring around the failure path.
+>
+> The lesson for me was not simply “mobile networks are unreliable.” It was that when a production issue cannot be reproduced, you shouldn't force a root-cause theory. Measure the real system first, separate the normal population from the outliers, and then build a controlled reproduction from the evidence.
+
+### Strong short version
+
+> We had intermittent production upload failures that we couldn't reproduce, and initially we didn't know whether the cause was the app, backend or network. I analyzed 3,000-plus production events, isolated a rare outlier pattern and then reproduced the issue in controlled weak-signal testing. That gave us enough evidence to introduce local persistence and connectivity-aware retry for pending requests instead of relying on one perfect API call.
 
 ## What this story proves
-- Production ownership
-- User focus
-- Debugging
-- Reliability
-- Evidence over assumption
+- Production investigation
+- Comfort with ambiguity
+- Telemetry before guessing
+- Controlled reproduction
+- User empathy
+- Reliability engineering
 - Durable fix instead of patch
 
-## If asked for exact metrics
-Only give numbers you can defend.
+## Defendable public numbers
+- **3,000+ upload events analyzed**
+- **Multi-minute weak-signal failure reproduced**
 
-Never invent impact.
+Do not invent:
+- exact failure percentage;
+- exact reduction percentage;
+- revenue/user numbers you cannot defend.
 
 ---
+
 
 <a id="ownership"></a>
 # 12. Give Me an Example of Ownership
 
-> For me, ownership doesn't mean only implementing the ticket that was assigned to me. It means understanding why we're doing it, identifying the risks, getting the feature into production and then being responsible for what happens after release.
->
-> I've had cases where solving the actual problem required looking beyond Flutter — into Firebase data, API behaviour, monitoring or deployment.
->
-> I don't think the user cares which repository the bug belongs to, so I try to follow the problem until we understand the real cause and have a safe result.
+## PRIMARY OWNERSHIP STORY — Cloud Functions Gen1 → Gen2 Migration
 
-## Memory
-**Ticket ≠ ownership. Outcome = ownership.**
+### Memory route
+**Migration need → Gen1 + Gen2 must coexist → CI/deploy breaks → Own transition system → Feature-flag rollout → Legacy removal**
+
+> A good ownership example was our Cloud Functions migration from Gen1 to Gen2.
+>
+> The difficult part was that it couldn't be treated as a simple “rewrite the function and switch it on” task. We still had existing clients and paths that depended on the older generation, so Gen1 and Gen2 had to be able to coexist during the transition. When we introduced that mixed-generation state, our CI/deployment setup also started failing, so the migration needed a real rollout system rather than just new function code.
+>
+> I took ownership of making that transition workable end to end. I worked through the mixed-generation deployment and pipeline problems so both versions could operate during the migration, then we used feature flags on the frontend to transition usage gradually rather than forcing a big-bang cutover.
+>
+> After the new path was stable, the work wasn't finished. I also stayed involved through the removal phase so we could retire the legacy paths and clean up the temporary compatibility pieces.
+>
+> That's how I think about ownership: not “I wrote the Gen2 function,” but “I made the migration safe from introduction, through rollout, to removal.”
+
+### Why this is a strong ownership story
+
+It includes:
+- Backend/cloud work beyond Flutter UI
+- CI/CD
+- Backward compatibility
+- Incremental rollout
+- Feature flags
+- Production transition
+- Cleanup / legacy removal
+- Full lifecycle ownership
+
+### One-line senior summary
+
+> I like owning migrations through the whole lifecycle — coexistence, rollout, verification and cleanup — rather than stopping when the new code compiles.
 
 ---
+
 
 <a id="disagreement"></a>
 # 13. Tell Me About a Disagreement
 
-## Memory route
-**Same goal → Evidence → Trade-offs → Decision**
+## PRIMARY STORY — Performance-Aware API Contract / Backend Schema
 
-> I try not to turn technical disagreement into personal disagreement.
->
-> Usually I first make sure we agree on the user or business outcome. If we disagree about the implementation, I try to make the trade-offs explicit and use telemetry or evidence where possible rather than arguing from preference.
->
-> I've had situations where the technically cleaner solution wasn't necessarily the best immediate product solution. In those cases I'd rather propose a smaller safe option, measure the result, and revisit the decision than block the user outcome because of my preferred architecture.
->
-> I try to disagree on the problem and evidence, not on the person.
+### Memory route
+**Different architecture concerns → End-to-end constraints → Make trade-offs explicit → Contract both sides can support**
 
-## If Derin asks for a concrete story
-Use a real case where:
-1. Product/user need and technical preference differed
-2. You did not make it personal
-3. You used telemetry/evidence
-4. You proposed options
-5. The team reached a better decision
+> One example was around a paginated search flow where the mobile side and backend side had different architectural concerns about the API contract — the schema shape, where ranking or sorting should happen, how much data should be returned, and how we would preserve compatibility with already released mobile versions.
+>
+> I didn't want the discussion to become “frontend preference versus backend preference.” I tried to bring the end-to-end constraints into the same conversation: backend evaluation cost, payload size, bounded ranked results, pagination, version compatibility and what fallback behaviour the client would need.
+>
+> Once we framed it that way, the discussion became much more concrete. We could compare the trade-offs instead of defending a layer. We ended up with a contract that used bounded/paginated results and backend evaluation where it made sense, while still accounting for mobile compatibility and client-side fallback where needed.
+>
+> The important part for me was that I wasn't trying to win an architecture argument. We were trying to choose a contract that worked for the whole system and for users on real app versions.
 
-Do not manufacture details tonight.
+### If asked “How did you handle the person?”
+
+> I kept the disagreement on the constraints and evidence, not on who owned which layer. Once we agreed on the outcome and the constraints, the architecture discussion became much easier.
+
+### What this proves
+- Constructive technical disagreement
+- Cross-team communication
+- API contract ownership
+- Performance awareness
+- Version compatibility
+- Trade-off thinking
+- No “frontend vs backend” tribalism
+
+### Memory
+**Outcome → Constraints → Trade-offs → Contract → Compatibility**
 
 ---
+
 
 <a id="user-vs-pref"></a>
 # 14. What If User Needs Conflict With Your Technical Preference?
@@ -449,32 +588,87 @@ Do not manufacture details tonight.
 <a id="mistake"></a>
 # 17. Tell Me About a Mistake or Failure
 
-Do **not** use a fake weakness.
+## First: what is the interviewer asking?
 
-Use a real story with this structure:
+Yes — this is normally asking for **a mistake, wrong assumption, missed risk or failure that YOU personally owned**.
+
+Do not answer mainly with:
+
+> “Someone else made a mistake and I fixed it.”
+
+A team failure is fine **only if your own part is clear**.
+
+### What counts as a good answer
+It does **not** have to be:
+- a catastrophic outage;
+- a huge financial loss;
+- a dramatic production incident.
+
+A senior answer can be:
+- an assumption you made that turned out to be wrong;
+- a risk you underestimated;
+- an edge case you missed;
+- a design you later changed after better evidence;
+- a verification/process gap you personally owned.
 
 ## Memory route
-**Own → Discover → Communicate → Correct → Prevent**
+**My assumption/decision → Why it was wrong → I owned it → Correct → Change process → Lesson**
 
-### Template
+## Safe opening if you don't have a dramatic failure
 
-> One example was [real situation].
->
-> I realized that [what was wrong / what you missed]. I took ownership of it rather than trying to explain it away.
->
-> I communicated the issue, corrected [specific problem], and then changed [test / monitoring / review / process] so the same class of problem would be less likely to happen again.
->
-> The lesson for me was [specific lesson].
+> I wouldn't describe it as a catastrophic failure, but I can give you an example where my initial assumption was wrong and I had to change the way I approached the problem.
 
-## Good story candidates
-- A production assumption that telemetry disproved
-- Missing an edge case that later became a regression test
-- A technical approach you changed after better information
-- An AI-generated implementation that looked finished but failed real-user verification
+Then tell a **real** example.
 
-The key is **your responsibility and learning**, not how dramatic the failure sounds.
+## Important: do NOT force the connectivity story into this question
+
+At the start of the upload investigation, **not knowing the root cause was not a mistake**. That is normal debugging.
+
+Use connectivity here only if there was a specific assumption or decision **you personally made** that was wrong.
+
+## Candidate A — Missed edge case → regression prevention
+Use this only if you remember a real case.
+
+> I missed an edge case in [real feature]. Once we saw it, I owned the correction, added the missing coverage and changed the test/review path so that class of failure would be caught earlier next time.
+
+Then give the actual details.
+
+## Candidate B — Underestimated migration / rollout risk
+Use only if this is factually true for the Gen1/Gen2 migration.
+
+> I initially underestimated [specific part] of the mixed Gen1/Gen2 transition. Once it became clear that coexistence and deployment were more complex than expected, I changed the approach from a direct migration to an incremental rollout with compatibility and feature flags.
+
+Do not say this unless **you really did underestimate it**.
+
+## Candidate C — Verification gap in an AI-assisted build
+This is useful only if you personally own the gap.
+
+> In an AI-assisted project, the implementation and automated checks looked complete, but real-browser and real-device verification exposed authentication and deployment behaviour that the implementation path had missed. What I changed after that was to make the deployed artifact and real-user environment part of the acceptance criteria, not just build/test success.
+
+This is better for **quality / verification / AI judgement** than for failure if you actually caught it before treating it as done.
+
+## If no strong true story comes to mind during the call
+
+Do **not fabricate one**.
+
+Say:
+
+> The best example I can think of is less about a dramatic failure and more about a wrong assumption I owned...
+
+Then use a real, smaller example.
+
+### The interviewer is scoring
+- honesty;
+- ownership;
+- self-awareness;
+- correction;
+- learning;
+- prevention.
+
+Not how spectacular your mistake was.
 
 ---
+
 
 <a id="ai"></a>
 # 18. How Do You Use AI in Development?
@@ -679,7 +873,7 @@ Do not imply Flutter is temporary.
 
 ---
 
-<a id="if-stuck"></a>
+<a id="stuck"></a>
 # 30. If You Don't Understand a Question
 
 Say:
@@ -694,6 +888,7 @@ Do **not** answer a different question because you were embarrassed to ask.
 
 ---
 
+<a id="think"></a>
 # 31. If You Need 3 Seconds to Think
 
 Use:
@@ -710,6 +905,7 @@ Silence for 2–3 seconds is fine.
 
 ---
 
+<a id="rambling"></a>
 # 32. If You Start Rambling
 
 Use a rescue route.
@@ -746,102 +942,157 @@ Then land the answer.
 <a id="star"></a>
 # ⭐ STAR STORY BANK
 
-Prepare these as **5 bullets each**, not essays.
+Do not memorize eight essays.
+
+Know **5–8 story anchors** and choose the one that matches the question.
+
+For HR, each good STAR answer should have enough detail that Derin can understand:
+- the context;
+- your responsibility;
+- the decision;
+- the result/lesson.
 
 ---
 
-## STAR A — Connectivity / Reliability
+## STAR A — Unknown Upload Failure → Weak Connectivity
 
-**Use for:** difficult problem, user focus, debugging, production ownership
+**Use for:** difficult production problem, debugging, ambiguity, telemetry, user focus, reliability
 
-- **Situation:** Unreliable connectivity affected an upload flow
-- **Task:** Make behaviour safer and clearer for users
-- **Action:** Used telemetry, reproduced failure path, avoided assuming API-only issue
-- **Action:** Added local-state / connectivity-aware recovery behaviour
-- **Result/Lesson:** More resilient flow; connectivity must be treated as unreliable
+- **Situation:** Intermittent photo-upload failures existed in production; normal test/dev environments could not reproduce them
+- **Unknown:** At first we did **not** know whether the cause was app, backend, request handling, device or network
+- **Action:** Analyzed **3,000+ production upload events** and separated normal behaviour from rare outliers
+- **Action:** Used controlled poor-signal/field testing and reproduced a **multi-minute weak-connectivity failure**
+- **Action:** Introduced connectivity-aware local persistence and retry behaviour for pending requests
+- **Result/Lesson:** Measure before guessing; build recovery around real mobile conditions
 
 ### Anchor
-**Telemetry → Reproduce → Persist/retry → Tests → Lesson**
+**Unknown → Can't reproduce → 3,000+ telemetry → Isolate → Weak-signal reproduce → Persist/retry**
 
 ---
 
-## STAR B — API / Performance Ownership
+## STAR B — Performance-Aware API Contract / Backend Schema
 
-**Use for:** technical decision, cross-team work, performance, ownership beyond Flutter
+**Use for:** disagreement, cross-team communication, API design, performance, seniority
 
-- **Situation:** Data flow / pagination / sorting affected performance or UX
-- **Task:** Find the real bottleneck / correct responsibility boundary
-- **Action:** Investigated client + API behaviour
-- **Action:** Evaluated frontend vs backend responsibility based on trade-offs
-- **Result:** Better contract / performance / maintainability
-- **Lesson:** Optimize from evidence, not framework assumptions
+- **Situation:** Paginated/ranked search needed a contract that worked across backend and released mobile clients
+- **Tension:** Different architectural concerns around schema, ranking/sorting, pagination and where responsibilities should live
+- **Action:** Reframed discussion around end-to-end constraints rather than frontend/backend preference
+- **Constraints:** Backend evaluation, payload size, bounded results, mobile-version compatibility, client fallback
+- **Result:** A performance-aware contract both layers could support
+- **Lesson:** Architecture quality is an end-to-end property, not one layer's cleanliness
 
 ### Anchor
-**Measure → Contract → Boundary → Trade-off**
+**Different concerns → Constraints → Trade-offs → Contract → Compatibility**
 
 ---
 
-## STAR C — PagerDuty / Operational Maturity
+## STAR C — Gen1 → Gen2 Cloud Functions Migration
 
-**Use for:** initiative, reliability, beyond-the-ticket improvement
+**Use for:** ownership, migration, CI/CD, backward compatibility, risk management, lifecycle
 
-- **Situation:** Incident response / ownership needed clearer structure
-- **Task:** Improve operational readiness
-- **Action:** Helped establish PagerDuty / escalation workflow
-- **Result:** Clearer and more predictable incident response
-- **Lesson:** Production ownership includes operations
+- **Situation:** Cloud Functions were moving from Gen1 to Gen2
+- **Constraint:** Existing clients/paths meant both generations had to coexist during transition
+- **Problem:** Mixed-generation CI/deployment setup was failing / needed a reliable system
+- **Action:** Took ownership of the coexistence and deployment transition
+- **Action:** Used frontend feature flags for a gradual move to the new path
+- **Action:** Stayed through stabilization and legacy removal
+- **Lesson:** Migration ownership includes rollout and cleanup, not only new code
 
 ### Anchor
-**Problem → Escalation → Ownership → Reliability**
+**Coexist → Fix pipeline → Feature-flag transition → Verify → Remove legacy**
 
 ---
 
-## STAR D — Testing / Regression Prevention
+## STAR D — Core Workflow Modernization
 
-**Use for:** quality, mistake, prevention, maintainability
+**Use for:** long-term ownership, modernization, reliability, backward compatibility
 
-- **Situation:** Risky production behaviour / regression potential
-- **Task:** Make future change safer
-- **Action:** Added automated tests / Gherkin coverage around behaviour
-- **Result:** Better confidence and regression prevention
-- **Lesson:** A durable fix includes proof
+- **Situation:** Desktop-oriented core workflow was being modernized into responsive Flutter experiences
+- **Scope:** Flutter + Firebase + enterprise-data synchronization + surrounding integrations
+- **Constraint:** Backward compatibility during transition
+- **Action:** Worked across implementation, integration, testing and stabilization
+- **Outcome:** Roughly **18 months without a production incident after stabilization**
+- **Lesson:** Modernization is successful when the new system remains stable after launch
 
 ### Anchor
-**Bug/risk → Test → Prevent**
+**Modernize → Compatibility → Integrate/test → Stabilize → ~18 months incident-free**
 
 ---
 
-## STAR E — Disagreement → Evidence
+## STAR E — Testing / Regression Prevention
 
-**Use for:** conflict, communication, user-first decisions
+**Use for:** quality, prevention, maintainability, mistake/failure follow-up
 
-- **Situation:** Technical preference and product/user need differed
-- **Task:** Reach a safe decision without personal conflict
-- **Action:** Reframed around user outcome
-- **Action:** Used telemetry/evidence and gave options
-- **Result:** Smaller / safer / better-informed decision
-- **Lesson:** Disagree on evidence, not people
+- **Situation:** Production changes needed stronger regression protection
+- **Action:** Used the test level appropriate to the failure mode — unit/widget, Gherkin/E2E, integration or Jest
+- **Result:** Better confidence around risky changes and production fixes
+- **Lesson:** A durable fix should leave behind proof
 
 ### Anchor
-**Outcome → Evidence → Options → Decision**
+**Risk/failure mode → Right test level → Prevent recurrence**
 
 ---
 
-## STAR F — Team Transition / Ambiguity
+## STAR F — PagerDuty / Operational Maturity
 
-**Use for:** adaptability, professionalism, independence
+**Use for:** initiative, operational ownership, beyond-the-ticket improvement
 
-- **Situation:** Team/company structure changing
-- **Task:** Keep delivery and ownership stable
-- **Action:** Continued maintaining / delivering across responsibilities
-- **Action:** Communicated clearly despite uncertainty
-- **Result:** Professional continuity during transition
-- **Lesson:** Uncertainty does not remove ownership
+- **Situation:** Incident response/escalation needed a clearer operating model
+- **Action:** Helped establish PagerDuty escalation and L1 on-call practices
+- **Result:** Clearer and more predictable operational ownership
+- **Lesson:** Production engineering includes response and observability, not just feature delivery
 
 ### Anchor
-**Change → Stay professional → Keep delivery visible**
+**Need → Escalation system → Clear ownership → Reliability**
 
 ---
+
+## STAR G — Embedded Analytics Across Technology Boundaries
+
+**Use for:** adaptability, working beyond Flutter, cross-stack problem solving, learning
+
+- **Situation:** Product needed budgeting/projections plus embedded analytics inside Flutter Web
+- **Constraint:** Power BI integration crossed Flutter Web, JavaScript browser integration and secure backend token concerns
+- **Action:** Built the product-side budgeting flow and embedded Power BI through a custom JavaScript Web Component
+- **Action:** Used a scoped-token Cloud Function rather than pushing sensitive token responsibility into the UI
+- **Result:** Analytics became part of the Flutter Web product flow
+- **Lesson:** Follow the product problem across technology boundaries instead of treating Flutter as an isolated layer
+
+### Anchor
+**Product need → Flutter Web boundary → JS Web Component → Cloud Function token → Integrated result**
+
+---
+
+## STAR H — Marketplace Pricing Across Products
+
+**Use for:** multi-repository ownership, feature flags, rollout risk, coordination
+
+- **Situation:** Provider-specific pricing had to remain coherent across Flutter web, shared packages and mobile
+- **Constraint:** Multiple products/repos could not safely switch in one uncontrolled step
+- **Action:** Coordinated the change across boundaries
+- **Action:** Used feature flags and integration tests to manage rollout risk
+- **Result/Lesson:** Cross-product changes need explicit transition mechanics, not just synchronized commits
+
+### Anchor
+**Cross-repo change → Feature flag → Integration tests → Controlled rollout**
+
+---
+
+## Which five should I know best?
+
+If you only have time for five:
+
+1. **Connectivity / 3,000+ events** — difficult production problem
+2. **Gen1 → Gen2** — ownership
+3. **API contract** — disagreement
+4. **Core modernization** — long-term impact / project responsibility
+5. **Testing or PagerDuty** — quality / initiative
+
+Keep **Embedded Analytics** as a strong sixth story for:
+> “Tell me about a time you worked outside your main stack.”
+
+---
+
 
 <a id="formula"></a>
 # 🧠 Behavioral Answer Formula
@@ -854,11 +1105,15 @@ For almost every HR question:
 4. State **result or lesson**
 5. Stop
 
-Target most answers:
-- **30–60 sec**
-- Hero story: **60–90 sec**
+Target answer depth:
+- **Normal HR answer:** usually **45–90 sec**
+- **Behavioral / STAR:** usually **90–150 sec**
+- **Experience pitch:** have **3–5 min of material ready**, but follow Derin's pacing
+- **Rate / availability:** usually **20–45 sec**
 
-Do not give a 4-minute lecture unless asked.
+The rule is **complete, not endless**.
+
+Do not stop at a vague one-liner, but do not repeat the same point three different ways.
 
 ---
 
@@ -936,27 +1191,29 @@ Try answering each **without reading the full answer**.
 3. Why Proxify?
 4. What kind of opportunity do you want?
 5. Strongest technical skills?
-6. How do you work remotely?
-7. Comfortable as contractor?
-8. Availability?
-9. Rate?
-10. What motivates you?
-11. Difficult production problem?
-12. Example of ownership?
-13. Disagreement?
-14. User need vs technical preference?
-15. Ambiguous requirements?
-16. Prioritization under pressure?
-17. Mistake/failure?
-18. AI workflow?
-19. Quality?
-20. Why should a client choose you?
-21. Strengths?
-22. Weakness?
-23. Where do you want to grow?
-24. What team is a bad fit?
-25. Questions for me?
-
+6. Describe a recent project and your responsibilities.
+7. Have you worked in Agile?
+8. Have you done performance optimization?
+9. How do you work remotely?
+10. Comfortable as contractor?
+11. Availability?
+12. Rate?
+13. What motivates you?
+14. Difficult production problem?
+15. Example of ownership?
+16. Disagreement?
+17. User need vs technical preference?
+18. Ambiguous requirements?
+19. Prioritization under pressure?
+20. Mistake/failure?
+21. AI workflow?
+22. Quality?
+23. Why should a client choose you?
+24. Strengths?
+25. Weakness?
+26. Where do you want to grow?
+27. What team is a bad fit?
+28. Questions for me?
 ---
 
 <a id="hard"></a>
@@ -1105,10 +1362,13 @@ No 2-hour cram immediately before the interview.
 **Org transition → still contributing → proactive**
 
 ## STRONGEST STORY
-**Connectivity → telemetry → reproduce → local persistence/retry → tests → lesson**
+**Unknown upload failure → couldn't reproduce → 3,000+ events → weak-signal reproduce → persistence/retry**
+
+## OWNERSHIP
+**Gen1 + Gen2 coexist → CI/deploy → feature flags → gradual transition → legacy removal**
 
 ## CONFLICT
-**User outcome → evidence → options → smallest safe solution**
+**API contract/schema → backend + mobile constraints → trade-offs → compatible contract**
 
 ## AMBIGUITY
 **Outcome → unknowns → assumptions → reversible step**
@@ -1135,6 +1395,32 @@ No 2-hour cram immediately before the interview.
 ## FINAL MENTAL MODEL
 **Derin does not need to believe I know every Flutter API.  
 She needs to believe Proxify can confidently put me in front of a client.**
+
+---
+
+<a id="source"></a>
+# 🔎 Source / Evidence Notes for This Version
+
+This cheat sheet intentionally separates:
+- **your real work examples** from your public portfolio;
+- **current official Proxify HR guidance**;
+- **anecdotal candidate reports**.
+
+Current Proxify guidance:
+- HR interview focuses on soft skills, motivation, communication, technical-skill overview, availability and rate alignment.
+- Prepare a **concise 3–5 minute experience pitch**.
+- Treat the call like a client meeting.
+
+Recent candidate reports are **anecdotal**, not official rules, but one August 2026 report specifically warns against being too terse and recommends expanding answers with real past examples and good energy.
+
+Your public portfolio evidence used here:
+- **3,000+** photo-upload events analyzed
+- controlled reproduction of a **multi-minute weak-signal failure**
+- Cloud Functions **Gen2 migration / mixed-generation transition**
+- **~18 months incident-free** after core-workflow stabilization
+- performance-aware paginated API contracts
+- Power BI / Flutter Web / JavaScript Web Component / Cloud Function integration
+- feature-flagged cross-product pricing rollout
 
 ---
 
