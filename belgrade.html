@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Belgrade Monumental — Interview Prep</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+    <style>
+        :root {
+            --bg: #eceae6;
+            --paper: #faf9f7;
+            --ink: #1c1b19;
+            --ink-muted: #5c5954;
+            --border: #d9d5ce;
+            --accent: #1f4e46;
+            --accent-soft: #e4efec;
+            --link: #1a5f8a;
+            --code-bg: #f0eeea;
+            --shadow: 0 1px 2px rgba(28, 27, 25, 0.06), 0 8px 24px rgba(28, 27, 25, 0.06);
+            --measure: 52.5rem;
+            --ui: "IBM Plex Sans", system-ui, sans-serif;
+            --serif: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+            --mono: "IBM Plex Mono", ui-monospace, monospace;
+            --jump-h: 5.5rem;
+        }
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: var(--serif);
+            font-size: 1.125rem;
+            line-height: 1.75;
+            color: var(--ink);
+            background:
+                radial-gradient(1200px 600px at 10% -10%, #e7ebe8 0%, transparent 55%),
+                radial-gradient(900px 500px at 100% 0%, #e9e4dc 0%, transparent 50%),
+                var(--bg);
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+        }
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            backdrop-filter: saturate(1.2) blur(10px);
+            background: rgba(250, 249, 247, 0.94);
+            border-bottom: 1px solid var(--border);
+        }
+        .jumpbar {
+            max-width: none;
+            margin: 0;
+            padding: 0.3rem 0.4rem 0.35rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.2rem;
+            justify-content: flex-start;
+            align-items: center;
+        }
+        .jump {
+            appearance: none;
+            flex: 0 0 auto;
+            border: 1px solid var(--border);
+            background: #ebe8e2;
+            color: var(--ink-muted);
+            font-family: var(--ui);
+            font-size: 0.9rem;
+            font-weight: 600;
+            line-height: 1.15;
+            padding: 0.28rem 0.58rem;
+            border-radius: 999px;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .jump:hover {
+            color: var(--ink);
+            background: var(--paper);
+        }
+        .jump[aria-current="true"] {
+            background: var(--paper);
+            color: var(--accent);
+            box-shadow: 0 1px 2px rgba(28, 27, 25, 0.08);
+        }
+        .jump-top {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+        .jump-top:hover,
+        .jump-top[aria-current="true"] {
+            background: #163832;
+            color: #fff;
+        }
+        .fab-top {
+            position: fixed;
+            right: 1.1rem;
+            bottom: 1.1rem;
+            z-index: 30;
+            appearance: none;
+            border: 0;
+            background: var(--accent);
+            color: #fff;
+            font-family: var(--ui);
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.7rem 0.95rem;
+            border-radius: 999px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(28, 27, 25, 0.18);
+        }
+        .fab-top[hidden] { display: none; }
+        main {
+            max-width: 70rem;
+            margin: 0 auto;
+            padding: 1.5rem 1.25rem 4rem;
+        }
+        .sheet {
+            background: var(--paper);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+            padding: clamp(1.5rem, 4vw, 3rem) clamp(1.25rem, 4vw, 3.25rem);
+            min-height: 70vh;
+        }
+        .doc-meta {
+            font-family: var(--ui);
+            font-size: 0.8rem;
+            color: var(--ink-muted);
+            margin: 0 0 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        #doc { max-width: var(--measure); margin: 0 auto; }
+        #doc :is(h1, h2, h3, h4),
+        #doc a[id] {
+            scroll-margin-top: var(--jump-h);
+        }
+        #doc a[id] { display: block; }
+        #doc :is(h1, h2, h3, h4) {
+            font-family: var(--serif);
+            font-weight: 700;
+            line-height: 1.25;
+            letter-spacing: -0.01em;
+            color: var(--ink);
+        }
+        #doc h1 {
+            font-size: clamp(1.7rem, 3vw, 2.15rem);
+            margin: 0 0 0.85em;
+            padding-bottom: 0.35em;
+            border-bottom: 1px solid var(--border);
+        }
+        #doc h2 { font-size: 1.4rem; margin: 1.8em 0 0.55em; }
+        #doc h3 { font-size: 1.18rem; margin: 1.45em 0 0.4em; }
+        #doc h4 { font-size: 1.05rem; margin: 1.25em 0 0.35em; }
+        #doc p { margin: 0.85em 0; }
+        #doc a { color: var(--link); text-underline-offset: 2px; }
+        #doc strong { font-weight: 700; }
+        #doc blockquote {
+            margin: 1.1em 0;
+            padding: 0.15em 0 0.15em 1em;
+            color: var(--ink-muted);
+            border-left: 3px solid var(--accent);
+        }
+        #doc ul, #doc ol { margin: 0.85em 0; padding-left: 1.35em; }
+        #doc li { margin: 0.35em 0; }
+        #doc li::marker { color: var(--ink-muted); }
+        #doc hr { border: none; border-top: 1px solid var(--border); margin: 2.2em 0; }
+        #doc table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--ui);
+            font-size: 0.92rem;
+            line-height: 1.45;
+            margin: 1.2em 0;
+            display: block;
+            overflow-x: auto;
+        }
+        #doc th, #doc td {
+            border: 1px solid var(--border);
+            padding: 0.55rem 0.75rem;
+            text-align: left;
+            vertical-align: top;
+        }
+        #doc th { background: var(--code-bg); font-weight: 600; }
+        #doc pre {
+            font-family: var(--mono);
+            font-size: 0.82rem;
+            line-height: 1.55;
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.95rem 1.05rem;
+            overflow-x: auto;
+            margin: 1.1em 0;
+        }
+        #doc code { font-family: var(--mono); font-size: 0.86em; }
+        #doc :not(pre) > code {
+            background: var(--accent-soft);
+            color: var(--accent);
+            padding: 0.12em 0.38em;
+            border-radius: 4px;
+        }
+        #err {
+            margin: 0 0 1rem;
+            padding: 0.9rem 1rem;
+            background: #f8ecec;
+            border: 1px solid #e2b6b6;
+            border-radius: 8px;
+            color: #7a1f1f;
+            font-family: var(--ui);
+            font-size: 0.95rem;
+        }
+        #err[hidden] { display: none; }
+        .loading {
+            font-family: var(--ui);
+            color: var(--ink-muted);
+            font-size: 0.95rem;
+        }
+        @media (max-width: 640px) {
+            body { font-size: 1.05rem; line-height: 1.7; }
+            :root { --jump-h: 6.5rem; }
+            .jumpbar { padding: 0.25rem 0.3rem 0.3rem; }
+            .jump { font-size: 0.82rem; padding: 0.24rem 0.5rem; }
+            main { padding: 1rem 0.75rem 3rem; }
+            .sheet { border-radius: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <nav class="jumpbar" id="jumpbar" aria-label="Jump to section"></nav>
+    </header>
+
+    <main>
+        <div class="sheet">
+            <p class="doc-meta">
+                <span>EasyInterview Prep</span>
+                <span>2 Sep 2026 — 09:30 · Flutter rewrite</span>
+            </p>
+            <div id="err" hidden></div>
+            <article id="doc" class="loading">Loading…</article>
+        </div>
+    </main>
+
+    <button type="button" class="fab-top" id="fabTop" hidden>Top</button>
+
+    <script>
+        (function () {
+            const FILE = 'Belgrade Monumental \u2014 Interview Prep.md';
+            const JUMPS = [
+                { id: 'top', label: 'Top' },
+                { id: 'role', label: 'Role' },
+                { id: 'product', label: 'Product' },
+                { id: 'intro', label: 'Intro' },
+                { id: 'q1', label: 'Q1 Migrate' },
+                { id: 'q2', label: 'Q2 Parity' },
+                { id: 'q3', label: 'Q3 Arch' },
+                { id: 'q4', label: 'Q4 Offline' },
+                { id: 'q5', label: 'Q5 Maps' },
+                { id: 'q6', label: 'Q6 Production' },
+                { id: 'q7', label: 'Q7 Perf' },
+                { id: 'q8', label: 'Q8 AI faster' },
+                { id: 'q9', label: 'Q9 Validate AI' },
+                { id: 'q10', label: 'Q10 Release' },
+                { id: 'q11', label: 'Q11 Native vs Flutter' },
+                { id: 'q12', label: 'Q12 First week' },
+                { id: 'q13', label: 'Q13 Scope' },
+                { id: 'q14', label: 'Q14 Legacy API' },
+                { id: 'q15', label: 'Q15 Debug' },
+                { id: 'live-coding', label: 'Live coding' },
+                { id: 'dart', label: 'Dart' },
+                { id: 'flutter', label: 'Flutter' },
+                { id: 'system-design', label: 'Design' },
+                { id: 'ai-workflow', label: 'AI workflow' },
+                { id: 'stories', label: 'Stories' },
+                { id: 'story-a', label: 'Story A' },
+                { id: 'story-b', label: 'Story B' },
+                { id: 'story-c', label: 'Story C' },
+                { id: 'truth', label: 'Truth' },
+                { id: 'questions', label: 'Ask' },
+                { id: 'morning', label: 'Morning' },
+                { id: 'behavior', label: 'Behavior' },
+                { id: 'rapid', label: 'Rapid' },
+                { id: 'final', label: 'Final' }
+            ];
+
+            const encoded = encodeURI(FILE);
+            const errEl = document.getElementById('err');
+            const docEl = document.getElementById('doc');
+            const jumpbar = document.getElementById('jumpbar');
+            const fabTop = document.getElementById('fabTop');
+
+            function syncJumpHeight() {
+                const bar = document.querySelector('.topbar');
+                if (!bar) return;
+                document.documentElement.style.setProperty('--jump-h', (bar.offsetHeight + 12) + 'px');
+            }
+
+            function jumpTo(id) {
+                const el = document.getElementById(id) || document.getElementById('top');
+                if (!el) {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    return;
+                }
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                history.replaceState(null, '', '#' + id);
+            }
+
+            function setCurrent(id) {
+                jumpbar.querySelectorAll('.jump').forEach((btn) => {
+                    btn.setAttribute('aria-current', btn.dataset.id === id ? 'true' : 'false');
+                });
+            }
+
+            JUMPS.forEach((item) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'jump' + (item.id === 'top' ? ' jump-top' : '');
+                btn.dataset.id = item.id;
+                btn.textContent = item.label;
+                btn.addEventListener('click', () => jumpTo(item.id));
+                jumpbar.appendChild(btn);
+            });
+            syncJumpHeight();
+            window.addEventListener('resize', syncJumpHeight);
+
+            fabTop.addEventListener('click', () => jumpTo('top'));
+            window.addEventListener('scroll', () => {
+                fabTop.hidden = window.scrollY < 500;
+            }, { passive: true });
+
+            function watchSections() {
+                const nodes = JUMPS
+                    .map((item) => document.getElementById(item.id))
+                    .filter(Boolean);
+                if (!nodes.length) return;
+                const observer = new IntersectionObserver((entries) => {
+                    const visible = entries
+                        .filter((e) => e.isIntersecting)
+                        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+                    if (visible[0] && visible[0].target.id) setCurrent(visible[0].target.id);
+                }, { rootMargin: '-20% 0px -70% 0px', threshold: 0 });
+                nodes.forEach((n) => observer.observe(n));
+            }
+
+            docEl.addEventListener('click', (e) => {
+                const a = e.target.closest('a[href^="#"]');
+                if (!a) return;
+                const id = a.getAttribute('href').slice(1);
+                if (!id) return;
+                e.preventDefault();
+                jumpTo(id);
+            });
+
+            async function main() {
+                try {
+                    const res = await fetch(encoded, { cache: 'no-cache' });
+                    if (!res.ok) throw new Error('Could not load cheat sheet (' + res.status + ').');
+                    const raw = await res.text();
+                    docEl.className = '';
+                    docEl.innerHTML = marked.parse(raw);
+                    watchSections();
+                    const hash = (location.hash || '').replace(/^#/, '');
+                    if (hash) jumpTo(hash);
+                } catch (e) {
+                    docEl.textContent = '';
+                    errEl.hidden = false;
+                    errEl.textContent = e.message || String(e);
+                }
+            }
+            main();
+        })();
+    </script>
+</body>
+</html>
