@@ -330,11 +330,8 @@
                 <button class="segment" role="tab" id="tab-plan" data-doc="plan" aria-selected="true" aria-controls="doc">August Plan</button>
                 <button class="segment" role="tab" id="tab-sprint" data-doc="sprint" aria-selected="false" aria-controls="doc">10–16 Aug</button>
                 <button class="segment" role="tab" id="tab-week" data-doc="week" aria-selected="false" aria-controls="doc">24–30 Plan</button>
-                <button class="segment" role="tab" id="tab-eval" data-doc="eval" aria-selected="false" aria-controls="doc">Eval</button>
-                <button class="segment" role="tab" id="tab-audit" data-doc="audit" aria-selected="false" aria-controls="doc">Pro App Audit</button>
                 <button class="segment" role="tab" id="tab-red-alert" data-doc="red-alert" aria-selected="false" aria-controls="doc">Red Alert Plan</button>
-                <a class="segment" href="proxify-hr.html">Proxify HR</a>
-                <a class="segment" href="belgrade.html">Belgrade</a>
+                <a class="segment" href="plugin-qa.html">Plugin Q&amp;A</a>
                 <a class="segment" href="thesis.html">Thesis</a>
             </div>
             <div class="actions">
@@ -374,18 +371,6 @@
                     title: '24–30 August Plan',
                     file: 'week_24_30_plan.md',
                     tabId: 'tab-week'
-                },
-                eval: {
-                    id: 'eval',
-                    title: '24–30 Evaluation',
-                    file: 'week_24_30_eval.md',
-                    tabId: 'tab-eval'
-                },
-                audit: {
-                    id: 'audit',
-                    title: 'Pro App Audit',
-                    file: 'ProApp_Audit.md',
-                    tabId: 'tab-audit'
                 },
                 'red-alert': {
                     id: 'red-alert',
@@ -495,8 +480,6 @@
                 const hash = (location.hash || '').replace(/^#/, '');
                 if (hash === 'sprint' || hash === 'august-10-16' || hash === '10-16-august') return 'sprint';
                 if (hash === 'week' || hash === '24-30' || hash === '24-30-plan') return 'week';
-                if (hash === 'eval' || hash === 'analysis' || hash === '24-30-eval') return 'eval';
-                if (hash === 'audit' || hash === 'pro-app-audit') return 'audit';
                 if (hash === 'red-alert' || hash === 'redalert' || hash === 'red') return 'red-alert';
                 if (hash === 'plan' || hash === 'august-plan' || hash === 'turn') return 'plan';
                 return 'plan';
