@@ -255,29 +255,34 @@ Puanlama eksenleri:
 **Tags:** `must` `behavioral` `ownership`  
 **Target:** 75–90 seconds
 
-### Answer structure
+Sumesh görüşmesinde de kullandığın hikâye. Portfolio: core workflow modernization.
 
-Use one real story:
+### Memory route
 
-1. User/business problem.
-2. Your responsibility.
-3. Key decision or tradeoff.
-4. Work across Flutter/API/web/testing/release.
-5. Production result and what you learned.
+**Desktop workflow → Flutter/Firebase field path → Compatibility → Stabilize → 18 months**
 
-### Safe opening
+### Strong sample answer
 
-> One example was a production workflow where the mobile experience depended on both API behavior and unreliable connectivity. I owned the problem beyond the UI: I reproduced the failure conditions, checked the data flow, aligned the client behavior with the API contract, added safer state handling and worked with QA on the critical scenarios.
+> One example was modernizing a core production workflow that had been desktop-oriented. Field users needed to complete the same work on phones, so I helped replace a GraphQL and TypeScript desktop flow with a responsive Flutter experience backed by Firebase and enterprise-data synchronization.
+>
+> I didn't treat it as a screen rewrite. I stayed with the problem through architecture, client and API behavior, rollout, and then after release. The important constraint was backward compatibility: the new path had to work without breaking the existing operational workflow.
+>
+> After it stabilized, that workflow ran for roughly eighteen months without a production incident. That's what I mean by owning something end to end: not stopping when the first version ships, but remaining responsible until the new path is actually reliable in production.
 
-### Personalize before use
+### Why this is the right card
 
-Add the exact feature, your exact action and one defensible result. Do not memorize this card until those three items are filled from the real project.
+- Product outcome, not a ticket.
+- Flutter + Firebase + API/sync, not only UI.
+- Defensible result: **~18 months incident-free** after stabilization.
+- Photo-upload'u burada kullanma — o Q15.
 
 ### Likely follow-ups
 
 - What decision was specifically yours?
 - What went wrong?
 - How did you know it worked?
+
+Backup if they already heard this one: Cloud Functions Gen1 → Gen2 coexistence, feature-flag rollout, then legacy cleanup.
 
 ---
 
@@ -324,20 +329,42 @@ Add the exact feature, your exact action and one defensible result. Do not memor
 **Tags:** `behavioral` `collaboration` `seniority`  
 **Target:** 60–90 seconds
 
-### Answer map
+RentReady app. Öneri: pagination ekleyelim, loading time düşer. Karar: önce ölç, sonra gerekirse yap.
 
-- Explain the actual disagreement, not personality conflict.
-- Move from preference to evidence, telemetry or user outcome.
-- State what changed and why.
-- Show low ego.
+### Memory route
 
-### Safe phrasing
+**Paginate to go faster → Telemetry first → 1-week window already exists → Job profiles per property are bounded → Loading is fine → Don't build it**
 
-> I try to separate a technical preference from the outcome we are trying to protect. In one case, we had different assumptions about where a reliability problem originated. Instead of continuing from intuition, I added visibility into the real behavior and compared the failure paths. The evidence changed the conversation, and we chose the simpler solution that protected the user's workflow.
+### Strong sample answer
 
-### Personalize before use
+> A useful example was in the RentReady mobile app, when the suggestion was to add pagination to reduce loading time.
+>
+> I didn't want to jump straight into a new loading architecture. The list was already scoped to a one-week window, so before adding complexity I wanted evidence. We added telemetry first and looked at real property-level job-profile counts over that week.
+>
+> What we saw was that the number of job profiles per property that actually filled a page was limited, and the loading times were not bad enough to justify pagination. So we decided not to build it.
+>
+> The disagreement wasn't personal. One instinct was “paginate to make it faster.” Mine was “measure the real dataset first.” The telemetry let us keep the simpler system.
 
-Insert the real system, signals collected and final decision.
+### Coaching notes
+
+- Instinct: pagination = faster loading.
+- First move: telemetry, not a new paging layer.
+- Product limit was already **1 week**.
+- In that week, job-profile count **per property** rarely exceeded an empty page.
+- Loading times were acceptable, so pagination would have been complexity without a user win.
+- Signal: measure before architecture; low ego if the data kills your (or someone else's) idea.
+
+### If they ask “How did you handle the person?”
+
+> I kept it on the evidence. Once we had the one-week property-level counts and the actual load times, the decision was obvious. We weren't trying to win an architecture argument.
+
+### Likely follow-ups
+
+- What if the dataset grows later?
+- Would you still refuse pagination at larger scale?
+- What telemetry did you add?
+
+If the dataset grows: revisit. Pagination becomes justified when the measured window and payload actually hurt. We just refused to build it on an assumption.
 
 ---
 
@@ -348,14 +375,19 @@ Insert the real system, signals collected and final decision.
 **Tags:** `behavioral` `product` `low-ego`  
 **Target:** 60–75 seconds
 
-### Strong structure
+Q12 pagination hikâyesini burada tekrar etme. O kart disagreement. Bu kart: senin varsayımın data ile değişti.
 
-> Initially, I believed **[assumption]**. We observed **[telemetry/user behavior]**, which showed **[contradiction]**. I changed **[decision]** because protecting **[user/business outcome]** was more important than defending the original approach. After the change, **[defensible result]**.
+Photo-upload da uyuyor: başta app/backend sandık, telemetry connectivity gösterdi.
+
+### Strong sample answer
+
+> Initially I treated the upload failures as a possible application or backend defect, because we couldn't reproduce them in normal environments. The telemetry over more than 3,000 events, then the weak-signal field test, showed it was connectivity. I changed the design from “make this request succeed once” to local persistence and retry, because losing the user's photo was worse than defending the original request path.
 
 ### Avoid
 
 - A fake weakness that makes you look perfect.
 - Saying “the data proved I was right.”
+- Retelling Q12 pagination here.
 
 ---
 
@@ -379,21 +411,40 @@ Insert the real system, signals collected and final decision.
 **Tags:** `must` `behavioral` `reliability`  
 **Target:** 75–90 seconds
 
-### Answer map
+Portfolio + Sumesh intro hikâyesi: weak connectivity → photo upload.
 
-- User impact first.
-- Contain or provide fallback.
-- Observe rather than guess.
-- Find root cause.
-- Fix, verify and prevent recurrence.
+### Memory route
 
-### Safe opening
+**Unknown upload failures → Can't reproduce → 3,000+ events → Weak-signal field test → Local persistence / retry → Prevention**
 
-> A useful example involved a workflow that behaved differently under unstable connectivity. The first priority was protecting the user's work, so we looked at preserving local state and making retries safe. Then I used observed behavior rather than assumptions to separate client, network and backend causes. After fixing the flow, we added coverage and better visibility so the same class of failure would be easier to detect.
+### Strong sample answer
 
-### Personalize before use
+> One of the more difficult production problems I worked on involved photo uploads in our Flutter mobile app.
+>
+> The hard part was that at the beginning we didn't know it was a connectivity problem. We had intermittent production failures, but in normal development and test environments the flow looked healthy, so we couldn't reproduce it consistently. The cause could have been the app, request handling, backend behaviour, the device or the network.
+>
+> Instead of picking a theory, I started from production telemetry. I analyzed more than 3,000 upload events and compared the normal cases with the outliers. That pattern pushed us toward connectivity. Then we tested under poor-signal conditions rather than normal Wi-Fi and reproduced a multi-minute weak-connectivity failure.
+>
+> Once we had evidence, we stopped depending on one perfect network call. We introduced connectivity-aware local persistence and retry for pending uploads, plus coverage and monitoring around the failure path. The user should not lose the photo because the signal dropped mid-request.
+>
+> The lesson was not simply “mobile networks are unreliable.” When you cannot reproduce a production issue, don't force a root cause. Measure first, separate the normal population from the outliers, then build a controlled reproduction from the evidence.
 
-Add the specific workflow and exact prevention step.
+### Defendable numbers
+
+- **3,000+** upload events analyzed
+- **Multi-minute** weak-signal failure reproduced
+
+Do not invent a failure-rate or reduction percentage.
+
+### If they ask “Why not just increase the timeout?”
+
+> Because connectivity can disappear entirely. A longer timeout would make the UI look stuck without making the upload recoverable.
+
+### Likely follow-ups
+
+- What did the user see before the fix?
+- How did you avoid duplicate uploads on retry?
+- What monitoring did you add?
 
 ---
 

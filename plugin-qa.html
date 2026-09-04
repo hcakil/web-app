@@ -94,6 +94,9 @@
             background: #163832;
             color: #fff;
         }
+        .jump-toggle {
+            display: none;
+        }
         .fab-top {
             position: fixed;
             right: 1.1rem;
@@ -228,14 +231,34 @@
             :root { --jump-h: 6.5rem; }
             .jumpbar { padding: 0.25rem 0.3rem 0.3rem; }
             .jump { font-size: 0.82rem; padding: 0.24rem 0.5rem; }
+            .jump-toggle {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.28rem;
+                background: var(--accent);
+                color: #fff;
+                border-color: var(--accent);
+            }
+            .jump-toggle:hover,
+            .jump-toggle[aria-current="true"] {
+                background: #163832;
+                color: #fff;
+            }
+            .topbar.is-collapsed .jump:not(.jump-toggle) { display: none; }
+            .topbar.is-collapsed .jumpbar {
+                flex-wrap: nowrap;
+                justify-content: flex-end;
+            }
             main { padding: 1rem 0.75rem 3rem; }
             .sheet { border-radius: 10px; }
         }
     </style>
 </head>
 <body>
-    <header class="topbar">
-        <nav class="jumpbar" id="jumpbar" aria-label="Jump to section"></nav>
+    <header class="topbar is-collapsed" id="topbar">
+        <nav class="jumpbar" id="jumpbar" aria-label="Jump to section">
+            <button type="button" class="jump jump-toggle" id="jumpToggle" aria-expanded="false" aria-controls="jumpbar">Jump ▾</button>
+        </nav>
     </header>
 
     <main>
@@ -332,11 +355,33 @@
             const docEl = document.getElementById('doc');
             const jumpbar = document.getElementById('jumpbar');
             const fabTop = document.getElementById('fabTop');
+            const topbar = document.getElementById('topbar');
+            const jumpToggle = document.getElementById('jumpToggle');
+            const mobileJump = window.matchMedia('(max-width: 640px)');
+            let userOpenedJump = false;
+
+            function isMobileJump() {
+                return mobileJump.matches;
+            }
 
             function syncJumpHeight() {
-                const bar = document.querySelector('.topbar');
-                if (!bar) return;
-                document.documentElement.style.setProperty('--jump-h', (bar.offsetHeight + 12) + 'px');
+                if (!topbar) return;
+                document.documentElement.style.setProperty('--jump-h', (topbar.offsetHeight + 12) + 'px');
+            }
+
+            function setJumpCollapsed(collapsed) {
+                topbar.classList.toggle('is-collapsed', collapsed);
+                jumpToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+                jumpToggle.textContent = collapsed ? 'Jump ▾' : 'Hide ▴';
+                syncJumpHeight();
+            }
+
+            function applyJumpMode() {
+                if (!isMobileJump()) {
+                    setJumpCollapsed(false);
+                    return;
+                }
+                setJumpCollapsed(!userOpenedJump);
             }
 
             function jumpTo(id) {
@@ -361,10 +406,26 @@
                 btn.className = 'jump' + (item.id === 'top' ? ' jump-top' : '');
                 btn.dataset.id = item.id;
                 btn.textContent = item.label;
-                btn.addEventListener('click', () => jumpTo(item.id));
+                btn.addEventListener('click', () => {
+                    jumpTo(item.id);
+                    if (isMobileJump()) {
+                        userOpenedJump = false;
+                        setJumpCollapsed(true);
+                    }
+                });
                 jumpbar.appendChild(btn);
             });
-            syncJumpHeight();
+            jumpToggle.addEventListener('click', () => {
+                if (!isMobileJump()) return;
+                userOpenedJump = topbar.classList.contains('is-collapsed');
+                setJumpCollapsed(!userOpenedJump);
+            });
+            applyJumpMode();
+            if (typeof mobileJump.addEventListener === 'function') {
+                mobileJump.addEventListener('change', applyJumpMode);
+            } else if (typeof mobileJump.addListener === 'function') {
+                mobileJump.addListener(applyJumpMode);
+            }
             window.addEventListener('resize', syncJumpHeight);
 
             fabTop.addEventListener('click', () => jumpTo('top'));
