@@ -900,24 +900,23 @@ Your strongest signal is not trivia. It is that you can connect Flutter UI behav
 
 Use this as a **structure**, not a memorized speech.
 
-> "I'm a mobile-focused software engineer with around nine years of commercial experience, and Flutter has been my main stack for about six and a half years. In my current role, I work on a production property-operations platform, primarily in Flutter, but I also follow problems into Firebase, APIs and supporting web systems when the product requires it.
+> "I'm a mobile-focused software engineer with around nine years of commercial experience, and I've spent about six and a half years working primarily with Flutter and Dart.
 >
-> Over time, my role became less about implementing isolated screens and more about ownership: reliability, performance, testing, production issues, and making sure workflows actually work for field users.
+> For nearly four years I've been working remotely with a US-based product company on production mobile and web applications used in operational workflows. My work includes Flutter architecture, API integrations, Firebase and Firestore, testing, CI/CD, production monitoring and reliability improvements.
 >
-> One of my strengths is that I don't treat Flutter as an isolated UI layer. If a problem involves state, networking, Firebase, backend behavior or rollout risk, I'm comfortable following it across those boundaries and working with the relevant teams."
+> Over time, my role became less about implementing isolated UI screens and more about ownership. I enjoy investigating real production problems, especially reliability and connectivity issues. For example, I worked on intermittent upload failures by adding telemetry, reproducing the issue under weak network conditions, and helping implement a more resilient persistence and retry flow.
+>
+> Earlier in my career I also worked with native Android, iOS and C#/.NET, so I'm comfortable following a problem beyond Flutter when needed. Recently I've also been using AI development tools such as Cursor and Codex to speed up implementation and investigation, while keeping architecture and code-review decisions under my own control.
+>
+> I'm now looking for opportunities where I can use that mobile product experience on technically challenging systems and continue growing in architecture and broader mobile engineering."
+
+### Shorter 30–45 second version
+
+> "I'm a mobile-focused software engineer with around nine years of commercial experience and about six and a half years primarily in Flutter and Dart. For nearly four years I've worked remotely with a US-based product company on production mobile and web workflows, covering Flutter architecture, Firebase, APIs, testing, CI/CD and reliability. Over time my role became more about ownership and production problem-solving rather than isolated UI work. I'm now looking for technically challenging mobile product work where I can keep growing in architecture and broader engineering."
 
 ### Optional "Why Proxify?" add-on
 
-> "What interests me about Proxify is the chance to work with international product teams where a senior engineer is expected to communicate clearly, understand the product problem and take ownership beyond just implementing UI tickets."
-
-### Delivery notes
-
-- Keep it under ~75 seconds unless the interviewer asks for more.
-- Do **not** turn the answer into a full CV history.
-- End with a sentence that gives the interviewer an obvious place to go deeper.
-- If they ask "why Proxify?", answer that separately instead of forcing it into the intro.
-
----
+> "What interests me about Proxify is the opportunity to work with international product teams where a senior engineer is expected to communicate clearly, understand the product problem and take ownership beyond just implementing UI tickets."
 
 <a id="s28"></a>
 
@@ -1232,3 +1231,352 @@ If time is limited, study in this order:
 8. Low-probability trivia only if everything above is already comfortable.
 
 Do not try to learn a new framework tonight.
+
+---
+
+<a id="s36"></a>
+
+# 36. Stale async response — answer + code
+
+## How would you prevent a stale async response from overwriting newer state?
+
+> "I give each logical request a monotonically increasing generation/request ID. Every new action invalidates the previous generation immediately. When a response returns, it may update state only if the captured request ID still matches the current one. Cancellation is useful when available, but I still keep the stale-response guard because cancellation is not always guaranteed."
+
+```dart
+int _requestId = 0;
+
+Future<void> search(String query) async {
+  final myRequestId = ++_requestId;
+
+  try {
+    final results = await api.search(query);
+
+    if (myRequestId != _requestId) return; // stale success
+    emit(SearchLoaded(results));
+  } catch (e) {
+    if (myRequestId != _requestId) return; // stale error
+    emit(SearchError(mapError(e)));
+  }
+}
+```
+
+**Remember:** debounce reduces request frequency; the request ID protects state from out-of-order completion.
+
+---
+
+<a id="s37"></a>
+
+# 37. Five simultaneous 401s — one refresh
+
+## How do you handle 5 simultaneous 401s with only one token refresh?
+
+> "I keep one shared in-flight refresh Future. The first 401 creates it; the other 401s await the same Future. After refresh succeeds, each original request retries once with the new token. The shared Future is cleared when refresh finishes so later expirations can refresh again. If refresh fails irrecoverably, waiting requests fail and the app returns to an unauthenticated state."
+
+```dart
+class AuthCoordinator {
+  Future<String>? _refreshing;
+
+  Future<String> getValidToken() {
+    final existing = _refreshing;
+    if (existing != null) return existing;
+
+    final future = _performRefresh();
+    _refreshing = future;
+
+    return future.whenComplete(() {
+      if (identical(_refreshing, future)) {
+        _refreshing = null;
+      }
+    });
+  }
+
+  Future<String> _performRefresh() async {
+    final token = await authApi.refreshToken();
+    await tokenStore.save(token);
+    return token;
+  }
+}
+```
+
+Interceptor idea:
+
+```dart
+if (response.statusCode == 401) {
+  final newToken = await authCoordinator.getValidToken();
+
+  final retryRequest = request.copyWith(
+    headers: {
+      ...request.headers,
+      'Authorization': 'Bearer $newToken',
+    },
+  );
+
+  return client.send(retryRequest); // retry once
+}
+```
+
+**Guardrails**
+- no infinite `401 → refresh → retry → 401` loop;
+- cap retry to once;
+- never log tokens;
+- if refresh fails, clear auth state/login again.
+
+---
+
+<a id="s38"></a>
+
+# 38. Firestore real-time but UI is stale — debugging flow
+
+> "I debug this layer by layer instead of assuming Firestore itself is stale."
+
+1. Is the expected `snapshots()` listener actually attached?
+2. Is the query/path/filter/tenant/user scope correct?
+3. Did the write actually succeed?
+4. Is the snapshot from cache or server?
+5. Are there pending local writes?
+6. Are Security Rules excluding data?
+7. Is repository/BLoC caching or suppressing the update?
+8. Is `map`, `distinct`, dedupe or DTO mapping dropping it?
+9. Is the UI actually rebuilding from the changed state?
+10. If optimistic UI and backend projection can race, is there a server version/timestamp to prevent stale overwrite?
+
+Tiny diagnostic code:
+
+```dart
+StreamSubscription? _sub;
+
+void listenToJob(String id) {
+  _sub?.cancel();
+
+  _sub = firestore
+      .collection('jobs')
+      .doc(id)
+      .snapshots(includeMetadataChanges: true)
+      .listen((snapshot) {
+    print('fromCache=${snapshot.metadata.isFromCache}');
+    print('pendingWrites=${snapshot.metadata.hasPendingWrites}');
+    print('data=${snapshot.data()}');
+
+    repositoryState.applySnapshot(snapshot);
+  });
+}
+```
+
+---
+
+<a id="s39"></a>
+
+# 39. Firestore offline/cache + listener lifecycle
+
+> "I decide explicitly what the source of truth is. I can show cached last-known data for fast/offline UX, but I expose sync state when freshness matters. I attach listeners only while the owning feature needs them and cancel manual subscriptions when ownership ends."
+
+```dart
+class JobController {
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _sub;
+
+  void watchJob(String jobId) {
+    _sub?.cancel();
+
+    _sub = FirebaseFirestore.instance
+        .collection('jobs')
+        .doc(jobId)
+        .snapshots(includeMetadataChanges: true)
+        .listen(
+      (snapshot) {
+        final data = snapshot.data();
+        if (data == null) return;
+
+        final syncState = snapshot.metadata.hasPendingWrites
+            ? SyncState.pending
+            : snapshot.metadata.isFromCache
+                ? SyncState.cached
+                : SyncState.synced;
+
+        emit(JobState(data: data, syncState: syncState));
+      },
+      onError: (error, stack) {
+        emit(JobState.error(mapError(error)));
+      },
+    );
+  }
+
+  Future<void> dispose() async {
+    await _sub?.cancel();
+  }
+}
+```
+
+**Offline UX**
+- keep useful last-known data;
+- show pending/offline state when it matters;
+- do not pretend cached data is guaranteed fresh;
+- reconcile on reconnect;
+- avoid duplicate listeners after rebuild/navigation.
+
+---
+
+<a id="s40"></a>
+
+# 40. Testing retries or races without `sleep()`
+
+> "I make time and completion order controllable. For timers/backoff I inject a delay/clock or use `fakeAsync`. For request order I use `Completer` or a fake repository. I verify the invariant rather than relying on real wall-clock timing."
+
+Retry example:
+
+```dart
+final delays = <Duration>[];
+
+Future<void> fakeDelay(Duration d) async {
+  delays.add(d);
+}
+
+await retryingCall(
+  action: () async {
+    attempts++;
+    if (attempts < 3) throw TimeoutException('retry');
+    return 'ok';
+  },
+  delay: fakeDelay,
+);
+
+expect(attempts, 3);
+expect(delays, [
+  const Duration(milliseconds: 100),
+  const Duration(milliseconds: 200),
+]);
+```
+
+Race idea:
+
+```dart
+final first = Completer<List<String>>();
+final second = Completer<List<String>>();
+
+manager.searchApi = (query) {
+  if (query == 'dart') return first.future;
+  return second.future;
+};
+
+manager.search('dart');
+manager.search('flutter');
+
+second.complete(['flutter']);
+await Future.microtask(() {});
+
+first.complete(['dart']);
+await Future.microtask(() {});
+
+expect(manager.results, ['flutter']);
+```
+
+**Key line:** "I don't need to simulate 1 second and 100 ms literally; I need deterministic control over which Future completes first."
+
+---
+
+<a id="s41"></a>
+
+# 41. A list scrolls at 30 FPS — investigation
+
+> "I reproduce it in profile mode and measure before changing code. I inspect frame timings in DevTools to determine whether the bottleneck is UI-thread work, Raster/GPU work, image decoding or memory pressure. Then I narrow the hot path, fix it and measure again."
+
+1. Reproduce on a representative device in **profile mode**.
+2. Inspect Flutter DevTools frame chart.
+3. Check whether UI or Raster thread misses frame budget.
+4. Profile CPU during scroll.
+5. Inspect expensive `build`, layout and synchronous transforms.
+6. Check rebuild scope.
+7. Ensure large lists are lazy (`ListView.builder`, slivers).
+8. Check oversized/redecoded images and cache pressure.
+9. Move genuinely CPU-heavy parsing off the UI isolate if needed.
+10. If Raster is hot, inspect shader/effect/GPU-heavy work.
+11. Fix one measured bottleneck.
+12. Re-profile and compare.
+
+Do **not** start with "add `const` everywhere." Measure first.
+
+---
+
+<a id="s42"></a>
+
+# 42. Excessive rebuilds or memory growth
+
+## Excessive rebuilds
+
+- use DevTools performance/rebuild profiling;
+- inspect broad `BlocBuilder` / Provider / Riverpod listeners;
+- use selectors or narrower listening scope;
+- move expensive synchronous work out of `build`;
+- split large subtrees only where ownership/rebuild boundaries justify it.
+
+> "I first identify which widgets rebuild and what state change causes it. Then I reduce the listening scope rather than blindly memoizing everything."
+
+## Memory growth
+
+1. Take a baseline memory snapshot.
+2. Open/close the suspect feature repeatedly.
+3. Trigger GC.
+4. Compare retained object counts.
+5. Inspect retaining paths.
+
+Common causes:
+- uncancelled `StreamSubscription`;
+- uncancelled `Timer`;
+- undisposed `AnimationController` / `TextEditingController`;
+- duplicate listeners;
+- closures retaining large object graphs;
+- unbounded caches;
+- image/cache pressure;
+- static/singleton references retaining screen-owned objects.
+
+> "A real leak is about objects remaining reachable when their owning feature should be gone, so I inspect retaining paths rather than only looking at a high memory number."
+
+---
+
+<a id="s43"></a>
+
+# 43. Architecture layers — simple ownership model
+
+> "I prefer the simplest architecture that preserves testability, maintainability and clear ownership. I don't draw full Clean Architecture on every project."
+
+| Layer | Owns | Typical fault |
+|---|---|---|
+| **Presentation** | widgets / screens / rendering / user interaction | broken UI |
+| **Application** | Cubit / BLoC / orchestration / state transitions | wrong transition / race |
+| **Domain** | entities / business rules | incorrect business rule; optional in a tiny app |
+| **Repository** | abstract data contract / data-source coordination | wrong source / mapping / orchestration contract |
+| **Data** | API / DB / platform implementation | endpoint / schema / persistence / platform issue |
+
+Flow:
+
+```text
+Presentation
+    ↓ intent
+Application / State
+    ↓
+Repository contract
+    ↓
+Data source(s): API / Firestore / SQLite / platform
+    ↑
+mapped result
+    ↑
+Repository
+    ↑
+Application State
+    ↑
+Presentation
+```
+
+Interview answer:
+
+> "Presentation owns rendering and interaction. Application state owns orchestration and transitions. Repository gives the app a stable data contract and coordinates sources. The data layer knows concrete APIs, databases and platform details. I add a separate domain layer only when business rules are complex enough to justify it."
+
+### Rule
+
+Create boundaries when:
+- parts change independently;
+- business rules deserve isolated tests;
+- multiple data sources exist;
+- infrastructure details must not leak upward;
+- ownership becomes clearer.
+
+Do not create five layers just because the diagram looks senior.
