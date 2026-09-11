@@ -435,44 +435,7 @@ You are testing **completion order**, not real wall-clock duration.
 
 <a id="s12"></a>
 
-# 12. Non-technical / seniority questions
-
-These can be as important as trivia because they test ownership, communication and client readiness.
-
-1. Tell me about yourself.
-2. Why are you interested in Proxify?
-3. Tell me about the most difficult production problem you personally owned.
-4. Tell me about a production incident and how you diagnosed it.
-5. Tell me about a disagreement with another engineer.
-6. Tell me about a time you changed your mind after new evidence.
-7. How do you handle unclear requirements from a product/client team?
-8. What do you do when you disagree with an existing architecture?
-9. How do you balance delivery speed vs technical quality?
-10. How do you work in a codebase with patterns you would not personally choose?
-11. How do you communicate a risky technical decision to non-engineers?
-12. Tell me about a regression you prevented through testing.
-13. Tell me about a performance problem you measured and fixed.
-14. What do you do when you cannot reproduce a customer issue?
-15. Tell me about a time you had to work outside Flutter to solve the real problem.
-16. How do you approach code review?
-17. How do you onboard into an unfamiliar codebase?
-18. How do you handle being blocked by another team?
-19. What would your teammates say you are strongest at?
-20. What is one area you are actively improving?
-21. How do you use AI tools in software development?
-22. How do you ensure AI-generated code is safe to ship?
-23. How do you respond when an interviewer/teammate points out a bug in your approach?
-24. Tell me about your current company transition and how you handled change professionally.
-25. What kind of client/team environment helps you do your best work?
-
----
-
-
----
-
-<a id="s13"></a>
-
-# 13. Retry policy
+# 12. Retry policy
 
 Automatic retry belongs close to the **network policy/client layer**, not duplicated in every state manager.
 
@@ -489,9 +452,9 @@ Example reasoning:
 
 ---
 
-<a id="s14"></a>
+<a id="s13"></a>
 
-# 14. Idempotency
+# 13. Idempotency
 
 ## Timeout does not mean failure on the server
 
@@ -524,9 +487,9 @@ Then bounded retry can become safe for that logical operation.
 
 ---
 
-<a id="s15"></a>
+<a id="s14"></a>
 
-# 15. Pagination + refresh
+# 14. Pagination + refresh
 
 Useful state:
 
@@ -566,9 +529,9 @@ Use:
 
 ---
 
-<a id="s16"></a>
+<a id="s15"></a>
 
-# 16. Local cache + API flow
+# 15. Local cache + API flow
 
 Example product-list startup:
 
@@ -588,9 +551,9 @@ For failures:
 
 ---
 
-<a id="s17"></a>
+<a id="s16"></a>
 
-# 17. Error modeling
+# 16. Error modeling
 
 Do not leak raw Dio exceptions / raw HTTP codes directly into UI state.
 
@@ -618,9 +581,9 @@ Interview line:
 
 ---
 
-<a id="s18"></a>
+<a id="s17"></a>
 
-# 18. Firestore / realtime
+# 17. Firestore / realtime
 
 ## Frequent listeners: risks
 
@@ -659,9 +622,9 @@ Example: verify inventory is still available, then decrement it.
 
 ---
 
-<a id="s19"></a>
+<a id="s18"></a>
 
-# 19. Cubit vs BLoC
+# 18. Cubit vs BLoC
 
 ## Cubit
 
@@ -694,9 +657,9 @@ Avoid: "BLoC is the architecture."
 
 ---
 
-<a id="s20"></a>
+<a id="s19"></a>
 
-# 20. Performance / jank
+# 19. Performance / jank
 
 If scrolling is slow:
 
@@ -725,9 +688,9 @@ Useful tools/concepts:
 
 ---
 
-<a id="s21"></a>
+<a id="s20"></a>
 
-# 21. Testing
+# 20. Testing
 
 ## Unit
 Pure Dart:
@@ -760,9 +723,9 @@ Avoid tests that depend on arbitrary real-time sleeps.
 
 ---
 
-<a id="s22"></a>
+<a id="s21"></a>
 
-# 22. Native / platform quick hits
+# 21. Native / platform quick hits
 
 ## MethodChannel
 Request/response style communication between Dart and platform code.
@@ -787,9 +750,9 @@ Swift:
 
 ---
 
-<a id="s23"></a>
+<a id="s22"></a>
 
-# 23. Live-coding behavior — this matters as much as syntax
+# 22. Live-coding behavior — this matters as much as syntax
 
 Before touching code:
 
@@ -823,9 +786,9 @@ Do not defend broken code.
 
 ---
 
-<a id="s24"></a>
+<a id="s23"></a>
 
-# 24. Production-scenario checklist
+# 23. Production-scenario checklist
 
 When given an architecture/reliability problem, quickly ask yourself:
 
@@ -841,9 +804,9 @@ When given an architecture/reliability problem, quickly ask yourself:
 
 ---
 
-<a id="s25"></a>
+<a id="s24"></a>
 
-# 25. 30-second answer templates
+# 24. 30-second answer templates
 
 ## Async
 > "I would separate CPU-bound work from I/O. Normal network I/O is already asynchronous and non-blocking, while CPU-heavy parsing can block the UI isolate and may belong in another isolate."
@@ -862,9 +825,9 @@ When given an architecture/reliability problem, quickly ask yourself:
 
 ---
 
-<a id="s26"></a>
+<a id="s25"></a>
 
-# 26. Final 5-minute pre-interview reminder
+# 25. Final 5-minute pre-interview reminder
 
 Do **not** try to sound encyclopedic.
 
@@ -889,9 +852,9 @@ Your strongest signal is not trivia. It is that you can connect Flutter UI behav
 
 ---
 
-<a id="s27"></a>
+<a id="s26"></a>
 
-# 27. Tell me about yourself — 60–75 second version
+# 26. Tell me about yourself — 60–75 second version
 
 Use this as a **structure**, not a memorized speech.
 
@@ -913,9 +876,9 @@ Use this as a **structure**, not a memorized speech.
 
 > "What interests me about Proxify is the opportunity to work with international product teams where a senior engineer is expected to communicate clearly, understand the product problem and take ownership beyond just implementing UI tickets."
 
-<a id="s28"></a>
+<a id="s27"></a>
 
-# 28. Strong real-project story — workflow modernization
+# 27. Strong real-project story — workflow modernization
 
 This is the story we developed during the mock. Keep ownership boundaries accurate.
 
@@ -950,9 +913,9 @@ Do not invent details that were owned by another team.
 
 ---
 
-<a id="s29"></a>
+<a id="s28"></a>
 
-# 29. Cubit vs BLoC — expanded last-day notes
+# 28. Cubit vs BLoC — expanded last-day notes
 
 ## Core rule
 
@@ -1016,9 +979,9 @@ Explain the tradeoff rather than claiming one universal pattern.
 
 ---
 
-<a id="s30"></a>
+<a id="s29"></a>
 
-# 30. Question map for tomorrow — not leaked questions
+# 29. Question map for tomorrow — not leaked questions
 
 These are **practice prompts inferred from the official interview format, the preparation brief, your background, and common senior Flutter evaluation patterns**. They are not claimed to be Marko's exact questions.
 
@@ -1068,9 +1031,9 @@ These are **practice prompts inferred from the official interview format, the pr
 
 ---
 
-<a id="s31"></a>
+<a id="s30"></a>
 
-# 31. Native / platform questions worth reviewing
+# 30. Native / platform questions worth reviewing
 
 We do **not** know that the interviewer will focus on native topics. If you have evidence that he has a native background, treat this as extra preparation, not a prediction.
 
@@ -1105,6 +1068,40 @@ High-yield native questions:
 
 ---
 
+<a id="s31"></a>
+
+# 31. Non-technical / seniority questions
+
+These can be as important as trivia because they test ownership, communication and client readiness.
+
+1. Tell me about yourself.
+2. Why are you interested in Proxify?
+3. Tell me about the most difficult production problem you personally owned.
+4. Tell me about a production incident and how you diagnosed it.
+5. Tell me about a disagreement with another engineer.
+6. Tell me about a time you changed your mind after new evidence.
+7. How do you handle unclear requirements from a product/client team?
+8. What do you do when you disagree with an existing architecture?
+9. How do you balance delivery speed vs technical quality?
+10. How do you work in a codebase with patterns you would not personally choose?
+11. How do you communicate a risky technical decision to non-engineers?
+12. Tell me about a regression you prevented through testing.
+13. Tell me about a performance problem you measured and fixed.
+14. What do you do when you cannot reproduce a customer issue?
+15. Tell me about a time you had to work outside Flutter to solve the real problem.
+16. How do you approach code review?
+17. How do you onboard into an unfamiliar codebase?
+18. How do you handle being blocked by another team?
+19. What would your teammates say you are strongest at?
+20. What is one area you are actively improving?
+21. How do you use AI tools in software development?
+22. How do you ensure AI-generated code is safe to ship?
+23. How do you respond when an interviewer/teammate points out a bug in your approach?
+24. Tell me about your current company transition and how you handled change professionally.
+25. What kind of client/team environment helps you do your best work?
+
+---
+
 <a id="s32"></a>
 
 # 32. Four stories to have ready
@@ -1112,7 +1109,7 @@ High-yield native questions:
 Do not memorize every word. Know the **spine** of each story.
 
 ## Story A — Workflow modernization
-Use Section 28.
+Use Section 27.
 
 Signals:
 - cross-stack ownership
@@ -1227,60 +1224,46 @@ Future<void> search(String query) async {
 
 <a id="s36"></a>
 
-# 36. Five simultaneous 401s — one refresh
+# 36. Auth refresh race — five 401s, one refresh
 
-## How do you handle 5 simultaneous 401s with only one token refresh?
+Problem: 5 concurrent requests receive 401.
 
-> "I keep one shared in-flight refresh Future. The first 401 creates it; the other 401s await the same Future. After refresh succeeds, each original request retries once with the new token. The shared Future is cleared when refresh finishes so later expirations can refresh again. If refresh fails irrecoverably, waiting requests fail and the app returns to an unauthenticated state."
+Wrong:
+- all 5 start token refresh.
+
+Right:
+- keep one shared in-flight refresh Future;
+- every failing request awaits it;
+- then replay each original request once with the new token.
+
+Conceptual pattern:
 
 ```dart
-class AuthCoordinator {
-  Future<String>? _refreshing;
+Future<String>? _activeRefresh;
 
-  Future<String> getValidToken() {
-    final existing = _refreshing;
-    if (existing != null) return existing;
+Future<String> refreshOnce() {
+  final current = _activeRefresh;
+  if (current != null) return current;
 
-    final future = _performRefresh();
-    _refreshing = future;
+  final future = _performRefresh();
+  _activeRefresh = future;
 
-    return future.whenComplete(() {
-      if (identical(_refreshing, future)) {
-        _refreshing = null;
-      }
-    });
-  }
-
-  Future<String> _performRefresh() async {
-    final token = await authApi.refreshToken();
-    await tokenStore.save(token);
-    return token;
-  }
+  return future.whenComplete(() {
+    if (identical(_activeRefresh, future)) {
+      _activeRefresh = null;
+    }
+  });
 }
 ```
 
-Interceptor idea:
+If refresh is unrecoverable:
+- waiting requests fail;
+- clear authenticated state as appropriate;
+- send user to login;
+- do not create an infinite 401 → refresh → retry loop.
 
-```dart
-if (response.statusCode == 401) {
-  final newToken = await authCoordinator.getValidToken();
+---
 
-  final retryRequest = request.copyWith(
-    headers: {
-      ...request.headers,
-      'Authorization': 'Bearer $newToken',
-    },
-  );
-
-  return client.send(retryRequest); // retry once
-}
-```
-
-**Guardrails**
-- no infinite `401 → refresh → retry → 401` loop;
-- cap retry to once;
-- never log tokens;
-- if refresh fails, clear auth state/login again.
 
 ---
 
