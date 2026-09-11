@@ -435,43 +435,38 @@ You are testing **completion order**, not real wall-clock duration.
 
 <a id="s12"></a>
 
-# 12. Auth refresh race — five 401s, one refresh
+# 12. Non-technical / seniority questions
 
-Problem: 5 concurrent requests receive 401.
+These can be as important as trivia because they test ownership, communication and client readiness.
 
-Wrong:
-- all 5 start token refresh.
+1. Tell me about yourself.
+2. Why are you interested in Proxify?
+3. Tell me about the most difficult production problem you personally owned.
+4. Tell me about a production incident and how you diagnosed it.
+5. Tell me about a disagreement with another engineer.
+6. Tell me about a time you changed your mind after new evidence.
+7. How do you handle unclear requirements from a product/client team?
+8. What do you do when you disagree with an existing architecture?
+9. How do you balance delivery speed vs technical quality?
+10. How do you work in a codebase with patterns you would not personally choose?
+11. How do you communicate a risky technical decision to non-engineers?
+12. Tell me about a regression you prevented through testing.
+13. Tell me about a performance problem you measured and fixed.
+14. What do you do when you cannot reproduce a customer issue?
+15. Tell me about a time you had to work outside Flutter to solve the real problem.
+16. How do you approach code review?
+17. How do you onboard into an unfamiliar codebase?
+18. How do you handle being blocked by another team?
+19. What would your teammates say you are strongest at?
+20. What is one area you are actively improving?
+21. How do you use AI tools in software development?
+22. How do you ensure AI-generated code is safe to ship?
+23. How do you respond when an interviewer/teammate points out a bug in your approach?
+24. Tell me about your current company transition and how you handled change professionally.
+25. What kind of client/team environment helps you do your best work?
 
-Right:
-- keep one shared in-flight refresh Future;
-- every failing request awaits it;
-- then replay each original request once with the new token.
+---
 
-Conceptual pattern:
-
-```dart
-Future<String>? _activeRefresh;
-
-Future<String> refreshOnce() {
-  final current = _activeRefresh;
-  if (current != null) return current;
-
-  final future = _performRefresh();
-  _activeRefresh = future;
-
-  return future.whenComplete(() {
-    if (identical(_activeRefresh, future)) {
-      _activeRefresh = null;
-    }
-  });
-}
-```
-
-If refresh is unrecoverable:
-- waiting requests fail;
-- clear authenticated state as appropriate;
-- send user to login;
-- do not create an infinite 401 → refresh → retry loop.
 
 ---
 
@@ -1112,41 +1107,7 @@ High-yield native questions:
 
 <a id="s32"></a>
 
-# 32. Non-technical / seniority questions
-
-These can be as important as trivia because they test ownership, communication and client readiness.
-
-1. Tell me about yourself.
-2. Why are you interested in Proxify?
-3. Tell me about the most difficult production problem you personally owned.
-4. Tell me about a production incident and how you diagnosed it.
-5. Tell me about a disagreement with another engineer.
-6. Tell me about a time you changed your mind after new evidence.
-7. How do you handle unclear requirements from a product/client team?
-8. What do you do when you disagree with an existing architecture?
-9. How do you balance delivery speed vs technical quality?
-10. How do you work in a codebase with patterns you would not personally choose?
-11. How do you communicate a risky technical decision to non-engineers?
-12. Tell me about a regression you prevented through testing.
-13. Tell me about a performance problem you measured and fixed.
-14. What do you do when you cannot reproduce a customer issue?
-15. Tell me about a time you had to work outside Flutter to solve the real problem.
-16. How do you approach code review?
-17. How do you onboard into an unfamiliar codebase?
-18. How do you handle being blocked by another team?
-19. What would your teammates say you are strongest at?
-20. What is one area you are actively improving?
-21. How do you use AI tools in software development?
-22. How do you ensure AI-generated code is safe to ship?
-23. How do you respond when an interviewer/teammate points out a bug in your approach?
-24. Tell me about your current company transition and how you handled change professionally.
-25. What kind of client/team environment helps you do your best work?
-
----
-
-<a id="s33"></a>
-
-# 33. Four stories to have ready
+# 32. Four stories to have ready
 
 Do not memorize every word. Know the **spine** of each story.
 
@@ -1197,9 +1158,9 @@ For every story, force yourself to say:
 
 ---
 
-<a id="s34"></a>
+<a id="s33"></a>
 
-# 34. Questions to ask the interviewer
+# 33. Questions to ask the interviewer
 
 Pick 2–3 only if time allows.
 
@@ -1215,9 +1176,9 @@ Best repair question at the end:
 
 ---
 
-<a id="s35"></a>
+<a id="s34"></a>
 
-# 35. Final priority order tonight
+# 34. Final priority order tonight
 
 If time is limited, study in this order:
 
@@ -1234,9 +1195,9 @@ Do not try to learn a new framework tonight.
 
 ---
 
-<a id="s36"></a>
+<a id="s35"></a>
 
-# 36. Stale async response — answer + code
+# 35. Stale async response — answer + code
 
 ## How would you prevent a stale async response from overwriting newer state?
 
@@ -1264,9 +1225,9 @@ Future<void> search(String query) async {
 
 ---
 
-<a id="s37"></a>
+<a id="s36"></a>
 
-# 37. Five simultaneous 401s — one refresh
+# 36. Five simultaneous 401s — one refresh
 
 ## How do you handle 5 simultaneous 401s with only one token refresh?
 
@@ -1323,9 +1284,9 @@ if (response.statusCode == 401) {
 
 ---
 
-<a id="s38"></a>
+<a id="s37"></a>
 
-# 38. Firestore real-time but UI is stale — debugging flow
+# 37. Firestore real-time but UI is stale — debugging flow
 
 > "I debug this layer by layer instead of assuming Firestore itself is stale."
 
@@ -1364,9 +1325,9 @@ void listenToJob(String id) {
 
 ---
 
-<a id="s39"></a>
+<a id="s38"></a>
 
-# 39. Firestore offline/cache + listener lifecycle
+# 38. Firestore offline/cache + listener lifecycle
 
 > "I decide explicitly what the source of truth is. I can show cached last-known data for fast/offline UX, but I expose sync state when freshness matters. I attach listeners only while the owning feature needs them and cancel manual subscriptions when ownership ends."
 
@@ -1415,9 +1376,9 @@ class JobController {
 
 ---
 
-<a id="s40"></a>
+<a id="s39"></a>
 
-# 40. Testing retries or races without `sleep()`
+# 39. Testing retries or races without `sleep()`
 
 > "I make time and completion order controllable. For timers/backoff I inject a delay/clock or use `fakeAsync`. For request order I use `Completer` or a fake repository. I verify the invariant rather than relying on real wall-clock timing."
 
@@ -1473,9 +1434,9 @@ expect(manager.results, ['flutter']);
 
 ---
 
-<a id="s41"></a>
+<a id="s40"></a>
 
-# 41. A list scrolls at 30 FPS — investigation
+# 40. A list scrolls at 30 FPS — investigation
 
 > "I reproduce it in profile mode and measure before changing code. I inspect frame timings in DevTools to determine whether the bottleneck is UI-thread work, Raster/GPU work, image decoding or memory pressure. Then I narrow the hot path, fix it and measure again."
 
@@ -1496,9 +1457,9 @@ Do **not** start with "add `const` everywhere." Measure first.
 
 ---
 
-<a id="s42"></a>
+<a id="s41"></a>
 
-# 42. Excessive rebuilds or memory growth
+# 41. Excessive rebuilds or memory growth
 
 ## Excessive rebuilds
 
@@ -1532,9 +1493,9 @@ Common causes:
 
 ---
 
-<a id="s43"></a>
+<a id="s42"></a>
 
-# 43. Architecture layers — simple ownership model
+# 42. Architecture layers — simple ownership model
 
 > "I prefer the simplest architecture that preserves testability, maintainability and clear ownership. I don't draw full Clean Architecture on every project."
 
