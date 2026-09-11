@@ -435,7 +435,66 @@ You are testing **completion order**, not real wall-clock duration.
 
 <a id="s12"></a>
 
-# 12. Retry policy
+# 12. Five simultaneous 401s — one refresh
+
+## How do you handle 5 simultaneous 401s with only one token refresh?
+
+> "I keep one shared in-flight refresh Future. The first 401 creates it; the other 401s await the same Future. After refresh succeeds, each original request retries once with the new token. The shared Future is cleared when refresh finishes so later expirations can refresh again. If refresh fails irrecoverably, waiting requests fail and the app returns to an unauthenticated state."
+
+```dart
+class AuthCoordinator {
+  Future<String>? _refreshing;
+
+  Future<String> getValidToken() {
+    final existing = _refreshing;
+    if (existing != null) return existing;
+
+    final future = _performRefresh();
+    _refreshing = future;
+
+    return future.whenComplete(() {
+      if (identical(_refreshing, future)) {
+        _refreshing = null;
+      }
+    });
+  }
+
+  Future<String> _performRefresh() async {
+    final token = await authApi.refreshToken();
+    await tokenStore.save(token);
+    return token;
+  }
+}
+```
+
+Interceptor idea:
+
+```dart
+if (response.statusCode == 401) {
+  final newToken = await authCoordinator.getValidToken();
+
+  final retryRequest = request.copyWith(
+    headers: {
+      ...request.headers,
+      'Authorization': 'Bearer $newToken',
+    },
+  );
+
+  return client.send(retryRequest); // retry once
+}
+```
+
+**Guardrails**
+- no infinite `401 → refresh → retry → 401` loop;
+- cap retry to once;
+- never log tokens;
+- if refresh fails, clear auth state/login again.
+
+---
+
+<a id="s13"></a>
+
+# 13. Retry policy
 
 Automatic retry belongs close to the **network policy/client layer**, not duplicated in every state manager.
 
@@ -452,9 +511,9 @@ Example reasoning:
 
 ---
 
-<a id="s13"></a>
+<a id="s14"></a>
 
-# 13. Idempotency
+# 14. Idempotency
 
 ## Timeout does not mean failure on the server
 
@@ -487,9 +546,9 @@ Then bounded retry can become safe for that logical operation.
 
 ---
 
-<a id="s14"></a>
+<a id="s15"></a>
 
-# 14. Pagination + refresh
+# 15. Pagination + refresh
 
 Useful state:
 
@@ -529,9 +588,9 @@ Use:
 
 ---
 
-<a id="s15"></a>
+<a id="s16"></a>
 
-# 15. Local cache + API flow
+# 16. Local cache + API flow
 
 Example product-list startup:
 
@@ -551,9 +610,9 @@ For failures:
 
 ---
 
-<a id="s16"></a>
+<a id="s17"></a>
 
-# 16. Error modeling
+# 17. Error modeling
 
 Do not leak raw Dio exceptions / raw HTTP codes directly into UI state.
 
@@ -581,9 +640,9 @@ Interview line:
 
 ---
 
-<a id="s17"></a>
+<a id="s18"></a>
 
-# 17. Firestore / realtime
+# 18. Firestore / realtime
 
 ## Frequent listeners: risks
 
@@ -622,9 +681,9 @@ Example: verify inventory is still available, then decrement it.
 
 ---
 
-<a id="s18"></a>
+<a id="s19"></a>
 
-# 18. Cubit vs BLoC
+# 19. Cubit vs BLoC
 
 ## Cubit
 
@@ -657,9 +716,9 @@ Avoid: "BLoC is the architecture."
 
 ---
 
-<a id="s19"></a>
+<a id="s20"></a>
 
-# 19. Performance / jank
+# 20. Performance / jank
 
 If scrolling is slow:
 
@@ -688,9 +747,9 @@ Useful tools/concepts:
 
 ---
 
-<a id="s20"></a>
+<a id="s21"></a>
 
-# 20. Testing
+# 21. Testing
 
 ## Unit
 Pure Dart:
@@ -723,9 +782,9 @@ Avoid tests that depend on arbitrary real-time sleeps.
 
 ---
 
-<a id="s21"></a>
+<a id="s22"></a>
 
-# 21. Native / platform quick hits
+# 22. Native / platform quick hits
 
 ## MethodChannel
 Request/response style communication between Dart and platform code.
@@ -750,9 +809,9 @@ Swift:
 
 ---
 
-<a id="s22"></a>
+<a id="s23"></a>
 
-# 22. Live-coding behavior — this matters as much as syntax
+# 23. Live-coding behavior — this matters as much as syntax
 
 Before touching code:
 
@@ -786,9 +845,9 @@ Do not defend broken code.
 
 ---
 
-<a id="s23"></a>
+<a id="s24"></a>
 
-# 23. Production-scenario checklist
+# 24. Production-scenario checklist
 
 When given an architecture/reliability problem, quickly ask yourself:
 
@@ -804,9 +863,9 @@ When given an architecture/reliability problem, quickly ask yourself:
 
 ---
 
-<a id="s24"></a>
+<a id="s25"></a>
 
-# 24. 30-second answer templates
+# 25. 30-second answer templates
 
 ## Async
 > "I would separate CPU-bound work from I/O. Normal network I/O is already asynchronous and non-blocking, while CPU-heavy parsing can block the UI isolate and may belong in another isolate."
@@ -825,9 +884,9 @@ When given an architecture/reliability problem, quickly ask yourself:
 
 ---
 
-<a id="s25"></a>
+<a id="s26"></a>
 
-# 25. Final 5-minute pre-interview reminder
+# 26. Final 5-minute pre-interview reminder
 
 Do **not** try to sound encyclopedic.
 
@@ -852,9 +911,9 @@ Your strongest signal is not trivia. It is that you can connect Flutter UI behav
 
 ---
 
-<a id="s26"></a>
+<a id="s27"></a>
 
-# 26. Tell me about yourself — 60–75 second version
+# 27. Tell me about yourself — 60–75 second version
 
 Use this as a **structure**, not a memorized speech.
 
@@ -876,9 +935,9 @@ Use this as a **structure**, not a memorized speech.
 
 > "What interests me about Proxify is the opportunity to work with international product teams where a senior engineer is expected to communicate clearly, understand the product problem and take ownership beyond just implementing UI tickets."
 
-<a id="s27"></a>
+<a id="s28"></a>
 
-# 27. Strong real-project story — workflow modernization
+# 28. Strong real-project story — workflow modernization
 
 This is the story we developed during the mock. Keep ownership boundaries accurate.
 
@@ -913,9 +972,9 @@ Do not invent details that were owned by another team.
 
 ---
 
-<a id="s28"></a>
+<a id="s29"></a>
 
-# 28. Cubit vs BLoC — expanded last-day notes
+# 29. Cubit vs BLoC — expanded last-day notes
 
 ## Core rule
 
@@ -979,9 +1038,9 @@ Explain the tradeoff rather than claiming one universal pattern.
 
 ---
 
-<a id="s29"></a>
+<a id="s30"></a>
 
-# 29. Question map for tomorrow — not leaked questions
+# 30. Question map for tomorrow — not leaked questions
 
 These are **practice prompts inferred from the official interview format, the preparation brief, your background, and common senior Flutter evaluation patterns**. They are not claimed to be Marko's exact questions.
 
@@ -1031,9 +1090,9 @@ These are **practice prompts inferred from the official interview format, the pr
 
 ---
 
-<a id="s30"></a>
+<a id="s31"></a>
 
-# 30. Native / platform questions worth reviewing
+# 31. Native / platform questions worth reviewing
 
 We do **not** know that the interviewer will focus on native topics. If you have evidence that he has a native background, treat this as extra preparation, not a prediction.
 
@@ -1068,9 +1127,9 @@ High-yield native questions:
 
 ---
 
-<a id="s31"></a>
+<a id="s32"></a>
 
-# 31. Non-technical / seniority questions
+# 32. Non-technical / seniority questions
 
 These can be as important as trivia because they test ownership, communication and client readiness.
 
@@ -1102,14 +1161,14 @@ These can be as important as trivia because they test ownership, communication a
 
 ---
 
-<a id="s32"></a>
+<a id="s33"></a>
 
-# 32. Four stories to have ready
+# 33. Four stories to have ready
 
 Do not memorize every word. Know the **spine** of each story.
 
 ## Story A — Workflow modernization
-Use Section 27.
+Use Section 28.
 
 Signals:
 - cross-stack ownership
@@ -1155,9 +1214,9 @@ For every story, force yourself to say:
 
 ---
 
-<a id="s33"></a>
+<a id="s34"></a>
 
-# 33. Questions to ask the interviewer
+# 34. Questions to ask the interviewer
 
 Pick 2–3 only if time allows.
 
@@ -1173,9 +1232,9 @@ Best repair question at the end:
 
 ---
 
-<a id="s34"></a>
+<a id="s35"></a>
 
-# 34. Final priority order tonight
+# 35. Final priority order tonight
 
 If time is limited, study in this order:
 
@@ -1192,9 +1251,9 @@ Do not try to learn a new framework tonight.
 
 ---
 
-<a id="s35"></a>
+<a id="s36"></a>
 
-# 35. Stale async response — answer + code
+# 36. Stale async response — answer + code
 
 ## How would you prevent a stale async response from overwriting newer state?
 
@@ -1222,54 +1281,68 @@ Future<void> search(String query) async {
 
 ---
 
-<a id="s36"></a>
+<a id="s37"></a>
 
-# 36. Auth refresh race — five 401s, one refresh
+# 37. Five simultaneous 401s — one refresh
 
-Problem: 5 concurrent requests receive 401.
+## How do you handle 5 simultaneous 401s with only one token refresh?
 
-Wrong:
-- all 5 start token refresh.
-
-Right:
-- keep one shared in-flight refresh Future;
-- every failing request awaits it;
-- then replay each original request once with the new token.
-
-Conceptual pattern:
+> "I keep one shared in-flight refresh Future. The first 401 creates it; the other 401s await the same Future. After refresh succeeds, each original request retries once with the new token. The shared Future is cleared when refresh finishes so later expirations can refresh again. If refresh fails irrecoverably, waiting requests fail and the app returns to an unauthenticated state."
 
 ```dart
-Future<String>? _activeRefresh;
+class AuthCoordinator {
+  Future<String>? _refreshing;
 
-Future<String> refreshOnce() {
-  final current = _activeRefresh;
-  if (current != null) return current;
+  Future<String> getValidToken() {
+    final existing = _refreshing;
+    if (existing != null) return existing;
 
-  final future = _performRefresh();
-  _activeRefresh = future;
+    final future = _performRefresh();
+    _refreshing = future;
 
-  return future.whenComplete(() {
-    if (identical(_activeRefresh, future)) {
-      _activeRefresh = null;
-    }
-  });
+    return future.whenComplete(() {
+      if (identical(_refreshing, future)) {
+        _refreshing = null;
+      }
+    });
+  }
+
+  Future<String> _performRefresh() async {
+    final token = await authApi.refreshToken();
+    await tokenStore.save(token);
+    return token;
+  }
 }
 ```
 
-If refresh is unrecoverable:
-- waiting requests fail;
-- clear authenticated state as appropriate;
-- send user to login;
-- do not create an infinite 401 → refresh → retry loop.
+Interceptor idea:
+
+```dart
+if (response.statusCode == 401) {
+  final newToken = await authCoordinator.getValidToken();
+
+  final retryRequest = request.copyWith(
+    headers: {
+      ...request.headers,
+      'Authorization': 'Bearer $newToken',
+    },
+  );
+
+  return client.send(retryRequest); // retry once
+}
+```
+
+**Guardrails**
+- no infinite `401 → refresh → retry → 401` loop;
+- cap retry to once;
+- never log tokens;
+- if refresh fails, clear auth state/login again.
 
 ---
 
+<a id="s38"></a>
 
----
-
-<a id="s37"></a>
-
-# 37. Firestore real-time but UI is stale — debugging flow
+# 38. Firestore real-time but UI is stale — debugging flow
 
 > "I debug this layer by layer instead of assuming Firestore itself is stale."
 
@@ -1308,9 +1381,9 @@ void listenToJob(String id) {
 
 ---
 
-<a id="s38"></a>
+<a id="s39"></a>
 
-# 38. Firestore offline/cache + listener lifecycle
+# 39. Firestore offline/cache + listener lifecycle
 
 > "I decide explicitly what the source of truth is. I can show cached last-known data for fast/offline UX, but I expose sync state when freshness matters. I attach listeners only while the owning feature needs them and cancel manual subscriptions when ownership ends."
 
@@ -1359,9 +1432,9 @@ class JobController {
 
 ---
 
-<a id="s39"></a>
+<a id="s40"></a>
 
-# 39. Testing retries or races without `sleep()`
+# 40. Testing retries or races without `sleep()`
 
 > "I make time and completion order controllable. For timers/backoff I inject a delay/clock or use `fakeAsync`. For request order I use `Completer` or a fake repository. I verify the invariant rather than relying on real wall-clock timing."
 
@@ -1417,9 +1490,9 @@ expect(manager.results, ['flutter']);
 
 ---
 
-<a id="s40"></a>
+<a id="s41"></a>
 
-# 40. A list scrolls at 30 FPS — investigation
+# 41. A list scrolls at 30 FPS — investigation
 
 > "I reproduce it in profile mode and measure before changing code. I inspect frame timings in DevTools to determine whether the bottleneck is UI-thread work, Raster/GPU work, image decoding or memory pressure. Then I narrow the hot path, fix it and measure again."
 
@@ -1440,9 +1513,9 @@ Do **not** start with "add `const` everywhere." Measure first.
 
 ---
 
-<a id="s41"></a>
+<a id="s42"></a>
 
-# 41. Excessive rebuilds or memory growth
+# 42. Excessive rebuilds or memory growth
 
 ## Excessive rebuilds
 
@@ -1476,9 +1549,9 @@ Common causes:
 
 ---
 
-<a id="s42"></a>
+<a id="s43"></a>
 
-# 42. Architecture layers — simple ownership model
+# 43. Architecture layers — simple ownership model
 
 > "I prefer the simplest architecture that preserves testability, maintainability and clear ownership. I don't draw full Clean Architecture on every project."
 
