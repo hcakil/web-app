@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="micro1.css?v=5">
+    <link rel="stylesheet" href="micro1.css?v=6">
 </head>
 <body>
     <header class="site-nav">
@@ -15,15 +15,11 @@
             <div class="brand">Prep Lab · <strong>micro1</strong></div>
             <a class="docs-home" href="index.html">Docs</a>
             <nav class="site-nav-links" aria-label="Prep sections">
-                <a class="nav-link" data-view="dashboard" href="#dashboard">Dashboard</a>
-                <a class="nav-link" data-view="experience" href="#experience">Experience</a>
-                <a class="nav-link" data-view="dart" href="#dart">Dart/Flutter</a>
-                <a class="nav-link" data-view="debug" href="#debug">Debugging &amp; Testing</a>
-                <a class="nav-link" data-view="ai" href="#ai">AI Evaluation</a>
+                <a class="nav-link" data-view="sheet" href="#sheet">Cheat sheet</a>
+                <a class="nav-link" data-view="cram" href="#cram">10 min</a>
+                <a class="nav-link" data-view="interview" href="#interview">Interview</a>
                 <a class="nav-link" data-view="stories" href="#stories">Stories</a>
-                <a class="nav-link" data-view="mock" href="#mock">Mock Interview</a>
-                <a class="nav-link" data-view="quick" href="#quick">Quick Review</a>
-                <a class="nav-link" data-view="prep" href="#prep">Focused Prep</a>
+                <a class="nav-link" data-view="drills" href="#drills">Drills</a>
             </nav>
             <div class="nav-tools">
                 <div class="timer-chip idle" id="timerChip" aria-live="polite">00:00</div>
@@ -37,13 +33,15 @@
     <div class="help-overlay" id="help" hidden>
         <div class="help-card">
             <h2>Keyboard</h2>
-            <p><span class="kbd">?</span> this help · <span class="kbd">f</span> focus mode · <span class="kbd">n</span> / <span class="kbd">p</span> next/prev question when a <code>#q</code> link is open.</p>
+            <p><span class="kbd">?</span> this help · <span class="kbd">f</span> focus mode.</p>
+            <p>Interview mode: <span class="kbd">←</span> <span class="kbd">→</span> previous/next · <span class="kbd">space</span> show or hide the answer.</p>
             <p class="muted">Shortcuts are ignored while typing in a field. Timer stays in the header so you don't need to scroll.</p>
             <button type="button" class="text-btn primary" id="helpClose">Close</button>
         </div>
     </div>
 
-    <script src="micro1-data.js?v=5"></script>
-    <script src="micro1.js?v=5"></script>
+    <script src="micro1-data.js?v=6"></script>
+    <script src="micro1-sheet.js?v=6"></script>
+    <script src="micro1.js?v=7"></script>
 </body>
 </html>

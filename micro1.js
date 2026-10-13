@@ -1,7 +1,8 @@
 (function () {
   const M = window.MICRO1;
   const STORE_KEY = "micro1-prep-v1";
-  const VIEWS = ["dashboard", "prep", "experience", "dart", "debug", "ai", "stories", "mock", "quick"];
+  const VIEWS = ["sheet", "cram", "interview", "drills", "dashboard", "prep", "experience", "dart", "debug", "ai", "stories", "mock", "quick"];
+  const HITS = ["regression test", "don't guess", "reproduce", "isolate", "measure", "production", "evidence", "reliability"];
   const CAT_VIEW = { experience: "experience", dart: "dart", debug: "debug", ai: "ai" };
 
   function defaultStore() {
@@ -72,7 +73,10 @@
     tick: 0,
     mock: restoreMock(initialStore.mockSession),
     practiceTimer: { id: null, remain: 0, running: false, qid: null },
-    recorder: { rec: null, chunks: [], url: null, supported: !!(navigator.mediaDevices && window.MediaRecorder) }
+    recorder: { rec: null, chunks: [], url: null, supported: !!(navigator.mediaDevices && window.MediaRecorder) },
+    sheetQuery: "",
+    sheetFilter: "all",
+    interview: { index: 0, open: false, shuffled: false, order: null }
   };
 
   let saveTimer = null;
@@ -137,6 +141,18 @@
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c];
     });
   }
+  function highlightHtml(text) {
+    let s = escapeHtml(text);
+    HITS.forEach(function (p) {
+      const re = new RegExp("\\b(" + p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")\\b", "gi");
+      s = s.replace(re, "<mark class=\"hit\">$1</mark>");
+    });
+    return s;
+  }
+  function sheetData() { return M.sheet; }
+  function sheetByNum(num) {
+    return sheetData().questions.find(function (q) { return q.num === num; });
+  }
   function pre(code) {
     if (!code) return null;
     return el("pre", {}, [el("code", {}, [code])]);
@@ -148,6 +164,7 @@
       else a.removeAttribute("aria-current");
     });
     document.body.classList.toggle("focus-mode", !!state.store.prefs.focus || (state.mock && state.mock.active));
+    document.body.classList.toggle("interview-live", state.view === "interview");
     const chip = document.getElementById("timerChip");
     if (state.mock && state.mock.active) {
       chip.textContent = fmt(state.mock.totalRemain);
@@ -173,14 +190,21 @@
   }
 
   function parseHash() {
-    const h = (location.hash || "#dashboard").replace(/^#/, "") || "dashboard";
+    const h = (location.hash || "#sheet").replace(/^#/, "") || "sheet";
     if (/^q\d+$/.test(h)) {
       state.view = (qs(h) && CAT_VIEW[qs(h).category]) || "experience";
       state.questionId = h;
       return;
     }
+    if (/^s\d+$/.test(h)) {
+      state.view = "sheet";
+      state.questionId = h;
+      state.sheetFilter = "all";
+      state.sheetQuery = "";
+      return;
+    }
     state.questionId = null;
-    state.view = VIEWS.indexOf(h) >= 0 ? h : "dashboard";
+    state.view = VIEWS.indexOf(h) >= 0 ? h : "sheet";
   }
 
   function render() {
@@ -188,6 +212,10 @@
     const root = document.getElementById("app");
     root.innerHTML = "";
     const view = {
+      sheet: viewSheet,
+      cram: viewCram,
+      interview: viewInterview,
+      drills: viewDrills,
       dashboard: viewDashboard,
       prep: viewPrep,
       experience: function () { return viewLibrary("experience"); },
@@ -202,8 +230,248 @@
     setNav();
     if (state.questionId) {
       const node = document.getElementById(state.questionId);
-      if (node) node.scrollIntoView({ block: "start" });
+      if (node) {
+        if (node.tagName === "DETAILS") node.open = true;
+        node.scrollIntoView({ block: "start" });
+      }
     }
+  }
+
+  function cheatGrid() {
+    const grid = el("div", { class: "cheat-grid" });
+    sheetData().cheat.forEach(function (item) {
+      grid.appendChild(el("div", { class: "cheat-tile" }, [
+        el("b", {}, [item.k]),
+        el("span", {}, [item.v])
+      ]));
+    });
+    return grid;
+  }
+
+  function formatBox() {
+    const ul = el("ul", {});
+    sheetData().format.forEach(function (line) { ul.appendChild(el("li", {}, [line])); });
+    return el("aside", { class: "format-box" }, [
+      el("h2", {}, ["micro1 interview format"]),
+      ul
+    ]);
+  }
+
+  function sheetCard(q, startOpen) {
+    const search = (q.num + " " + q.question + " " + q.category + " " + q.answer.join(" ") + " " + q.remember).toLowerCase();
+    const det = el("details", {
+      class: "q-card sheet-card",
+      id: q.id,
+      "data-sheet-q": q.id,
+      "data-cat": q.category,
+      "data-search": search
+    });
+    if (startOpen) det.open = true;
+    det.appendChild(el("summary", {}, [
+      el("div", { class: "sum-row" }, [
+        el("span", { class: "sum-num" }, [String(q.num)]),
+        el("span", { class: "sum-q" }, [q.question]),
+        el("span", { class: "sum-meta" }, [q.category + " · " + q.duration])
+      ])
+    ]));
+    const body = el("div", { class: "sheet-answer" });
+    q.answer.forEach(function (p) { body.appendChild(el("p", { html: highlightHtml(p) })); });
+    if (q.remember) {
+      body.appendChild(el("p", { class: "remember", html: "<strong>Remember:</strong> " + highlightHtml(q.remember) }));
+    }
+    det.appendChild(body);
+    return det;
+  }
+
+  function applySheetFilter() {
+    const q = state.sheetQuery.trim().toLowerCase();
+    const cat = state.sheetFilter;
+    let shown = 0;
+    document.querySelectorAll("[data-sheet-q]").forEach(function (card) {
+      const ok = (cat === "all" || card.getAttribute("data-cat") === cat) &&
+        (!q || card.getAttribute("data-search").indexOf(q) !== -1);
+      card.hidden = !ok;
+      if (ok) shown += 1;
+    });
+    const empty = document.getElementById("sheetEmpty");
+    if (empty) empty.hidden = shown !== 0;
+  }
+
+  function viewSheet() {
+    const cats = [];
+    sheetData().questions.forEach(function (q) {
+      if (cats.indexOf(q.category) < 0) cats.push(q.category);
+    });
+    const search = el("input", { type: "text", placeholder: "Search questions or answers", "aria-label": "Search questions" });
+    search.value = state.sheetQuery;
+    search.addEventListener("input", function () {
+      state.sheetQuery = search.value;
+      applySheetFilter();
+    });
+    const select = el("select", { "aria-label": "Filter by category" });
+    select.appendChild(el("option", { value: "all" }, ["All categories"]));
+    cats.forEach(function (c) { select.appendChild(el("option", { value: c }, [c])); });
+    select.value = state.sheetFilter;
+    select.addEventListener("change", function () {
+      state.sheetFilter = select.value;
+      applySheetFilter();
+    });
+    const reminders = el("ul", { class: "reminders" });
+    sheetData().reminders.forEach(function (line) { reminders.appendChild(el("li", {}, [line])); });
+    const list = el("div", { class: "q-list", id: "sheetList" });
+    sheetData().questions.forEach(function (q) { list.appendChild(sheetCard(q, false)); });
+    const sheet = el("div", { class: "sheet" }, [
+      el("div", { class: "top-split" }, [formatBox(), cheatGrid()]),
+      reminders,
+      el("div", { class: "sheet-tools" }, [
+        btn("10 MIN CRAM", "primary", function () { go("#cram"); }),
+        btn("Interview mode", "", function () { go("#interview"); }),
+        btn("Expand all", "", function () {
+          document.querySelectorAll("details.sheet-card").forEach(function (d) { if (!d.hidden) d.open = true; });
+        }),
+        btn("Collapse all", "", function () {
+          document.querySelectorAll("details.sheet-card").forEach(function (d) { d.open = false; });
+        }),
+        search,
+        select
+      ]),
+      el("p", { class: "muted", id: "sheetEmpty", hidden: true }, ["No questions match that search."]),
+      list
+    ]);
+    setTimeout(applySheetFilter, 0);
+    return sheet;
+  }
+
+  function recoveryBlock() {
+    const box = el("div", { class: "q-list" });
+    sheetData().recovery.forEach(function (group) {
+      const ul = el("ul", { class: "compact" });
+      group.lines.forEach(function (line) { ul.appendChild(el("li", {}, [line])); });
+      box.appendChild(el("article", { class: "card" }, [el("h3", {}, [group.title]), ul]));
+    });
+    return box;
+  }
+
+  function viewCram() {
+    const list = el("div", { class: "q-list" });
+    sheetData().cram.forEach(function (num) {
+      const q = sheetByNum(num);
+      if (q) list.appendChild(sheetCard(q, true));
+    });
+    return el("div", { class: "sheet" }, [
+      el("div", { class: "page-head" }, [
+        el("div", {}, [
+          el("h1", {}, ["10 min cram"]),
+          el("p", { class: "lede" }, ["Read these out loud once. Then say the six lines at the bottom."])
+        ]),
+        btn("All questions", "", function () { go("#sheet"); })
+      ]),
+      cheatGrid(),
+      list,
+      el("h2", {}, ["Recovery phrases"]),
+      recoveryBlock(),
+      el("h2", {}, ["Final 2-minute review"]),
+      cheatGrid()
+    ]);
+  }
+
+  function interviewDeck() {
+    const all = sheetData().questions;
+    if (!state.interview.shuffled || !state.interview.order) return all.slice();
+    return state.interview.order.map(sheetByNum).filter(Boolean);
+  }
+
+  function shuffleInterview() {
+    const nums = sheetData().questions.map(function (q) { return q.num; });
+    for (let i = nums.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const tmp = nums[i];
+      nums[i] = nums[j];
+      nums[j] = tmp;
+    }
+    state.interview.order = nums;
+    state.interview.shuffled = true;
+    state.interview.index = 0;
+    state.interview.open = false;
+  }
+
+  function interviewStep(delta) {
+    const deck = interviewDeck();
+    if (!deck.length) return;
+    state.interview.index = (state.interview.index + delta + deck.length) % deck.length;
+    state.interview.open = false;
+    render();
+  }
+
+  function viewInterview() {
+    const deck = interviewDeck();
+    const q = deck[Math.min(state.interview.index, deck.length - 1)];
+    const answer = el("div", { class: "sheet-answer interview-a" + (state.interview.open ? "" : " hidden-block") });
+    if (state.interview.open) {
+      answer.className = "sheet-answer interview-a";
+      q.answer.forEach(function (p) { answer.appendChild(el("p", { html: highlightHtml(p) })); });
+      if (q.remember) answer.appendChild(el("p", { class: "remember", html: "<strong>Remember:</strong> " + highlightHtml(q.remember) }));
+    }
+    return el("div", { class: "sheet interview-stage" }, [
+      el("p", { class: "muted" }, [
+        "Question " + (state.interview.index + 1) + " of " + deck.length +
+        " · " + q.category + " · " + q.duration
+      ]),
+      el("h1", { class: "interview-q" }, [q.num + ". " + q.question]),
+      answer,
+      el("div", { class: "actions" }, [
+        btn("Previous", "", function () { interviewStep(-1); }),
+        btn("Next", "primary", function () { interviewStep(1); }),
+        btn(state.interview.open ? "Hide answer" : "Show answer", "", function () {
+          state.interview.open = !state.interview.open;
+          render();
+        }),
+        btn("Random question", "", function () {
+          const deckNow = interviewDeck();
+          let next = Math.floor(Math.random() * deckNow.length);
+          if (deckNow.length > 1 && next === state.interview.index) next = (next + 1) % deckNow.length;
+          state.interview.index = next;
+          state.interview.open = false;
+          render();
+        }),
+        btn(state.interview.shuffled ? "Shuffle: on" : "Shuffle: off", "", function () {
+          if (state.interview.shuffled) {
+            state.interview.shuffled = false;
+            state.interview.order = null;
+            state.interview.index = 0;
+          } else shuffleInterview();
+          state.interview.open = false;
+          render();
+        }),
+        btn("Exit", "ghost", function () { go("#sheet"); })
+      ]),
+      el("p", { class: "muted" }, ["← → move · space shows or hides the answer. Nothing is recorded."])
+    ]);
+  }
+
+  function viewDrills() {
+    const links = [
+      ["#experience", "Experience drills"],
+      ["#dart", "Dart / Flutter drills"],
+      ["#debug", "Debugging drills"],
+      ["#ai", "AI-evaluation drills"],
+      ["#stories", "Story builder"],
+      ["#mock", "Timed mock"],
+      ["#quick", "Older quick review"],
+      ["#prep", "Focused prep steps"],
+      ["#dashboard", "Progress dashboard"]
+    ];
+    const ul = el("ul", {});
+    links.forEach(function (pair) {
+      ul.appendChild(el("li", {}, [el("a", { href: pair[0] }, [pair[1]])]));
+    });
+    return el("div", { class: "sheet" }, [
+      el("h1", {}, ["Extra drills"]),
+      el("p", { class: "lede" }, [
+        "Spoken answers to use in the interview are on the cheat sheet. These pages keep the longer notes, code sketches, story templates, and the timed mock."
+      ]),
+      ul
+    ]);
   }
 
   function viewDashboard() {
@@ -576,12 +844,8 @@
       btn(m.paused ? "Resume" : "Pause", "", function () { m.paused = !m.paused; persistMock(); render(); }),
       btn("Next", "primary", mockNext),
       btn("Finish early", "", finishMock),
-      btn("Reset mock", "danger", function () { state.mock = null; persistMock(); render(); }),
-      state.recorder.supported ? btn(state.recorder.rec ? "Stop mic" : "Record mic", "", toggleMic) : el("span", { class: "muted" }, ["Microphone API not available; type instead."])
+      btn("Reset mock", "danger", function () { state.mock = null; persistMock(); render(); })
     ]));
-    if (state.recorder.url) {
-      sheet.appendChild(el("audio", { controls: true, src: state.recorder.url }));
-    }
     return sheet;
   }
 
@@ -776,7 +1040,18 @@
   }
 
   function onKey(e) {
-    if (e.target && (e.target.tagName === "TEXTAREA" || e.target.tagName === "INPUT" || e.target.tagName === "SELECT")) return;
+    const typing = e.target && (e.target.tagName === "TEXTAREA" || e.target.tagName === "INPUT" || e.target.tagName === "SELECT");
+    if (!typing && state.view === "interview") {
+      if (e.key === "ArrowLeft") { e.preventDefault(); interviewStep(-1); return; }
+      if (e.key === "ArrowRight") { e.preventDefault(); interviewStep(1); return; }
+      if (e.key === " " && !(e.target && e.target.tagName === "BUTTON")) {
+        e.preventDefault();
+        state.interview.open = !state.interview.open;
+        render();
+        return;
+      }
+    }
+    if (typing) return;
     if (e.key === "?") {
       e.preventDefault();
       document.getElementById("help").hidden = !document.getElementById("help").hidden;
