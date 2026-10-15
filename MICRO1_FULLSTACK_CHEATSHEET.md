@@ -86,21 +86,49 @@ The mobile sheet is still at [micro1.html](micro1.html).
 
 # B. Experience stories
 
-Fill the brackets before you practice. Do not invent a feature, a metric, or a root cause.
+Q4 and Q5 are the stories to use. Q9 still needs one real mistake. Do not invent a metric.
 
 <a id="q4"></a>
 
 ## 4. Walk me through an end-to-end feature.
 
-**Needs your real details.**
+**Primary: NextMatchAI — AI outreach drafting. Your product.**
 
-> One example I can discuss is [the feature] in [Rent Ready or NextMatchAI].
-> The user needed [goal]. I worked on [your actual scope], connecting the UI to [the API or storage you actually touched].
-> The important constraint was [the real constraint]. I chose [the approach] because [the reason].
-> I verified the main path and [one real failure case], then checked the behavior after release.
+> One end-to-end feature I built is the AI outreach drafting flow in NextMatchAI, my own product for international medical graduates.
+> The user signs in with Google and provides their background and research interests through a Flutter web interface.
+> A TypeScript Cloud Function handles the backend operation, including subscription checks and the Gemini integration. The generated draft is returned to the UI, where the user can review and copy it.
+> Users send the email themselves and track their outreach history in Firestore.
+> I kept AI credentials and privileged operations on the server, with user-scoped data access. I also added selected backend tests and retry handling for temporary AI failures.
+> The interesting part was owning the complete product flow and making architectural trade-offs around security, cost, and reliability.
 
-**Türkçe:** Kim yaptı, hangi istek, yetki nerede, timeout’ta ne oldu, UI yazmanın bittiğini nereden anladı.  
-**Don't:** fill the brackets with a design you only wish you had shipped.
+**Türkçe:** Ürün Flutter Web. Next.js ayrı pazarlama sitesi. Toplu e-posta yok. Anahtarlar sunucuda. Kapsamlı e2e testi iddia etme.
+**Flow:** Google Sign-In → Flutter Web/GetX → TypeScript Cloud Function → auth and subscription checks → research context + Gemini → draft → user reviews and copies → Firestore outreach history.
+**You owned:** the product flow: client, function, plan check, model call, and history.
+**Trade-off:** draft-and-track instead of sending mail for the user. Less compliance risk, less automation. Research context makes a better draft and costs more latency.
+**Hook:** Google, function, Gemini, copy, Firestore.
+
+**Follow-ups**
+
+1. **Why a Cloud Function instead of calling Gemini from Flutter?** The key stays off the client, and the plan check runs on the server. A client call could skip both.
+2. **How do you authenticate and authorize?** Google sign-in through Firebase Auth. Generation goes through an authenticated function that also enforces the subscription. Do not recite token-parsing code you are not looking at.
+3. **How do you isolate user data?** Primary records use Firestore rules scoped to the owning user. Subscription and usage fields are server-owned. Do not quote a rule you have not opened.
+4. **What if Gemini times out?** Temporary overload uses retry with backoff. Do not name a timeout or a retry count. If it still fails, say the draft was not created. Do not describe an error widget you cannot picture.
+5. **How do retries avoid making it worse?** Backoff, and a limit on tries, so a stuck model does not loop. This path generates a draft. It does not send mail, so a retry is not a second email. Do not claim the exact cap.
+6. **Why Flutter Web for the product and Next.js for marketing?** Flutter Web and GetX for the signed-in product and shared Dart models. Next.js is a separate static site so marketing pages can be crawled without loading the app.
+7. **How did you test it?** Selected Flutter model tests, and Jest tests around generation and research helpers. Not full end-to-end coverage, and not “CI covers the whole product.”
+8. **What would you improve?** Broader UI and end-to-end tests, and integration coverage around billing and identity. Say “I would.” Those are not shipped.
+
+**Do not claim:** bulk send, comprehensive e2e, user counts, revenue, or that the public case-study repo is the production source.
+
+### Backup — Rent Ready budgeting and Power BI
+
+> A second example, from Rent Ready, is budgeting and embedded analytics.
+> I built total and service budgeting with projections, then embedded Power BI in Flutter Web.
+> The embed used a custom JavaScript web component, and a Cloud Function provided a scoped token.
+> I would keep the answer at that boundary unless I am looking at the code.
+
+**Türkçe:** Yedek hikâye, 45–60 saniye. Token ömrü, veritabanı şeması ve test sonucu uydurma.
+**Verify before you go deeper:** token lifetime, how the scope is chosen, and which tests exist.
 
 ---
 
@@ -108,15 +136,50 @@ Fill the brackets before you practice. Do not invent a feature, a metric, or a r
 
 ## 5. Describe a difficult intermittent bug.
 
-**From the mobile interview. Confirm the actual fix before you treat this as fact.**
+**Primary: Rent Ready photo uploads. Do not use the mobile-interview story unless they ask about consistency.**
 
-> A useful example is a REST write and a Firestore listener arriving in an unexpected order.
-> The UI could show an update that did not match the stored state. The hard part was separating what the screen was showing from what the server had confirmed.
-> I compared request completion and listener events, isolated the timing window, and tested a specific order of events.
-> The fix had to be an explicit rule for pending local actions versus confirmed server state, not “take whichever callback came last.”
+> At Rent Ready, I investigated intermittent photo-upload failures that were difficult to reproduce under normal network conditions.
+> I analyzed more than 3,000 upload events to understand the failure patterns and distinguish application issues from network-related problems.
+> Then I reproduced a multi-minute failure under controlled weak-connectivity conditions.
+> Based on that investigation, I introduced connectivity-aware local persistence and retry handling for pending mobile requests.
+> The key lesson was not to guess at the root cause. I used telemetry and controlled reproduction to understand the problem before implementing a more reliable recovery path.
 
-**Türkçe:** Sıra önemli. Son gelen callback doğru demek değil. Fix’i ve regression test’i ancak hatırlıyorsan söyle.  
-**Follow-ups:** OS-specific? Resume? Which sequence failed? Offline? Why was retry not enough?
+**Türkçe:** 3.000+ olay gözlem. Zayıf ağda çok dakikalık hata, kontrollü koşullarda. Yerel bekleyen istek ve retry. Süre, protokol, yüzde ve kütüphane adı yok.
+**Flow:** normal network looks fine → telemetry on 3,000+ events → separate app faults from network outliers → reproduce a long failure on a weak link → persist the pending request → retry when connectivity allows.
+**You owned:** the investigation and the client recovery path for pending uploads.
+**Trade-off:** keep the photo on the device and retry, instead of failing the user immediately or retrying blindly on every error.
+**Hook:** telemetry, weak signal, persist, retry, don’t guess.
+
+**Follow-ups**
+
+1. **Why was it intermittent?** It showed up under weak connectivity, not on a normal connection. Telemetry was how I separated an application fault from a rare network outlier.
+2. **How did you reproduce it?** Controlled weak-connectivity conditions, long enough to see a multi-minute failure. Do not name a tool or a bandwidth number you do not remember.
+3. **What did telemetry show?** More than 3,000 upload events, and a split between application problems and network-driven ones. No failure percentage.
+4. **How does local persistence help?** The pending request survives the drop, so the user does not lose the photo when the call fails. Do not name the storage library.
+5. **Server stored the file, client timed out?** Observed work stops at persistence and retry. The safe next step, which I would describe as an approach, is to check server state before sending again. Do not claim a dedup protocol you cannot point to.
+6. **How would you prevent duplicates?** Do not retry a request that may have succeeded until you know the server state. Say “I would” unless you remember the exact check.
+7. **What if the app restarts?** The point of local persistence is that a pending request is still there. Do not invent the restart sequence or a queue product.
+8. **How would you test it?** Interrupt the network mid-upload, restart with a pending item, and time out after the server already has the file. Say “I would” unless you can name the test you added.
+
+**Do not claim:** retry intervals, a success rate, the 18-month incident-free period, or that this was only your solo incident response for the whole product.
+
+### Alternative — Already used in Senior Mobile interview
+
+REST write versus a Firestore listener. Use this only if they ask about ordering or consistency. Do not open with it.
+
+> A REST write and a Firestore listener could arrive in an unexpected order, so the screen did not match the confirmed state.
+> The hard part was separating what the UI was showing from what the server had stored.
+> The rule had to reconcile a pending local action with confirmed server state, instead of trusting whichever callback came last.
+
+**Türkçe:** Bunu full-stack mülakatta birinci hikâye yapma. Fix ve regression test’i ancak hatırlıyorsan söyle.
+
+### Separate story — Rent Ready modernization
+
+Not the upload bug. Not NextMatchAI.
+
+> On a Rent Ready workflow, we moved a desktop-oriented GraphQL and TypeScript path to responsive Flutter and GetX, with Firebase and enterprise-data synchronization.
+> After stabilization, that workflow went about 18 months without a production incident.
+> That was a team outcome for that system and that period. I would not take sole credit, and I would not attach it to the photo-upload fix.
 
 ---
 
@@ -550,7 +613,7 @@ Fill the brackets before you practice. Do not invent a feature, a metric, or a r
 
 ## 38. Describe something an AI could not solve without you.
 
-**Needs one real task. Use the ordering bug only if you actually used an agent on it.**
+**Needs one real task. Do not default to the listener story you already used in the mobile interview.**
 
 > On [the real task], the model could suggest plausible code, but it did not have [the context or the failing sequence].
 > I gave it [the evidence], narrowed the scope, and defined [the invariant or the test].
@@ -764,8 +827,8 @@ RETURNING stock;
 This is a practice clock, not micro1’s official timing.
 
 - 0–3 min: yourself, then why this role.
-- 3–9 min: one real end-to-end feature. Validation, authorization, state, errors.
-- 9–15 min: the ordering bug or the latency diagnosis. “What evidence killed your first hypothesis?”
+- 3–9 min: NextMatchAI outreach draft. Backup is Rent Ready budgeting and Power BI.
+- 9–15 min: photo uploads under weak connectivity. The listener race only if they ask about consistency.
 - 15–20 min: Promise.all, and a stale response.
 - 20–24 min: lost update, idempotent worker, posting-list flashcard.
 - 24–28 min: how you use an agent, one thing it got wrong, how you compare two solutions.
@@ -794,7 +857,7 @@ This is a practice clock, not micro1’s official timing.
 # L. If you only have 45 minutes
 
 - 10 min: introduction and one real end-to-end story. Delete anything you cannot defend.
-- 10 min: the ordering bug. Event order and the actual fix, or mark it as unconfirmed.
+- 10 min: photo uploads. Telemetry, the weak-network reproduction, persistence and retry. No percentage.
 - 10 min: Future versus Stream, stateless versus stateful, Promise.all, stale response.
 - 10 min: one AI example, how you judge two solutions, posting-list flashcard.
 - 5 min: say them out loud. Check the role on the platform, desktop, audio and camera.
