@@ -156,7 +156,15 @@ async function getJson(url) {
 
 ## 6. Sıra — event loop
 
-Önce satır satır giden iş biter. Sonra söz verilen işler (Promise). En son zamanlayıcı (`setTimeout`).
+Üç kuyruk var. Üstteki bitmeden alttakine geçilmez.
+
+| Sıra | Adı | Bunu yazınca | Ne olur |
+|---|---|---|---|
+| 1. En yüksek | Call stack. Senkron kod. | `console.log()`, fonksiyon çağrısı, `async` fonksiyonun `await` satırından **öncesi** | Yukarıdan aşağı hemen çalışır. Bu yığın boşalmadan alttaki kuyruklara bakılmaz. |
+| 2. Orta | Microtask. Job queue. | `Promise.then()`, `.catch()`, `.finally()`, `await` **sonrası** | Senkron iş bitince önce burası boşalır. Burada iş kaldıkça zamanlayıcıya geçilmez. |
+| 3. En düşük | Macrotask. Task queue. | `setTimeout()`, `setInterval()`, tıklama, `fetch` cevabı | Üstteki ikisi tamamen boşsa bakılır. Bir turda **yalnız bir** makro iş alınır, sonra yine mikro kuyruğa dönülür. |
+
+`fetch(...)` satırının kendisi hemen çalışır, isteği yollar. Cevap gelince o iş makro kuyruğuna yazılır. Cevabı işleyen `await` sonrası yine mikro kuyruktadır.
 
 **Tahmin et, sonra aşağıya bak.**
 
